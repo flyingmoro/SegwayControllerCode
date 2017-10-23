@@ -1,9 +1,15 @@
-#include <Arduino.h>
+#include <mbed.h>
 
-void setup() {
+DigitalOut myled(LED1);
+
+int main() {
+
     // put your setup code here, to run once:
-}
 
-void loop() {
-    // put your main code here, to run repeatedly:
+    while(1) {
+        myled = 1;
+        wait(0.2);
+        myled = 0;
+        wait(1);
+    }
 }
