@@ -1,0 +1,3063 @@
+{\rtf1\ansi\deff0{\fonttbl{\f0\fnil\fcharset0 Courier New;}}
+{\colortbl ;\red0\green77\blue187;\red0\green176\blue80;\red255\green192\blue0;}
+{\*\generator Msftedit 5.41.21.2510;}\viewkind4\uc1\pard\cf1\lang1031\f0\fs22 // I2Cdev library collection - MPU6050 I2C device class\par
+// Based on InvenSense MPU-6050 register map document rev. 2.0, 5/19/2011 (RM-MPU-6000A-00)\par
+// 8/24/2011 by Jeff Rowberg <jeff@rowberg.net>\par
+// Updates should (hopefully) always be available at https://github.com/jrowberg/i2cdevlib\par
+//\par
+// Changelog:\par
+//     ... - ongoing debug release\par
+\par
+// NOTE: THIS IS ONLY A PARIAL RELEASE. THIS DEVICE CLASS IS CURRENTLY UNDERGOING ACTIVE DEVELOPMENT AND IS STILL MISSING SOME IMPORTANT FEATURES. PLEASE KEEP THIS IN MIND IF YOU DECIDE TO USE THIS PARTICULAR CODE FOR ANYTHING.\par
+\par
+/* ============================================\par
+\cf2 I2Cdev device library code is placed under the MIT license\par
+Copyright (c) 2012 Jeff Rowberg\par
+\par
+Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:\par
+\par
+The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.\par
+\par
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN\par
+THE SOFTWARE.\par
+===============================================\par
+\cf0 */\par
+\par
+\cf1 #include "MPU6050.h"\cf0\par
+\par
+\cf2 /** Default constructor, uses default I2C address.\cf0\par
+\cf2  * @see MPU6050_DEFAULT_ADDRESS\par
+ */\cf0\par
+MPU6050::MPU6050() \{\par
+    devAddr = MPU6050_DEFAULT_ADDRESS;\par
+\}\par
+\par
+\cf2 /** Specific address constructor.\par
+ * @param address I2C address\par
+ * @see MPU6050_DEFAULT_ADDRESS\par
+ * @see MPU6050_ADDRESS_AD0_LOW\par
+ * @see MPU6050_ADDRESS_AD0_HIGH\par
+ */\par
+\cf0 MPU6050::MPU6050(uint8_t address) \{\par
+    devAddr = address;\par
+\}\par
+\par
+\cf2 /** Power on and prepare for general usage.\par
+ * This will activate the device and take it out of sleep mode (which must be done after start-up). This function also sets both the accelerometer and the gyroscope to their most sensitive settings, namely +/- 2g and +/- 250 degrees/sec, and sets the clock source to use the X Gyro for reference, which is slightly better than the default internal clock source.\par
+ */\par
+\cf0 void MPU6050::initialize() \{\par
+    setClockSource(MPU6050_CLOCK_PLL_XGYRO);\par
+    setFullScaleGyroRange(MPU6050_GYRO_FS_250);\par
+    setFullScaleAccelRange(MPU6050_ACCEL_FS_2);\par
+    setSleepEnabled(false); \cf2 // thanks to Jack Elston for pointing this one out!\par
+\cf0\}\par
+\par
+\cf2 /** Verify the I2C connection.\par
+ * Make sure the device is connected and responds as expected.\par
+ * @return True if connection is valid, false otherwise\par
+ */\par
+\cf0 bool MPU6050::testConnection() \{\par
+    return getDeviceID() == 0x34;\par
+\}\par
+\par
+\cf3 // AUX_VDDIO register (InvenSense demo code calls this RA_*G_OFFS_TC)\par
+\cf0\par
+\cf2 /** Get the auxiliary I2C supply voltage level.\par
+ * When set to 1, the auxiliary I2C bus high logic level is VDD. When cleared to 0, the auxiliary I2C bus high logic level is VLOGIC. This does not apply to the MPU-6000, which does not have a VLOGIC pin. @return I2C supply voltage level (0=VLOGIC, 1=VDD)\par
+ */\par
+\cf0 uint8_t MPU6050::getAuxVDDIOLevel() \{\par
+    I2Cdev::readBit(devAddr, MPU6050_RA_YG_OFFS_TC, MPU6050_TC_PWR_MODE_BIT, buffer);\par
+    return buffer[0];\par
+\}\par
+\cf2 /** Set the auxiliary I2C supply voltage level.\par
+ * When set to 1, the auxiliary I2C bus high logic level is VDD. When cleared to 0, the auxiliary I2C bus high logic level is VLOGIC. This does not apply to the MPU-6000, which does not have a VLOGIC pin. @param level I2C supply voltage level (0=VLOGIC, 1=VDD)\par
+ */\par
+\cf0 void MPU6050::setAuxVDDIOLevel(uint8_t level) \{\par
+    I2Cdev::writeBit(devAddr, MPU6050_RA_YG_OFFS_TC, MPU6050_TC_PWR_MODE_BIT, level);\par
+\}\par
+\par
+\cf3 // SMPLRT_DIV register\cf0\par
+\par
+\cf2 /** Get gyroscope output rate divider.\par
+ * The sensor register output, FIFO output, DMP sampling, Motion detection, Zero Motion detection, and Free Fall detection are all based on the Sample Rate.\par
+ * The Sample Rate is generated by dividing the gyroscope output rate by\par
+ * SMPLRT_DIV:\par
+ *\par
+ * \cf1 Sample Rate = Gyroscope Output Rate / (1 + SMPLRT_DIV)\par
+\cf2  *\par
+ * where Gyroscope Output Rate = 8kHz when the DLPF is disabled (DLPF_CFG = 0 or 7), and 1kHz when the DLPF is enabled (see Register 26).\par
+ *\par
+ * Note: The accelerometer output rate is 1kHz. This means that for a Sample Rate greater than 1kHz, the same accelerometer sample may be output to the FIFO, DMP, and sensor registers more than once.\par
+ *\par
+ * For a diagram of the gyroscope and accelerometer signal paths, see Section 8 of the MPU-6000/MPU-6050 Product Specification document.\par
+ *\par
+ * @return Current sample rate\par
+ * @see MPU6050_RA_SMPLRT_DIV\par
+ */\par
+\cf0 uint8_t MPU6050::getRate() \{\par
+    I2Cdev::readByte(devAddr, MPU6050_RA_SMPLRT_DIV, buffer);\par
+    return buffer[0];\par
+\}\par
+\cf2 /** Set gyroscope sample rate divider.\par
+ * @param rate New sample rate divider\par
+ * @see getRate()\par
+ * @see MPU6050_RA_SMPLRT_DIV\par
+ */\par
+\cf0 void MPU6050::setRate(uint8_t rate) \{\par
+    I2Cdev::writeByte(devAddr, MPU6050_RA_SMPLRT_DIV, rate);\par
+\}\par
+\par
+\cf3 // CONFIG register\cf0\par
+\par
+\cf2 /** Get external FSYNC configuration.\par
+ * Configures the external Frame Synchronization (FSYNC) pin sampling. An external signal connected to the FSYNC pin can be sampled by configuring EXT_SYNC_SET. Signal changes to the FSYNC pin are latched so that short strobes may be captured. The latched FSYNC signal will be sampled at the Sampling Rate, as defined in register 25. After sampling, the latch will reset to the current FSYNC signal state.\par
+ *\par
+ * The sampled value will be reported in place of the least significant bit in a sensor data register determined by the value of EXT_SYNC_SET according to the following table.\par
+ *\par
+ * <pre>\par
+ * EXT_SYNC_SET | FSYNC Bit Location\par
+ * -------------+-------------------\par
+ * 0            | Input disabled\par
+ * 1            | TEMP_OUT_L[0]\par
+ * 2            | GYRO_XOUT_L[0]\par
+ * 3            | GYRO_YOUT_L[0]\par
+ * 4            | GYRO_ZOUT_L[0]\par
+ * 5            | ACCEL_XOUT_L[0]\par
+ * 6            | ACCEL_YOUT_L[0]\par
+ * 7            |\par
+ ACCEL_ZOUT_L[0]\par
+ * </pre>\par
+ *\par
+ * @return FSYNC configuration value\par
+ */\par
+\cf0 uint8_t MPU6050::getExternalFrameSync() \{\par
+    I2Cdev::readBits(devAddr, MPU6050_RA_CONFIG, MPU6050_CFG_EXT_SYNC_SET_BIT, MPU6050_CFG_EXT_SYNC_SET_LENGTH, buffer);\par
+    return buffer[0];\par
+\}\par
+\cf2 /** Set external FSYNC configuration.\par
+ * @see getExternalFrameSync()\par
+ * @see MPU6050_RA_CONFIG\par
+ * @param sync New FSYNC configuration value\par
+ */\par
+\cf0 void MPU6050::setExternalFrameSync(uint8_t sync) \{\par
+    I2Cdev::writeBits(devAddr, MPU6050_RA_CONFIG, MPU6050_CFG_EXT_SYNC_SET_BIT, MPU6050_CFG_EXT_SYNC_SET_LENGTH, sync);\par
+\}\par
+\cf2 /** Get digital low-pass filter configuration.\par
+ * The DLPF_CFG parameter sets the digital low pass filter configuration. It also determines the internal sampling rate used by the device as shown in the table below.\par
+ *\par
+ * Note: The accelerometer output rate is 1kHz. This means that for a Sample Rate greater than 1kHz, the same accelerometer sample may be output to the FIFO, DMP, and sensor registers more than once.\par
+ *\par
+ * <pre>\par
+ *          |   ACCELEROMETER    |           GYROSCOPE\par
+ * DLPF_CFG | Bandwidth | Delay  | Bandwidth | Delay  | Sample Rate\par
+ * ---------+-----------+--------+-----------+--------+-------------\par
+ * 0        | 260Hz     | 0ms    | 256Hz     | 0.98ms | 8kHz\par
+ * 1        | 184Hz     | 2.0ms  | 188Hz     | 1.9ms  | 1kHz\par
+ * 2        | 94Hz      | 3.0ms  | 98Hz      | 2.8ms  | 1kHz\par
+ * 3        | 44Hz      | 4.9ms  | 42Hz      | 4.8ms  | 1kHz\par
+ * 4        | 21Hz      | 8.5ms  | 20Hz      | 8.3ms  | 1kHz\par
+ * 5        | 10Hz      | 13.8ms | 10Hz      | 13.4ms | 1kHz\par
+ * 6        | 5Hz       | 19.0ms | 5Hz       | 18.6ms | 1kHz\par
+ * 7        |   -- Reserved --   |   -- Reserved --   | Reserved\par
+ * </pre>\par
+ *\par
+ * @return DLFP configuration\par
+ * @see MPU6050_RA_CONFIG\par
+ * @see MPU6050_CFG_DLPF_CFG_BIT\par
+ * @see MPU6050_CFG_DLPF_CFG_LENGTH\par
+ */\par
+\cf0 uint8_t MPU6050::getDLPFMode() \{\par
+    I2Cdev::readBits(devAddr, MPU6050_RA_CONFIG, MPU6050_CFG_DLPF_CFG_BIT, MPU6050_CFG_DLPF_CFG_LENGTH, buffer);\par
+    return buffer[0];\par
+\}\par
+\cf2 /** Set digital low-pass filter configuration.\par
+ * @param mode New DLFP configuration setting\par
+ * @see getDLPFBandwidth()\par
+ * @see MPU6050_DLPF_BW_256\par
+ * @see MPU6050_RA_CONFIG\par
+ * @see MPU6050_CFG_DLPF_CFG_BIT\par
+ * @see MPU6050_CFG_DLPF_CFG_LENGTH\par
+ */\par
+\cf0 void MPU6050::setDLPFMode(uint8_t mode) \{\par
+    I2Cdev::writeBits(devAddr, MPU6050_RA_CONFIG, MPU6050_CFG_DLPF_CFG_BIT, MPU6050_CFG_DLPF_CFG_LENGTH, mode);\par
+\}\par
+\par
+\cf3 // GYRO_CONFIG register\par
+\par
+\cf2 /** Get full-scale gyroscope range.\par
+ * The FS_SEL parameter allows setting the full-scale range of the gyro sensors, as described in the table below.\par
+ *\par
+ * <pre>\par
+ * 0 = +/- 250 degrees/sec\par
+ * 1 = +/- 500 degrees/sec\par
+ * 2 = +/- 1000 degrees/sec\par
+ * 3 = +/- 2000 degrees/sec\par
+ * </pre>\par
+ *\par
+ * @return Current full-scale gyroscope range setting\par
+ * @see MPU6050_GYRO_FS_250\par
+ * @see MPU6050_RA_GYRO_CONFIG\par
+ * @see MPU6050_GCONFIG_FS_SEL_BIT\par
+ * @see MPU6050_GCONFIG_FS_SEL_LENGTH\par
+ */\par
+\cf0 uint8_t MPU6050::getFullScaleGyroRange() \{\par
+    I2Cdev::readBits(devAddr, MPU6050_RA_GYRO_CONFIG, MPU6050_GCONFIG_FS_SEL_BIT, MPU6050_GCONFIG_FS_SEL_LENGTH, buffer);\par
+    return buffer[0];\par
+\}\par
+\cf2 /** Set full-scale gyroscope range.\par
+ * @param range New full-scale gyroscope range value\par
+ * @see getFullScaleRange()\par
+ * @see MPU6050_GYRO_FS_250\par
+ * @see MPU6050_RA_GYRO_CONFIG\par
+ * @see MPU6050_GCONFIG_FS_SEL_BIT\par
+ * @see MPU6050_GCONFIG_FS_SEL_LENGTH\par
+ */\par
+\cf0 void MPU6050::setFullScaleGyroRange(uint8_t range) \{\par
+    I2Cdev::writeBits(devAddr, MPU6050_RA_GYRO_CONFIG, MPU6050_GCONFIG_FS_SEL_BIT, MPU6050_GCONFIG_FS_SEL_LENGTH, range);\par
+\}\par
+\par
+\cf3 // SELF TEST FACTORY TRIM VALUES\cf0\par
+\par
+\cf2 /** Get self-test factory trim value for accelerometer X axis.\par
+ * @return factory trim value\par
+ * @see MPU6050_RA_SELF_TEST_X\par
+ */\par
+\cf0 uint8_t MPU6050::getAccelXSelfTestFactoryTrim() \{\par
+    I2Cdev::readByte(devAddr, MPU6050_RA_SELF_TEST_X, &buffer[0]);\par
+\tab I2Cdev::readByte(devAddr, MPU6050_RA_SELF_TEST_A, &buffer[1]);\tab\par
+    return (buffer[0]>>3) | ((buffer[1]>>4) & 0x03);\par
+\}\par
+\par
+\cf2 /** Get self-test factory trim value for accelerometer Y axis.\par
+ * @return factory trim value\par
+ * @see MPU6050_RA_SELF_TEST_Y\par
+ */\cf0\par
+uint8_t MPU6050::getAccelYSelfTestFactoryTrim() \{\par
+    I2Cdev::readByte(devAddr, MPU6050_RA_SELF_TEST_Y, &buffer[0]);\par
+\tab I2Cdev::readByte(devAddr, MPU6050_RA_SELF_TEST_A, &buffer[1]);\tab\par
+    return (buffer[0]>>3) | ((buffer[1]>>2) & 0x03);\par
+\}\par
+\par
+\cf2 /** Get self-test factory trim value for accelerometer Z axis.\par
+ * @return factory trim value\par
+ * @see MPU6050_RA_SELF_TEST_Z\par
+ */\par
+\cf0 uint8_t MPU6050::getAccelZSelfTestFactoryTrim() \{\par
+    I2Cdev::readBytes(devAddr, MPU6050_RA_SELF_TEST_Z, 2, buffer);\tab\par
+    return (buffer[0]>>3) | (buffer[1] & 0x03);\par
+\}\par
+\par
+\cf2 /** Get self-test factory trim value for gyro X axis.\par
+ * @return factory trim value\par
+ * @see MPU6050_RA_SELF_TEST_X\par
+ */\par
+\cf0 uint8_t MPU6050::getGyroXSelfTestFactoryTrim() \{\par
+    I2Cdev::readByte(devAddr, MPU6050_RA_SELF_TEST_X, buffer);\tab\par
+    return (buffer[0] & 0x1F);\par
+\}\par
+\par
+\cf2 /** Get self-test factory trim value for gyro Y axis.\par
+ * @return factory trim value\par
+ * @see MPU6050_RA_SELF_TEST_Y\par
+ */\cf0\par
+uint8_t MPU6050::getGyroYSelfTestFactoryTrim() \{\par
+    I2Cdev::readByte(devAddr, MPU6050_RA_SELF_TEST_Y, buffer);\tab\par
+    return (buffer[0] & 0x1F);\par
+\}\par
+\par
+\cf2 /** Get self-test factory trim value for gyro Z axis.\par
+ * @return factory trim value\par
+ * @see MPU6050_RA_SELF_TEST_Z\par
+ */\cf0\par
+uint8_t MPU6050::getGyroZSelfTestFactoryTrim() \{\par
+    I2Cdev::readByte(devAddr, MPU6050_RA_SELF_TEST_Z, buffer);\tab\par
+    return (buffer[0] & 0x1F);\par
+\}\par
+\par
+\cf3 // ACCEL_CONFIG register\cf0\par
+\par
+\cf2 /** Get self-test enabled setting for accelerometer X axis.\par
+ * @return Self-test enabled value\par
+ * @see MPU6050_RA_ACCEL_CONFIG\par
+ */\par
+\cf0 bool MPU6050::getAccelXSelfTest() \{\par
+    I2Cdev::readBit(devAddr, MPU6050_RA_ACCEL_CONFIG, MPU6050_ACONFIG_XA_ST_BIT, buffer);\par
+    return buffer[0];\par
+\}\par
+\cf2 /** Get self-test enabled setting for accelerometer X axis.\par
+ * @param enabled Self-test enabled value\par
+ * @see MPU6050_RA_ACCEL_CONFIG\par
+ */\par
+\cf0 void MPU6050::setAccelXSelfTest(bool enabled) \{\par
+    I2Cdev::writeBit(devAddr, MPU6050_RA_ACCEL_CONFIG, MPU6050_ACONFIG_XA_ST_BIT, enabled);\par
+\}\par
+\cf2 /** Get self-test enabled value for accelerometer Y axis.\par
+ * @return Self-test enabled value\par
+ * @see MPU6050_RA_ACCEL_CONFIG\par
+ */\par
+\cf0 bool MPU6050::getAccelYSelfTest() \{\par
+    I2Cdev::readBit(devAddr, MPU6050_RA_ACCEL_CONFIG, MPU6050_ACONFIG_YA_ST_BIT, buffer);\par
+    return buffer[0];\par
+\}\par
+\cf2 /** Get self-test enabled value for accelerometer Y axis.\par
+ * @param enabled Self-test enabled value\par
+ * @see MPU6050_RA_ACCEL_CONFIG\par
+ */\par
+\cf0 void MPU6050::setAccelYSelfTest(bool enabled) \{\par
+    I2Cdev::writeBit(devAddr, MPU6050_RA_ACCEL_CONFIG, MPU6050_ACONFIG_YA_ST_BIT, enabled);\par
+\}\par
+\cf2 /** Get self-test enabled value for accelerometer Z axis.\par
+ * @return Self-test enabled value\par
+ * @see MPU6050_RA_ACCEL_CONFIG\par
+ */\par
+\cf0 bool MPU6050::getAccelZSelfTest() \{\par
+    I2Cdev::readBit(devAddr, MPU6050_RA_ACCEL_CONFIG, MPU6050_ACONFIG_ZA_ST_BIT, buffer);\par
+    return buffer[0];\par
+\}\par
+\cf2 /** Set self-test enabled value for accelerometer Z axis.\par
+ * @param enabled Self-test enabled value\par
+ * @see MPU6050_RA_ACCEL_CONFIG\par
+ */\par
+\cf0 void MPU6050::setAccelZSelfTest(bool enabled) \{\par
+    I2Cdev::writeBit(devAddr, MPU6050_RA_ACCEL_CONFIG, MPU6050_ACONFIG_ZA_ST_BIT, enabled);\par
+\}\par
+\cf2 /** Get full-scale accelerometer range.\par
+ * The FS_SEL parameter allows setting the full-scale range of the accelerometer sensors, as described in the table below.\par
+ *\par
+ * <pre>\par
+ * 0 = +/- 2g\par
+ * 1 = +/- 4g\par
+ * 2 = +/- 8g\par
+ * 3 = +/- 16g\par
+ * </pre>\par
+ *\par
+ * @return Current full-scale accelerometer range setting\par
+ * @see MPU6050_ACCEL_FS_2\par
+ * @see MPU6050_RA_ACCEL_CONFIG\par
+ * @see MPU6050_ACONFIG_AFS_SEL_BIT\par
+ * @see MPU6050_ACONFIG_AFS_SEL_LENGTH\par
+ */\par
+\cf0 uint8_t MPU6050::getFullScaleAccelRange() \{\par
+    I2Cdev::readBits(devAddr, MPU6050_RA_ACCEL_CONFIG, MPU6050_ACONFIG_AFS_SEL_BIT, MPU6050_ACONFIG_AFS_SEL_LENGTH, buffer);\par
+    return buffer[0];\par
+\}\par
+\cf2 /** Set full-scale accelerometer range.\par
+ * @param range New full-scale accelerometer range setting\par
+ * @see getFullScaleAccelRange()\par
+ */\par
+\cf0 void MPU6050::setFullScaleAccelRange(uint8_t range) \{\par
+    I2Cdev::writeBits(devAddr, MPU6050_RA_ACCEL_CONFIG, MPU6050_ACONFIG_AFS_SEL_BIT, MPU6050_ACONFIG_AFS_SEL_LENGTH, range);\par
+\}\par
+\cf2 /** Get the high-pass filter configuration.\par
+ * The DHPF is a filter module in the path leading to motion detectors (Free Fall, Motion threshold, and Zero Motion). The high pass filter output is not available to the data registers (see Figure in Section 8 of the MPU-6000/MPU-6050 Product Specification document).\par
+ *\par
+ * The high pass filter has three modes:\par
+ *\par
+ * <pre>\par
+ *    Reset: The filter output settles to zero within one sample. This effectively disables the high pass filter. This mode may be toggled to quickly settle the filter.\par
+ *\par
+ *    On:    The high pass filter will pass signals above the cut off frequency.\par
+ *\par
+ *    Hold:  When triggered, the filter holds the present sample. The filter output will be the difference between the input sample and the held sample.\par
+ * </pre>\par
+ *\par
+ * <pre>\par
+ * ACCEL_HPF | Filter Mode | Cut-off Frequency\par
+ * ----------+-------------+------------------\par
+ * 0         | Reset       | None\par
+ * 1         | On          | 5Hz\par
+ * 2         | On          | 2.5Hz\par
+ * 3         | On          | 1.25Hz\par
+ * 4         | On          | 0.63Hz\par
+ * 7         | Hold        | None\par
+ * </pre>\par
+ *\par
+ * @return Current high-pass filter configuration\par
+ * @see MPU6050_DHPF_RESET\par
+ * @see MPU6050_RA_ACCEL_CONFIG\par
+ */\par
+\cf0 uint8_t MPU6050::getDHPFMode() \{\par
+    I2Cdev::readBits(devAddr, MPU6050_RA_ACCEL_CONFIG, MPU6050_ACONFIG_ACCEL_HPF_BIT, MPU6050_ACONFIG_ACCEL_HPF_LENGTH, buffer);\par
+    return buffer[0];\par
+\}\par
+\cf2 /** Set the high-pass filter configuration.\par
+ * @param bandwidth New high-pass filter configuration\par
+ * @see setDHPFMode()\par
+ * @see MPU6050_DHPF_RESET\par
+ * @see MPU6050_RA_ACCEL_CONFIG\par
+ */\par
+\cf0 void MPU6050::setDHPFMode(uint8_t bandwidth) \{\par
+    I2Cdev::writeBits(devAddr, MPU6050_RA_ACCEL_CONFIG, MPU6050_ACONFIG_ACCEL_HPF_BIT, MPU6050_ACONFIG_ACCEL_HPF_LENGTH, bandwidth);\par
+\}\par
+\par
+\cf3 // FF_THR register\cf0\par
+\par
+\cf2 /** Get free-fall event acceleration threshold.\par
+ * This register configures the detection threshold for Free Fall event detection. The unit of FF_THR is 1LSB = 2mg. Free Fall is detected when the absolute value of the accelerometer measurements for the three axes are each less than the detection threshold. This condition increments the Free Fall duration counter (Register 30). The Free Fall interrupt is triggered when the Free Fall duration counter reaches the time specified in FF_DUR.\par
+ *\par
+ * For more details on the Free Fall detection interrupt, see Section 8.2 of the MPU-6000/MPU-6050 Product Specification document as well as Registers 56 and 58 of this document.\par
+ *\par
+ * @return Current free-fall acceleration threshold value (LSB = 2mg)\par
+ * @see MPU6050_RA_FF_THR\par
+ */\par
+\cf0 uint8_t MPU6050::getFreefallDetectionThreshold() \{\par
+    I2Cdev::readByte(devAddr, MPU6050_RA_FF_THR, buffer);\par
+    return buffer[0];\par
+\}\par
+\cf2 /** Get free-fall event acceleration threshold.\par
+ * @param threshold New free-fall acceleration threshold value (LSB = 2mg)\par
+ * @see getFreefallDetectionThreshold()\par
+ * @see MPU6050_RA_FF_THR\par
+ */\par
+\cf0 void MPU6050::setFreefallDetectionThreshold(uint8_t threshold) \{\par
+    I2Cdev::writeByte(devAddr, MPU6050_RA_FF_THR, threshold);\par
+\}\par
+\par
+\cf3 // FF_DUR register\cf0\par
+\par
+\cf2 /** Get free-fall event duration threshold.\par
+ * This register configures the duration counter threshold for Free Fall event detection. The duration counter ticks at 1kHz, therefore FF_DUR has a unit of 1 LSB = 1 ms.\par
+ *\par
+ * The Free Fall duration counter increments while the absolute value of the accelerometer measurements are each less than the detection threshold (Register 29). The Free Fall interrupt is triggered when the Free Fall duration counter reaches the time specified in this register.\par
+ *\par
+ * For more details on the Free Fall detection interrupt, see Section 8.2 of the MPU-6000/MPU-6050 Product Specification document as well as Registers 56 and 58 of this document.\par
+ *\par
+ * @return Current free-fall duration threshold value (LSB = 1ms)\par
+ * @see MPU6050_RA_FF_DUR\par
+ */\par
+\cf0 uint8_t MPU6050::getFreefallDetectionDuration() \{\par
+    I2Cdev::readByte(devAddr, MPU6050_RA_FF_DUR, buffer);\par
+    return buffer[0];\par
+\}\par
+\cf2 /** Get free-fall event duration threshold.\par
+ * @param duration New free-fall duration threshold value (LSB = 1ms)\par
+ * @see getFreefallDetectionDuration()\par
+ * @see MPU6050_RA_FF_DUR\par
+ */\par
+\cf0 void MPU6050::setFreefallDetectionDuration(uint8_t duration) \{\par
+    I2Cdev::writeByte(devAddr, MPU6050_RA_FF_DUR, duration);\par
+\}\par
+\par
+\cf3 // MOT_THR register\cf0\par
+\par
+\cf2 /** Get motion detection event acceleration threshold.\par
+ * This register configures the detection threshold for Motion interrupt generation. The unit of MOT_THR is 1LSB = 2mg. Motion is detected when the absolute value of any of the accelerometer measurements exceeds this Motion detection threshold. This condition increments the Motion detection duration counter (Register 32). The Motion detection interrupt is triggered when the Motion Detection counter reaches the time count specified in MOT_DUR(Register 32).\par
+ *\par
+ * The Motion interrupt will indicate the axis and polarity of detected motion in MOT_DETECT_STATUS (Register 97).\par
+ *\par
+ * For more details on the Motion detection interrupt, see Section 8.3 of the MPU-6000/MPU-6050 Product Specification document as well as Registers 56 and 58 of this document.\par
+ *\par
+ * @return Current motion detection acceleration threshold value (LSB = 2mg)\par
+ * @see MPU6050_RA_MOT_THR\par
+ */\par
+\cf0 uint8_t MPU6050::getMotionDetectionThreshold() \{\par
+    I2Cdev::readByte(devAddr, MPU6050_RA_MOT_THR, buffer);\par
+    return buffer[0];\par
+\}\par
+\cf2 /** Set motion detection event acceleration threshold.\par
+ * @param threshold New motion detection acceleration threshold value (LSB = 2mg)\par
+ * @see getMotionDetectionThreshold()\par
+ * @see MPU6050_RA_MOT_THR\par
+ */\par
+\cf0 void MPU6050::setMotionDetectionThreshold(uint8_t threshold) \{\par
+    I2Cdev::writeByte(devAddr, MPU6050_RA_MOT_THR, threshold);\par
+\}\par
+\par
+\cf3 // MOT_DUR register\cf0\par
+\par
+\cf2 /** Get motion detection event duration threshold.\par
+ * This register configures the duration counter threshold for Motion interrupt generation. The duration counter ticks at 1 kHz, therefore MOT_DUR has a unit of 1LSB = 1ms. The Motion detection duration counter increments when the absolute value of any of the accelerometer measurements exceeds the Motion detection threshold (Register 31). The Motion detection interrupt is triggered when the Motion detection counter reaches the time count specified in this register.\par
+ *\par
+ * For more details on the Motion detection interrupt, see Section 8.3 of the MPU-6000/MPU-6050 Product Specification document.\par
+ *\par
+ * @return Current motion detection duration threshold value (LSB = 1ms)\par
+ * @see MPU6050_RA_MOT_DUR\par
+ */\par
+\cf0 uint8_t MPU6050::getMotionDetectionDuration() \{\par
+    I2Cdev::readByte(devAddr, MPU6050_RA_MOT_DUR, buffer);\par
+    return buffer[0];\par
+\}\par
+\cf2 /** Set motion detection event duration threshold.\par
+ * @param duration New motion detection duration threshold value (LSB = 1ms)\par
+ * @see getMotionDetectionDuration()\par
+ * @see MPU6050_RA_MOT_DUR\par
+ */\par
+\cf0 void MPU6050::setMotionDetectionDuration(uint8_t duration) \{\par
+    I2Cdev::writeByte(devAddr, MPU6050_RA_MOT_DUR, duration);\par
+\}\par
+\par
+\cf3 // ZRMOT_THR register\cf0\par
+\par
+\cf2 /** Get zero motion detection event acceleration threshold.\par
+ * This register configures the detection threshold for Zero Motion interrupt generation. The unit of ZRMOT_THR is 1LSB = 2mg. Zero Motion is detected when the absolute value of the accelerometer measurements for the 3 axes are each less than the detection threshold. This condition increments the Zero Motion duration counter (Register 34). The Zero Motion interrupt is triggered when the Zero Motion duration counter reaches the time count specified in ZRMOT_DUR (Register 34).\par
+ *\par
+ * Unlike Free Fall or Motion detection, Zero Motion detection triggers an interrupt both when Zero Motion is first detected and when Zero Motion is no longer detected.\par
+ *\par
+ * When a zero motion event is detected, a Zero Motion Status will be indicated in the MOT_DETECT_STATUS register (Register 97). When a motion-to-zero-motion condition is detected, the status bit is set to 1. When a zero-motion-to- motion condition is detected, the status bit is set to 0.\par
+ *\par
+ For more details on the Zero Motion detection interrupt, see Section 8.4 of the MPU-6000/MPU-6050 Product Specification document as well as Registers 56 and 58 of this document.\par
+ *\par
+ * @return Current zero motion detection acceleration threshold value (LSB = 2mg)\par
+ * @see MPU6050_RA_ZRMOT_THR\par
+ */\par
+\cf0 uint8_t MPU6050::getZeroMotionDetectionThreshold() \{\par
+    I2Cdev::readByte(devAddr, MPU6050_RA_ZRMOT_THR, buffer);\par
+    return buffer[0];\par
+\}\par
+\cf2 /** Set zero motion detection event acceleration threshold.\par
+ * @param threshold New zero motion detection acceleration threshold value (LSB = 2mg)\par
+ * @see getZeroMotionDetectionThreshold()\par
+ * @see MPU6050_RA_ZRMOT_THR\par
+ */\par
+\cf0 void MPU6050::setZeroMotionDetectionThreshold(uint8_t threshold) \{\par
+    I2Cdev::writeByte(devAddr, MPU6050_RA_ZRMOT_THR, threshold);\par
+\}\par
+\par
+\cf3 // ZRMOT_DUR register\cf0\par
+\par
+\cf2 /** Get zero motion detection event duration threshold.\par
+ * This register configures the duration counter threshold for Zero Motion interrupt generation. The duration counter ticks at 16 Hz, therefore ZRMOT_DUR has a unit of 1 LSB = 64 ms. The Zero Motion duration counter increments while the absolute value of the accelerometer measurements are each less than the detection threshold (Register 33). The Zero Motion interrupt is triggered when the Zero Motion duration counter reaches the time count specified in this register.\par
+ *\par
+ * For more details on the Zero Motion detection interrupt, see Section 8.4 of the MPU-6000/MPU-6050 Product Specification document, as well as Registers 56 and 58 of this document.\par
+ *\par
+ * @return Current zero motion detection duration threshold value (LSB = 64ms)\par
+ * @see MPU6050_RA_ZRMOT_DUR\par
+ */\par
+\cf0 uint8_t MPU6050::getZeroMotionDetectionDuration() \{\par
+    I2Cdev::readByte(devAddr, MPU6050_RA_ZRMOT_DUR, buffer);\par
+    return buffer[0];\par
+\}\par
+\cf2 /** Set zero motion detection event duration threshold.\par
+ * @param duration New zero motion detection duration threshold value (LSB = 1ms)\par
+ * @see getZeroMotionDetectionDuration()\par
+ * @see MPU6050_RA_ZRMOT_DUR\par
+ */\par
+\cf0 void MPU6050::setZeroMotionDetectionDuration(uint8_t duration) \{\par
+    I2Cdev::writeByte(devAddr, MPU6050_RA_ZRMOT_DUR, duration);\par
+\}\par
+\par
+\cf3 // FIFO_EN register\cf0\par
+\par
+\cf2 /** Get temperature FIFO enabled value.\par
+ * When set to 1, this bit enables TEMP_OUT_H and TEMP_OUT_L (Registers 65 and 66) to be written into the FIFO buffer.\par
+ * @return Current temperature FIFO enabled value\par
+ * @see MPU6050_RA_FIFO_EN\par
+ */\par
+\cf0 bool MPU6050::getTempFIFOEnabled() \{\par
+    I2Cdev::readBit(devAddr, MPU6050_RA_FIFO_EN, MPU6050_TEMP_FIFO_EN_BIT, buffer);\par
+    return buffer[0];\par
+\}\par
+\cf2 /** Set temperature FIFO enabled value.\par
+ * @param enabled New temperature FIFO enabled value\par
+ * @see getTempFIFOEnabled()\par
+ * @see MPU6050_RA_FIFO_EN\par
+ */\par
+\cf0 void MPU6050::setTempFIFOEnabled(bool enabled) \{\par
+    I2Cdev::writeBit(devAddr, MPU6050_RA_FIFO_EN, MPU6050_TEMP_FIFO_EN_BIT, enabled);\par
+\}\par
+\cf2 /** Get gyroscope X-axis FIFO enabled value.\par
+ * When set to 1, this bit enables GYRO_XOUT_H and GYRO_XOUT_L (Registers 67 and 68) to be written into the FIFO buffer.\par
+ * @return Current gyroscope X-axis FIFO enabled value\par
+ * @see MPU6050_RA_FIFO_EN\par
+ */\par
+\cf0 bool MPU6050::getXGyroFIFOEnabled() \{\par
+    I2Cdev::readBit(devAddr, MPU6050_RA_FIFO_EN, MPU6050_XG_FIFO_EN_BIT, buffer);\par
+    return buffer[0];\par
+\}\par
+\cf2 /** Set gyroscope X-axis FIFO enabled value.\par
+ * @param enabled New gyroscope X-axis FIFO enabled value\par
+ * @see getXGyroFIFOEnabled()\par
+ * @see MPU6050_RA_FIFO_EN\par
+ */\par
+\cf0 void MPU6050::setXGyroFIFOEnabled(bool enabled) \{\par
+    I2Cdev::writeBit(devAddr, MPU6050_RA_FIFO_EN, MPU6050_XG_FIFO_EN_BIT, enabled);\par
+\}\par
+\cf2 /** Get gyroscope Y-axis FIFO enabled value.\par
+ * When set to 1, this bit enables GYRO_YOUT_H and GYRO_YOUT_L (Registers 69 and\par
+ * 70) to be written into the FIFO buffer.\par
+ * @return Current gyroscope Y-axis FIFO enabled value\par
+ * @see MPU6050_RA_FIFO_EN\par
+ */\par
+\cf0 bool MPU6050::getYGyroFIFOEnabled() \{\par
+    I2Cdev::readBit(devAddr, MPU6050_RA_FIFO_EN, MPU6050_YG_FIFO_EN_BIT, buffer);\par
+    return buffer[0];\par
+\}\par
+\cf2 /** Set gyroscope Y-axis FIFO enabled value.\par
+ * @param enabled New gyroscope Y-axis FIFO enabled value\par
+ * @see getYGyroFIFOEnabled()\par
+ * @see MPU6050_RA_FIFO_EN\par
+ */\par
+\cf0 void MPU6050::setYGyroFIFOEnabled(bool enabled) \{\par
+    I2Cdev::writeBit(devAddr, MPU6050_RA_FIFO_EN, MPU6050_YG_FIFO_EN_BIT, enabled);\par
+\}\par
+\cf2 /** Get gyroscope Z-axis FIFO enabled value.\par
+ * When set to 1, this bit enables GYRO_ZOUT_H and GYRO_ZOUT_L (Registers 71 and 72) to be written into the FIFO buffer.\par
+ * @return Current gyroscope Z-axis FIFO enabled value\par
+ * @see MPU6050_RA_FIFO_EN\par
+ */\par
+\cf0 bool MPU6050::getZGyroFIFOEnabled() \{\par
+    I2Cdev::readBit(devAddr, MPU6050_RA_FIFO_EN, MPU6050_ZG_FIFO_EN_BIT, buffer);\par
+    return buffer[0];\par
+\}\par
+\cf2 /** Set gyroscope Z-axis FIFO enabled value.\par
+ * @param enabled New gyroscope Z-axis FIFO enabled value\par
+ * @see getZGyroFIFOEnabled()\par
+ * @see MPU6050_RA_FIFO_EN\par
+ */\par
+\cf0 void MPU6050::setZGyroFIFOEnabled(bool enabled) \{\par
+    I2Cdev::writeBit(devAddr, MPU6050_RA_FIFO_EN, MPU6050_ZG_FIFO_EN_BIT, enabled);\par
+\}\par
+\cf2 /** Get accelerometer FIFO enabled value.\par
+ * When set to 1, this bit enables ACCEL_XOUT_H, ACCEL_XOUT_L, ACCEL_YOUT_H, ACCEL_YOUT_L, ACCEL_ZOUT_H, and ACCEL_ZOUT_L (Registers 59 to 64) to be written into the FIFO buffer.\par
+ * @return Current accelerometer FIFO enabled value\par
+ * @see MPU6050_RA_FIFO_EN\par
+ */\par
+\cf0 bool MPU6050::getAccelFIFOEnabled() \{\par
+    I2Cdev::readBit(devAddr, MPU6050_RA_FIFO_EN, MPU6050_ACCEL_FIFO_EN_BIT, buffer);\par
+    return buffer[0];\par
+\}\par
+\cf2 /** Set accelerometer FIFO enabled value.\par
+ * @param enabled New accelerometer FIFO enabled value\par
+ * @see getAccelFIFOEnabled()\par
+ * @see MPU6050_RA_FIFO_EN\par
+ */\par
+\cf0 void MPU6050::setAccelFIFOEnabled(bool enabled) \{\par
+    I2Cdev::writeBit(devAddr, MPU6050_RA_FIFO_EN, MPU6050_ACCEL_FIFO_EN_BIT, enabled);\par
+\}\par
+\cf2 /** Get Slave 2 FIFO enabled value.\par
+ * When set to 1, this bit enables EXT_SENS_DATA registers (Registers 73 to 96) associated with Slave 2 to be written into the FIFO buffer.\par
+ * @return Current Slave 2 FIFO enabled value\par
+ * @see MPU6050_RA_FIFO_EN\par
+ */\par
+\cf0 bool MPU6050::getSlave2FIFOEnabled() \{\par
+    I2Cdev::readBit(devAddr, MPU6050_RA_FIFO_EN, MPU6050_SLV2_FIFO_EN_BIT, buffer);\par
+    return buffer[0];\par
+\}\par
+\cf2 /** Set Slave 2 FIFO enabled value.\par
+ * @param enabled New Slave 2 FIFO enabled value\par
+ * @see getSlave2FIFOEnabled()\par
+ * @see MPU6050_RA_FIFO_EN\par
+ */\par
+\cf0 void MPU6050::setSlave2FIFOEnabled(bool enabled) \{\par
+    I2Cdev::writeBit(devAddr, MPU6050_RA_FIFO_EN, MPU6050_SLV2_FIFO_EN_BIT, enabled);\par
+\}\par
+\cf2 /** Get Slave 1 FIFO enabled value.\par
+ * When set to 1, this bit enables EXT_SENS_DATA registers (Registers 73 to 96) associated with Slave 1 to be written into the FIFO buffer.\par
+ * @return Current Slave 1 FIFO enabled value\par
+ * @see MPU6050_RA_FIFO_EN\par
+ */\par
+\cf0 bool MPU6050::getSlave1FIFOEnabled() \{\par
+    I2Cdev::readBit(devAddr, MPU6050_RA_FIFO_EN, MPU6050_SLV1_FIFO_EN_BIT, buffer);\par
+    return buffer[0];\par
+\}\par
+\cf2 /** Set Slave 1 FIFO enabled value.\par
+ * @param enabled New Slave 1 FIFO enabled value\par
+ * @see getSlave1FIFOEnabled()\par
+ * @see MPU6050_RA_FIFO_EN\par
+ */\par
+\cf0 void MPU6050::setSlave1FIFOEnabled(bool enabled) \{\par
+    I2Cdev::writeBit(devAddr, MPU6050_RA_FIFO_EN, MPU6050_SLV1_FIFO_EN_BIT, enabled);\par
+\}\par
+\cf2 /** Get Slave 0 FIFO enabled value.\par
+ * When set to 1, this bit enables EXT_SENS_DATA registers (Registers 73 to 96) associated with Slave 0 to be written into the FIFO buffer.\par
+ * @return Current Slave 0 FIFO enabled value\par
+ * @see MPU6050_RA_FIFO_EN\par
+ */\par
+\cf0 bool MPU6050::getSlave0FIFOEnabled() \{\par
+    I2Cdev::readBit(devAddr, MPU6050_RA_FIFO_EN, MPU6050_SLV0_FIFO_EN_BIT, buffer);\par
+    return buffer[0];\par
+\}\par
+\cf2 /** Set Slave 0 FIFO enabled value.\par
+ * @param enabled New Slave 0 FIFO enabled value\par
+ * @see getSlave0FIFOEnabled()\par
+ * @see MPU6050_RA_FIFO_EN\par
+ */\par
+\cf0 void MPU6050::setSlave0FIFOEnabled(bool enabled) \{\par
+    I2Cdev::writeBit(devAddr, MPU6050_RA_FIFO_EN, MPU6050_SLV0_FIFO_EN_BIT, enabled);\par
+\}\par
+\par
+\cf3 // I2C_MST_CTRL register\cf0\par
+\par
+\cf2 /** Get multi-master enabled value.\par
+ * Multi-master capability allows multiple I2C masters to operate on the same bus. In circuits where multi-master capability is required, set MULT_MST_EN to 1. This will increase current drawn by approximately 30uA.\par
+ *\par
+ * In circuits where multi-master capability is required, the state of the I2C bus must always be monitored by each separate I2C Master. Before an I2C Master can assume arbitration of the bus, it must first confirm that no other I2C Master has arbitration of the bus. When MULT_MST_EN is set to 1, the MPU-60X0's bus arbitration detection logic is turned on, enabling it to detect when the bus is available.\par
+ *\par
+ * @return Current multi-master enabled value\par
+ * @see MPU6050_RA_I2C_MST_CTRL\par
+ */\par
+\cf0 bool MPU6050::getMultiMasterEnabled() \{\par
+    I2Cdev::readBit(devAddr, MPU6050_RA_I2C_MST_CTRL, MPU6050_MULT_MST_EN_BIT, buffer);\par
+    return buffer[0];\par
+\}\par
+\cf2 /** Set multi-master enabled value.\par
+ * @param enabled New multi-master enabled value\par
+ * @see getMultiMasterEnabled()\par
+ * @see MPU6050_RA_I2C_MST_CTRL\par
+ */\cf0\par
+void MPU6050::setMultiMasterEnabled(bool enabled) \{\par
+    I2Cdev::writeBit(devAddr, MPU6050_RA_I2C_MST_CTRL, MPU6050_MULT_MST_EN_BIT, enabled);\par
+\}\par
+\cf2 /** Get wait-for-external-sensor-data enabled value.\par
+ * When the WAIT_FOR_ES bit is set to 1, the Data Ready interrupt will be delayed until External Sensor data from the Slave Devices are loaded into the EXT_SENS_DATA registers. This is used to ensure that both the internal sensor data (i.e. from gyro and accel) and external sensor data have been loaded to their respective data registers (i.e. the data is synced) when the Data Ready interrupt is triggered.\par
+ *\par
+ * @return Current wait-for-external-sensor-data enabled value\par
+ * @see MPU6050_RA_I2C_MST_CTRL\par
+ */\par
+\cf0 bool MPU6050::getWaitForExternalSensorEnabled() \{\par
+    I2Cdev::readBit(devAddr, MPU6050_RA_I2C_MST_CTRL, MPU6050_WAIT_FOR_ES_BIT, buffer);\par
+    return buffer[0];\par
+\}\par
+\cf2 /** Set wait-for-external-sensor-data enabled value.\par
+ * @param enabled New wait-for-external-sensor-data enabled value\par
+ * @see getWaitForExternalSensorEnabled()\par
+ * @see MPU6050_RA_I2C_MST_CTRL\par
+ */\par
+\cf0 void MPU6050::setWaitForExternalSensorEnabled(bool enabled) \{\par
+    I2Cdev::writeBit(devAddr, MPU6050_RA_I2C_MST_CTRL, MPU6050_WAIT_FOR_ES_BIT, enabled);\par
+\}\par
+\cf2 /** Get Slave 3 FIFO enabled value.\par
+ * When set to 1, this bit enables EXT_SENS_DATA registers (Registers 73 to 96) associated with Slave 3 to be written into the FIFO buffer.\par
+ * @return Current Slave 3 FIFO enabled value\par
+ * @see MPU6050_RA_MST_CTRL\par
+ */\par
+\cf0 bool MPU6050::getSlave3FIFOEnabled() \{\par
+    I2Cdev::readBit(devAddr, MPU6050_RA_I2C_MST_CTRL, MPU6050_SLV_3_FIFO_EN_BIT, buffer);\par
+    return buffer[0];\par
+\}\par
+\cf2 /** Set Slave 3 FIFO enabled value.\par
+ * @param enabled New Slave 3 FIFO enabled value\par
+ * @see getSlave3FIFOEnabled()\par
+ * @see MPU6050_RA_MST_CTRL\par
+ */\cf0\par
+void MPU6050::setSlave3FIFOEnabled(bool enabled) \{\par
+    I2Cdev::writeBit(devAddr, MPU6050_RA_I2C_MST_CTRL, MPU6050_SLV_3_FIFO_EN_BIT, enabled);\par
+\}\par
+\cf2 /** Get slave read/write transition enabled value.\par
+ * The I2C_MST_P_NSR bit configures the I2C Master's transition from one slave read to the next slave read. If the bit equals 0, there will be a restart between reads. If the bit equals 1, there will be a stop followed by a start of the following read. When a write transaction follows a read transaction, the stop followed by a start of the successive write will be always used.\par
+ *\par
+ * @return Current slave read/write transition enabled value\par
+ * @see MPU6050_RA_I2C_MST_CTRL\par
+ */\par
+\cf0 bool MPU6050::getSlaveReadWriteTransitionEnabled() \{\par
+    I2Cdev::readBit(devAddr, MPU6050_RA_I2C_MST_CTRL, MPU6050_I2C_MST_P_NSR_BIT, buffer);\par
+    return buffer[0];\par
+\}\par
+\cf2 /** Set slave read/write transition enabled value.\par
+ * @param enabled New slave read/write transition enabled value\par
+ * @see getSlaveReadWriteTransitionEnabled()\par
+ * @see MPU6050_RA_I2C_MST_CTRL\par
+ */\cf0\par
+void MPU6050::setSlaveReadWriteTransitionEnabled(bool enabled) \{\par
+    I2Cdev::writeBit(devAddr, MPU6050_RA_I2C_MST_CTRL, MPU6050_I2C_MST_P_NSR_BIT, enabled);\par
+\}\par
+\cf2 /** Get I2C master clock speed.\par
+ * I2C_MST_CLK is a 4 bit unsigned value which configures a divider on the MPU-60X0 internal 8MHz clock. It sets the I2C master clock speed according to the following table:\par
+ *\par
+ * <pre>\par
+ * I2C_MST_CLK | I2C Master Clock Speed | 8MHz Clock Divider\par
+ * ------------+------------------------+-------------------\par
+ * 0           | 348kHz                 | 23\par
+ * 1           | 333kHz                 | 24\par
+ * 2           | 320kHz                 | 25\par
+ * 3           | 308kHz                 | 26\par
+ * 4           | 296kHz                 | 27\par
+ * 5           | 286kHz                 | 28\par
+ * 6           | 276kHz                 | 29\par
+ * 7           | 267kHz                 | 30\par
+ * 8           | 258kHz                 | 31\par
+ * 9           | 500kHz                 | 16\par
+ * 10          | 471kHz                 | 17\par
+ * 11          | 444kHz                 | 18\par
+ * 12          | 421kHz                 | 19\par
+ * 13          | 400kHz                 | 20\par
+ * 14          | 381kHz                 | 21\par
+ * 15          | 364kHz                 | 22\par
+ * </pre>\par
+ *\par
+ * @return Current I2C master clock speed\par
+ * @see MPU6050_RA_I2C_MST_CTRL\par
+ */\par
+\cf0 uint8_t MPU6050::getMasterClockSpeed() \{\par
+    I2Cdev::readBits(devAddr, MPU6050_RA_I2C_MST_CTRL, MPU6050_I2C_MST_CLK_BIT, MPU6050_I2C_MST_CLK_LENGTH, buffer);\par
+    return buffer[0];\par
+\}\par
+\cf2 /** Set I2C master clock speed.\par
+ * @reparam speed Current I2C master clock speed\par
+ * @see MPU6050_RA_I2C_MST_CTRL\par
+ */\par
+\cf0 void MPU6050::setMasterClockSpeed(uint8_t speed) \{\par
+    I2Cdev::writeBits(devAddr, MPU6050_RA_I2C_MST_CTRL, MPU6050_I2C_MST_CLK_BIT, MPU6050_I2C_MST_CLK_LENGTH, speed);\par
+\}\par
+\par
+\cf3 // I2C_SLV* registers (Slave 0-3)\cf0\par
+\par
+\cf2 /** Get the I2C address of the specified slave (0-3).\par
+ * Note that Bit 7 (MSB) controls read/write mode. If Bit 7 is set, it's a read operation, and if it is cleared, then it's a write operation. The remaining bits (6-0) are the 7-bit device address of the slave device.\par
+ *\par
+ * In read mode, the result of the read is placed in the lowest available  EXT_SENS_DATA register. For further information regarding the allocation of read results, please refer to the EXT_SENS_DATA register description (Registers 73 - 96).\par
+ *\par
+ * The MPU-6050 supports a total of five slaves, but Slave 4 has unique characteristics, and so it has its own functions (getSlave4* and setSlave4*).\par
+ *\par
+ * I2C data transactions are performed at the Sample Rate, as defined in Register 25. The user is responsible for ensuring that I2C data transactions to and from each enabled Slave can be completed within a single period of the Sample Rate.\par
+ *\par
+ * The I2C slave access rate can be reduced relative to the Sample Rate. This reduced access rate is determined by I2C_MST_DLY (Register 52). Whether a slave's access rate is reduced relative to the Sample Rate is determined by I2C_MST_DELAY_CTRL (Register 103).\par
+ *\par
+ * The processing order for the slaves is fixed. The sequence followed for processing the slaves is Slave 0, Slave 1, Slave 2, Slave 3 and Slave 4. If a particular Slave is disabled it will be skipped.\par
+ *\par
+ * Each slave can either be accessed at the sample rate or at a reduced sample rate. In a case where some slaves are accessed at the Sample Rate and some slaves are accessed at the reduced rate, the sequence of accessing the slaves (Slave 0 to Slave 4) is still followed. However, the reduced rate slaves will be skipped if their access rate dictates that they should not be accessed during that particular cycle. For further information regarding the reduced access rate, please refer to Register 52. Whether a slave is accessed at the Sample Rate or at the reduced rate is determined by the Delay Enable bits in Register 103.\par
+ *\par
+ * @param num Slave number (0-3)\par
+ * @return Current address for specified slave\par
+ * @see MPU6050_RA_I2C_SLV0_ADDR\par
+ */\par
+\cf0 uint8_t MPU6050::getSlaveAddress(uint8_t num) \{\par
+    if (num > 3) return 0;\par
+    I2Cdev::readByte(devAddr, MPU6050_RA_I2C_SLV0_ADDR + num*3, buffer);\par
+    return buffer[0];\cf2\par
+\cf0\}\cf2\par
+/** Set the I2C address of the specified slave (0-3).\par
+ * @param num Slave number (0-3)\par
+ * @param address New address for specified slave\par
+ * @see getSlaveAddress()\par
+ * @see MPU6050_RA_I2C_SLV0_ADDR\par
+ */\par
+\cf0 void MPU6050::setSlaveAddress(uint8_t num, uint8_t address) \{\par
+    if (num > 3) return;\par
+    I2Cdev::writeByte(devAddr, MPU6050_RA_I2C_SLV0_ADDR + num*3, address);\par
+\}\par
+\cf2 /** Get the active internal register for the specified slave (0-3).\par
+ * Read/write operations for this slave will be done to whatever internal register address is stored in this MPU register.\par
+ *\par
+ * The MPU-6050 supports a total of five slaves, but Slave 4 has unique characteristics, and so it has its own functions.\par
+ *\par
+ * @param num Slave number (0-3)\par
+ * @return Current active register for specified slave\par
+ * @see MPU6050_RA_I2C_SLV0_REG\par
+ */\par
+\cf0 uint8_t MPU6050::getSlaveRegister(uint8_t num) \{\par
+    if (num > 3) return 0;\par
+    I2Cdev::readByte(devAddr, MPU6050_RA_I2C_SLV0_REG + num*3, buffer);\par
+    return buffer[0];\par
+\}\par
+\cf2 /** Set the active internal register for the specified slave (0-3).\par
+ * @param num Slave number (0-3)\par
+ * @param reg New active register for specified slave\par
+ * @see getSlaveRegister()\par
+ * @see MPU6050_RA_I2C_SLV0_REG\par
+ */\cf0\par
+void MPU6050::setSlaveRegister(uint8_t num, uint8_t reg) \{\par
+    if (num > 3) return;\par
+    I2Cdev::writeByte(devAddr, MPU6050_RA_I2C_SLV0_REG + num*3, reg);\par
+\}\par
+\cf2 /** Get the enabled value for the specified slave (0-3).\par
+ * When set to 1, this bit enables Slave 0 for data transfer operations. When cleared to 0, this bit disables Slave 0 from data transfer operations.\par
+ * @param num Slave number (0-3)\par
+ * @return Current enabled value for specified slave\par
+ * @see MPU6050_RA_I2C_SLV0_CTRL\par
+ */\par
+\cf0 bool MPU6050::getSlaveEnabled(uint8_t num) \{\par
+    if (num > 3) return 0;\par
+    I2Cdev::readBit(devAddr, MPU6050_RA_I2C_SLV0_CTRL + num*3, MPU6050_I2C_SLV_EN_BIT, buffer);\par
+    return buffer[0];\par
+\}\par
+\cf2 /** Set the enabled value for the specified slave (0-3).\par
+ * @param num Slave number (0-3)\par
+ * @param enabled New enabled value for specified slave\par
+ * @see getSlaveEnabled()\par
+ * @see MPU6050_RA_I2C_SLV0_CTRL\par
+ */\cf0\par
+void MPU6050::setSlaveEnabled(uint8_t num, bool enabled) \{\par
+    if (num > 3) return;\par
+    I2Cdev::writeBit(devAddr, MPU6050_RA_I2C_SLV0_CTRL + num*3, MPU6050_I2C_SLV_EN_BIT, enabled);\par
+\}\par
+\cf2 /** Get word pair byte-swapping enabled for the specified slave (0-3). When set to 1, this bit enables byte swapping. When byte swapping is enabled, the high and low bytes of a word pair are swapped. Please refer to I2C_SLV0_GRP for the pairing convention of the word pairs. When cleared to 0, bytes transferred to and from Slave 0 will be written to EXT_SENS_DATA registers in the order they were transferred.\par
+ *\par
+ * @param num Slave number (0-3)\par
+ * @return Current word pair byte-swapping enabled value for specified slave\par
+ * @see MPU6050_RA_I2C_SLV0_CTRL\par
+ */\par
+\cf0 bool MPU6050::getSlaveWordByteSwap(uint8_t num) \{\par
+    if (num > 3) return 0;\par
+    I2Cdev::readBit(devAddr, MPU6050_RA_I2C_SLV0_CTRL + num*3, MPU6050_I2C_SLV_BYTE_SW_BIT, buffer);\par
+    return buffer[0];\par
+\}\par
+\cf2 /** Set word pair byte-swapping enabled for the specified slave (0-3).\par
+ * @param num Slave number (0-3)\par
+ * @param enabled New word pair byte-swapping enabled value for specified slave\par
+ * @see getSlaveWordByteSwap()\par
+ * @see MPU6050_RA_I2C_SLV0_CTRL\par
+ */\par
+\cf0 void MPU6050::setSlaveWordByteSwap(uint8_t num, bool enabled) \{\par
+    if (num > 3) return;\par
+    I2Cdev::writeBit(devAddr, MPU6050_RA_I2C_SLV0_CTRL + num*3, MPU6050_I2C_SLV_BYTE_SW_BIT, enabled);\par
+\}\par
+/** Get write mode for the specified slave (0-3).\par
+ * When set to 1, the transaction will read or write data only. When cleared to\par
+ * 0, the transaction will write a register address prior to reading or writing\par
+ * data. This should equal 0 when specifying the register address within the\par
+ * Slave device to/from which the ensuing data transaction will take place.\par
+ *\par
+ * @param num Slave number (0-3)\par
+ * @return Current write mode for specified slave (0 = register address + data, 1 = data only)\par
+ * @see MPU6050_RA_I2C_SLV0_CTRL\par
+ */\par
+bool MPU6050::getSlaveWriteMode(uint8_t num) \{\par
+    if (num > 3) return 0;\par
+    I2Cdev::readBit(devAddr, MPU6050_RA_I2C_SLV0_CTRL + num*3, MPU6050_I2C_SLV_REG_DIS_BIT, buffer);\par
+    return buffer[0];\par
+\}\par
+/** Set write mode for the specified slave (0-3).\par
+ * @param num Slave number (0-3)\par
+ * @param mode New write mode for specified slave (0 = register address + data, 1 = data only)\par
+ * @see getSlaveWriteMode()\par
+ * @see MPU6050_RA_I2C_SLV0_CTRL\par
+ */\par
+void MPU6050::setSlaveWriteMode(uint8_t num, bool mode) \{\par
+    if (num > 3) return;\par
+    I2Cdev::writeBit(devAddr, MPU6050_RA_I2C_SLV0_CTRL + num*3, MPU6050_I2C_SLV_REG_DIS_BIT, mode);\par
+\}\par
+/** Get word pair grouping order offset for the specified slave (0-3).\par
+ * This sets specifies the grouping order of word pairs received from registers.\par
+ * When cleared to 0, bytes from register addresses 0 and 1, 2 and 3, etc (even,\par
+ * then odd register addresses) are paired to form a word. When set to 1, bytes\par
+ * from register addresses are paired 1 and 2, 3 and 4, etc. (odd, then even\par
+ * register addresses) are paired to form a word.\par
+ *\par
+ * @param num Slave number (0-3)\par
+ * @return Current word pair grouping order offset for specified slave\par
+ * @see MPU6050_RA_I2C_SLV0_CTRL\par
+ */\par
+bool MPU6050::getSlaveWordGroupOffset(uint8_t num) \{\par
+    if (num > 3) return 0;\par
+    I2Cdev::readBit(devAddr, MPU6050_RA_I2C_SLV0_CTRL + num*3, MPU6050_I2C_SLV_GRP_BIT, buffer);\par
+    return buffer[0];\par
+\}\par
+/** Set word pair grouping order offset for the specified slave (0-3).\par
+ * @param num Slave number (0-3)\par
+ * @param enabled New word pair grouping order offset for specified slave\par
+ * @see getSlaveWordGroupOffset()\par
+ * @see MPU6050_RA_I2C_SLV0_CTRL\par
+ */\par
+void MPU6050::setSlaveWordGroupOffset(uint8_t num, bool enabled) \{\par
+    if (num > 3) return;\par
+    I2Cdev::writeBit(devAddr, MPU6050_RA_I2C_SLV0_CTRL + num*3, MPU6050_I2C_SLV_GRP_BIT, enabled);\par
+\}\par
+/** Get number of bytes to read for the specified slave (0-3).\par
+ * Specifies the number of bytes transferred to and from Slave 0. Clearing this\par
+ * bit to 0 is equivalent to disabling the register by writing 0 to I2C_SLV0_EN.\par
+ * @param num Slave number (0-3)\par
+ * @return Number of bytes to read for specified slave\par
+ * @see MPU6050_RA_I2C_SLV0_CTRL\par
+ */\par
+uint8_t MPU6050::getSlaveDataLength(uint8_t num) \{\par
+    if (num > 3) return 0;\par
+    I2Cdev::readBits(devAddr, MPU6050_RA_I2C_SLV0_CTRL + num*3, MPU6050_I2C_SLV_LEN_BIT, MPU6050_I2C_SLV_LEN_LENGTH, buffer);\par
+    return buffer[0];\par
+\}\par
+/** Set number of bytes to read for the specified slave (0-3).\par
+ * @param num Slave number (0-3)\par
+ * @param length Number of bytes to read for specified slave\par
+ * @see getSlaveDataLength()\par
+ * @see MPU6050_RA_I2C_SLV0_CTRL\par
+ */\par
+void MPU6050::setSlaveDataLength(uint8_t num, uint8_t length) \{\par
+    if (num > 3) return;\par
+    I2Cdev::writeBits(devAddr, MPU6050_RA_I2C_SLV0_CTRL + num*3, MPU6050_I2C_SLV_LEN_BIT, MPU6050_I2C_SLV_LEN_LENGTH, length);\par
+\}\par
+\par
+// I2C_SLV* registers (Slave 4)\par
+\par
+/** Get the I2C address of Slave 4.\par
+ * Note that Bit 7 (MSB) controls read/write mode. If Bit 7 is set, it's a read\par
+ * operation, and if it is cleared, then it's a write operation. The remaining\par
+ * bits (6-0) are the 7-bit device address of the slave device.\par
+ *\par
+ * @return Current address for Slave 4\par
+ * @see getSlaveAddress()\par
+ * @see MPU6050_RA_I2C_SLV4_ADDR\par
+ */\par
+uint8_t MPU6050::getSlave4Address() \{\par
+    I2Cdev::readByte(devAddr, MPU6050_RA_I2C_SLV4_ADDR, buffer);\par
+    return buffer[0];\par
+\}\par
+/** Set the I2C address of Slave 4.\par
+ * @param address New address for Slave 4\par
+ * @see getSlave4Address()\par
+ * @see MPU6050_RA_I2C_SLV4_ADDR\par
+ */\par
+void MPU6050::setSlave4Address(uint8_t address) \{\par
+    I2Cdev::writeByte(devAddr, MPU6050_RA_I2C_SLV4_ADDR, address);\par
+\}\par
+/** Get the active internal register for the Slave 4.\par
+ * Read/write operations for this slave will be done to whatever internal\par
+ * register address is stored in this MPU register.\par
+ *\par
+ * @return Current active register for Slave 4\par
+ * @see MPU6050_RA_I2C_SLV4_REG\par
+ */\par
+uint8_t MPU6050::getSlave4Register() \{\par
+    I2Cdev::readByte(devAddr, MPU6050_RA_I2C_SLV4_REG, buffer);\par
+    return buffer[0];\par
+\}\par
+/** Set the active internal register for Slave 4.\par
+ * @param reg New active register for Slave 4\par
+ * @see getSlave4Register()\par
+ * @see MPU6050_RA_I2C_SLV4_REG\par
+ */\par
+void MPU6050::setSlave4Register(uint8_t reg) \{\par
+    I2Cdev::writeByte(devAddr, MPU6050_RA_I2C_SLV4_REG, reg);\par
+\}\par
+/** Set new byte to write to Slave 4.\par
+ * This register stores the data to be written into the Slave 4. If I2C_SLV4_RW\par
+ * is set 1 (set to read), this register has no effect.\par
+ * @param data New byte to write to Slave 4\par
+ * @see MPU6050_RA_I2C_SLV4_DO\par
+ */\par
+void MPU6050::setSlave4OutputByte(uint8_t data) \{\par
+    I2Cdev::writeByte(devAddr, MPU6050_RA_I2C_SLV4_DO, data);\par
+\}\par
+/** Get the enabled value for the Slave 4.\par
+ * When set to 1, this bit enables Slave 4 for data transfer operations. When\par
+ * cleared to 0, this bit disables Slave 4 from data transfer operations.\par
+ * @return Current enabled value for Slave 4\par
+ * @see MPU6050_RA_I2C_SLV4_CTRL\par
+ */\par
+bool MPU6050::getSlave4Enabled() \{\par
+    I2Cdev::readBit(devAddr, MPU6050_RA_I2C_SLV4_CTRL, MPU6050_I2C_SLV4_EN_BIT, buffer);\par
+    return buffer[0];\par
+\}\par
+/** Set the enabled value for Slave 4.\par
+ * @param enabled New enabled value for Slave 4\par
+ * @see getSlave4Enabled()\par
+ * @see MPU6050_RA_I2C_SLV4_CTRL\par
+ */\par
+void MPU6050::setSlave4Enabled(bool enabled) \{\par
+    I2Cdev::writeBit(devAddr, MPU6050_RA_I2C_SLV4_CTRL, MPU6050_I2C_SLV4_EN_BIT, enabled);\par
+\}\par
+/** Get the enabled value for Slave 4 transaction interrupts.\par
+ * When set to 1, this bit enables the generation of an interrupt signal upon\par
+ * completion of a Slave 4 transaction. When cleared to 0, this bit disables the\par
+ * generation of an interrupt signal upon completion of a Slave 4 transaction.\par
+ * The interrupt status can be observed in Register 54.\par
+ *\par
+ * @return Current enabled value for Slave 4 transaction interrupts.\par
+ * @see MPU6050_RA_I2C_SLV4_CTRL\par
+ */\par
+bool MPU6050::getSlave4InterruptEnabled() \{\par
+    I2Cdev::readBit(devAddr, MPU6050_RA_I2C_SLV4_CTRL, MPU6050_I2C_SLV4_INT_EN_BIT, buffer);\par
+    return buffer[0];\par
+\}\par
+/** Set the enabled value for Slave 4 transaction interrupts.\par
+ * @param enabled New enabled value for Slave 4 transaction interrupts.\par
+ * @see getSlave4InterruptEnabled()\par
+ * @see MPU6050_RA_I2C_SLV4_CTRL\par
+ */\par
+void MPU6050::setSlave4InterruptEnabled(bool enabled) \{\par
+    I2Cdev::writeBit(devAddr, MPU6050_RA_I2C_SLV4_CTRL, MPU6050_I2C_SLV4_INT_EN_BIT, enabled);\par
+\}\par
+/** Get write mode for Slave 4.\par
+ * When set to 1, the transaction will read or write data only. When cleared to\par
+ * 0, the transaction will write a register address prior to reading or writing\par
+ * data. This should equal 0 when specifying the register address within the\par
+ * Slave device to/from which the ensuing data transaction will take place.\par
+ *\par
+ * @return Current write mode for Slave 4 (0 = register address + data, 1 = data only)\par
+ * @see MPU6050_RA_I2C_SLV4_CTRL\par
+ */\par
+bool MPU6050::getSlave4WriteMode() \{\par
+    I2Cdev::readBit(devAddr, MPU6050_RA_I2C_SLV4_CTRL, MPU6050_I2C_SLV4_REG_DIS_BIT, buffer);\par
+    return buffer[0];\par
+\}\par
+/** Set write mode for the Slave 4.\par
+ * @param mode New write mode for Slave 4 (0 = register address + data, 1 = data only)\par
+ * @see getSlave4WriteMode()\par
+ * @see MPU6050_RA_I2C_SLV4_CTRL\par
+ */\par
+void MPU6050::setSlave4WriteMode(bool mode) \{\par
+    I2Cdev::writeBit(devAddr, MPU6050_RA_I2C_SLV4_CTRL, MPU6050_I2C_SLV4_REG_DIS_BIT, mode);\par
+\}\par
+/** Get Slave 4 master delay value.\par
+ * This configures the reduced access rate of I2C slaves relative to the Sample\par
+ * Rate. When a slave's access rate is decreased relative to the Sample Rate,\par
+ * the slave is accessed every:\par
+ *\par
+ *     1 / (1 + I2C_MST_DLY) samples\par
+ *\par
+ * This base Sample Rate in turn is determined by SMPLRT_DIV (register 25) and\par
+ * DLPF_CFG (register 26). Whether a slave's access rate is reduced relative to\par
+ * the Sample Rate is determined by I2C_MST_DELAY_CTRL (register 103). For\par
+ * further information regarding the Sample Rate, please refer to register 25.\par
+ *\par
+ * @return Current Slave 4 master delay value\par
+ * @see MPU6050_RA_I2C_SLV4_CTRL\par
+ */\par
+uint8_t MPU6050::getSlave4MasterDelay() \{\par
+    I2Cdev::readBits(devAddr, MPU6050_RA_I2C_SLV4_CTRL, MPU6050_I2C_SLV4_MST_DLY_BIT, MPU6050_I2C_SLV4_MST_DLY_LENGTH, buffer);\par
+    return buffer[0];\par
+\}\par
+/** Set Slave 4 master delay value.\par
+ * @param delay New Slave 4 master delay value\par
+ * @see getSlave4MasterDelay()\par
+ * @see MPU6050_RA_I2C_SLV4_CTRL\par
+ */\par
+void MPU6050::setSlave4MasterDelay(uint8_t delay) \{\par
+    I2Cdev::writeBits(devAddr, MPU6050_RA_I2C_SLV4_CTRL, MPU6050_I2C_SLV4_MST_DLY_BIT, MPU6050_I2C_SLV4_MST_DLY_LENGTH, delay);\par
+\}\par
+/** Get last available byte read from Slave 4.\par
+ * This register stores the data read from Slave 4. This field is populated\par
+ * after a read transaction.\par
+ * @return Last available byte read from to Slave 4\par
+ * @see MPU6050_RA_I2C_SLV4_DI\par
+ */\par
+uint8_t MPU6050::getSlate4InputByte() \{\par
+    I2Cdev::readByte(devAddr, MPU6050_RA_I2C_SLV4_DI, buffer);\par
+    return buffer[0];\par
+\}\par
+\par
+// I2C_MST_STATUS register\par
+\par
+/** Get FSYNC interrupt status.\par
+ * This bit reflects the status of the FSYNC interrupt from an external device\par
+ * into the MPU-60X0. This is used as a way to pass an external interrupt\par
+ * through the MPU-60X0 to the host application processor. When set to 1, this\par
+ * bit will cause an interrupt if FSYNC_INT_EN is asserted in INT_PIN_CFG\par
+ * (Register 55).\par
+ * @return FSYNC interrupt status\par
+ * @see MPU6050_RA_I2C_MST_STATUS\par
+ */\par
+bool MPU6050::getPassthroughStatus() \{\par
+    I2Cdev::readBit(devAddr, MPU6050_RA_I2C_MST_STATUS, MPU6050_MST_PASS_THROUGH_BIT, buffer);\par
+    return buffer[0];\par
+\}\par
+/** Get Slave 4 transaction done status.\par
+ * Automatically sets to 1 when a Slave 4 transaction has completed. This\par
+ * triggers an interrupt if the I2C_MST_INT_EN bit in the INT_ENABLE register\par
+ * (Register 56) is asserted and if the SLV_4_DONE_INT bit is asserted in the\par
+ * I2C_SLV4_CTRL register (Register 52).\par
+ * @return Slave 4 transaction done status\par
+ * @see MPU6050_RA_I2C_MST_STATUS\par
+ */\par
+bool MPU6050::getSlave4IsDone() \{\par
+    I2Cdev::readBit(devAddr, MPU6050_RA_I2C_MST_STATUS, MPU6050_MST_I2C_SLV4_DONE_BIT, buffer);\par
+    return buffer[0];\par
+\}\par
+/** Get master arbitration lost status.\par
+ * This bit automatically sets to 1 when the I2C Master has lost arbitration of\par
+ * the auxiliary I2C bus (an error condition). This triggers an interrupt if the\par
+ * I2C_MST_INT_EN bit in the INT_ENABLE register (Register 56) is asserted.\par
+ * @return Master arbitration lost status\par
+ * @see MPU6050_RA_I2C_MST_STATUS\par
+ */\par
+bool MPU6050::getLostArbitration() \{\par
+    I2Cdev::readBit(devAddr, MPU6050_RA_I2C_MST_STATUS, MPU6050_MST_I2C_LOST_ARB_BIT, buffer);\par
+    return buffer[0];\par
+\}\par
+/** Get Slave 4 NACK status.\par
+ * This bit automatically sets to 1 when the I2C Master receives a NACK in a\par
+ * transaction with Slave 4. This triggers an interrupt if the I2C_MST_INT_EN\par
+ * bit in the INT_ENABLE register (Register 56) is asserted.\par
+ * @return Slave 4 NACK interrupt status\par
+ * @see MPU6050_RA_I2C_MST_STATUS\par
+ */\par
+bool MPU6050::getSlave4Nack() \{\par
+    I2Cdev::readBit(devAddr, MPU6050_RA_I2C_MST_STATUS, MPU6050_MST_I2C_SLV4_NACK_BIT, buffer);\par
+    return buffer[0];\par
+\}\par
+/** Get Slave 3 NACK status.\par
+ * This bit automatically sets to 1 when the I2C Master receives a NACK in a\par
+ * transaction with Slave 3. This triggers an interrupt if the I2C_MST_INT_EN\par
+ * bit in the INT_ENABLE register (Register 56) is asserted.\par
+ * @return Slave 3 NACK interrupt status\par
+ * @see MPU6050_RA_I2C_MST_STATUS\par
+ */\par
+bool MPU6050::getSlave3Nack() \{\par
+    I2Cdev::readBit(devAddr, MPU6050_RA_I2C_MST_STATUS, MPU6050_MST_I2C_SLV3_NACK_BIT, buffer);\par
+    return buffer[0];\par
+\}\par
+/** Get Slave 2 NACK status.\par
+ * This bit automatically sets to 1 when the I2C Master receives a NACK in a\par
+ * transaction with Slave 2. This triggers an interrupt if the I2C_MST_INT_EN\par
+ * bit in the INT_ENABLE register (Register 56) is asserted.\par
+ * @return Slave 2 NACK interrupt status\par
+ * @see MPU6050_RA_I2C_MST_STATUS\par
+ */\par
+bool MPU6050::getSlave2Nack() \{\par
+    I2Cdev::readBit(devAddr, MPU6050_RA_I2C_MST_STATUS, MPU6050_MST_I2C_SLV2_NACK_BIT, buffer);\par
+    return buffer[0];\par
+\}\par
+/** Get Slave 1 NACK status.\par
+ * This bit automatically sets to 1 when the I2C Master receives a NACK in a\par
+ * transaction with Slave 1. This triggers an interrupt if the I2C_MST_INT_EN\par
+ * bit in the INT_ENABLE register (Register 56) is asserted.\par
+ * @return Slave 1 NACK interrupt status\par
+ * @see MPU6050_RA_I2C_MST_STATUS\par
+ */\par
+bool MPU6050::getSlave1Nack() \{\par
+    I2Cdev::readBit(devAddr, MPU6050_RA_I2C_MST_STATUS, MPU6050_MST_I2C_SLV1_NACK_BIT, buffer);\par
+    return buffer[0];\par
+\}\par
+/** Get Slave 0 NACK status.\par
+ * This bit automatically sets to 1 when the I2C Master receives a NACK in a\par
+ * transaction with Slave 0. This triggers an interrupt if the I2C_MST_INT_EN\par
+ * bit in the INT_ENABLE register (Register 56) is asserted.\par
+ * @return Slave 0 NACK interrupt status\par
+ * @see MPU6050_RA_I2C_MST_STATUS\par
+ */\par
+bool MPU6050::getSlave0Nack() \{\par
+    I2Cdev::readBit(devAddr, MPU6050_RA_I2C_MST_STATUS, MPU6050_MST_I2C_SLV0_NACK_BIT, buffer);\par
+    return buffer[0];\par
+\}\par
+\par
+// INT_PIN_CFG register\par
+\par
+/** Get interrupt logic level mode.\par
+ * Will be set 0 for active-high, 1 for active-low.\par
+ * @return Current interrupt mode (0=active-high, 1=active-low)\par
+ * @see MPU6050_RA_INT_PIN_CFG\par
+ * @see MPU6050_INTCFG_INT_LEVEL_BIT\par
+ */\par
+bool MPU6050::getInterruptMode() \{\par
+    I2Cdev::readBit(devAddr, MPU6050_RA_INT_PIN_CFG, MPU6050_INTCFG_INT_LEVEL_BIT, buffer);\par
+    return buffer[0];\par
+\}\par
+/** Set interrupt logic level mode.\par
+ * @param mode New interrupt mode (0=active-high, 1=active-low)\par
+ * @see getInterruptMode()\par
+ * @see MPU6050_RA_INT_PIN_CFG\par
+ * @see MPU6050_INTCFG_INT_LEVEL_BIT\par
+ */\par
+void MPU6050::setInterruptMode(bool mode) \{\par
+   I2Cdev::writeBit(devAddr, MPU6050_RA_INT_PIN_CFG, MPU6050_INTCFG_INT_LEVEL_BIT, mode);\par
+\}\par
+/** Get interrupt drive mode.\par
+ * Will be set 0 for push-pull, 1 for open-drain.\par
+ * @return Current interrupt drive mode (0=push-pull, 1=open-drain)\par
+ * @see MPU6050_RA_INT_PIN_CFG\par
+ * @see MPU6050_INTCFG_INT_OPEN_BIT\par
+ */\par
+bool MPU6050::getInterruptDrive() \{\par
+    I2Cdev::readBit(devAddr, MPU6050_RA_INT_PIN_CFG, MPU6050_INTCFG_INT_OPEN_BIT, buffer);\par
+    return buffer[0];\par
+\}\par
+/** Set interrupt drive mode.\par
+ * @param drive New interrupt drive mode (0=push-pull, 1=open-drain)\par
+ * @see getInterruptDrive()\par
+ * @see MPU6050_RA_INT_PIN_CFG\par
+ * @see MPU6050_INTCFG_INT_OPEN_BIT\par
+ */\par
+void MPU6050::setInterruptDrive(bool drive) \{\par
+    I2Cdev::writeBit(devAddr, MPU6050_RA_INT_PIN_CFG, MPU6050_INTCFG_INT_OPEN_BIT, drive);\par
+\}\par
+/** Get interrupt latch mode.\par
+ * Will be set 0 for 50us-pulse, 1 for latch-until-int-cleared.\par
+ * @return Current latch mode (0=50us-pulse, 1=latch-until-int-cleared)\par
+ * @see MPU6050_RA_INT_PIN_CFG\par
+ * @see MPU6050_INTCFG_LATCH_INT_EN_BIT\par
+ */\par
+bool MPU6050::getInterruptLatch() \{\par
+    I2Cdev::readBit(devAddr, MPU6050_RA_INT_PIN_CFG, MPU6050_INTCFG_LATCH_INT_EN_BIT, buffer);\par
+    return buffer[0];\par
+\}\par
+/** Set interrupt latch mode.\par
+ * @param latch New latch mode (0=50us-pulse, 1=latch-until-int-cleared)\par
+ * @see getInterruptLatch()\par
+ * @see MPU6050_RA_INT_PIN_CFG\par
+ * @see MPU6050_INTCFG_LATCH_INT_EN_BIT\par
+ */\par
+void MPU6050::setInterruptLatch(bool latch) \{\par
+    I2Cdev::writeBit(devAddr, MPU6050_RA_INT_PIN_CFG, MPU6050_INTCFG_LATCH_INT_EN_BIT, latch);\par
+\}\par
+/** Get interrupt latch clear mode.\par
+ * Will be set 0 for status-read-only, 1 for any-register-read.\par
+ * @return Current latch clear mode (0=status-read-only, 1=any-register-read)\par
+ * @see MPU6050_RA_INT_PIN_CFG\par
+ * @see MPU6050_INTCFG_INT_RD_CLEAR_BIT\par
+ */\par
+bool MPU6050::getInterruptLatchClear() \{\par
+    I2Cdev::readBit(devAddr, MPU6050_RA_INT_PIN_CFG, MPU6050_INTCFG_INT_RD_CLEAR_BIT, buffer);\par
+    return buffer[0];\par
+\}\par
+/** Set interrupt latch clear mode.\par
+ * @param clear New latch clear mode (0=status-read-only, 1=any-register-read)\par
+ * @see getInterruptLatchClear()\par
+ * @see MPU6050_RA_INT_PIN_CFG\par
+ * @see MPU6050_INTCFG_INT_RD_CLEAR_BIT\par
+ */\par
+void MPU6050::setInterruptLatchClear(bool clear) \{\par
+    I2Cdev::writeBit(devAddr, MPU6050_RA_INT_PIN_CFG, MPU6050_INTCFG_INT_RD_CLEAR_BIT, clear);\par
+\}\par
+/** Get FSYNC interrupt logic level mode.\par
+ * @return Current FSYNC interrupt mode (0=active-high, 1=active-low)\par
+ * @see getFSyncInterruptMode()\par
+ * @see MPU6050_RA_INT_PIN_CFG\par
+ * @see MPU6050_INTCFG_FSYNC_INT_LEVEL_BIT\par
+ */\par
+bool MPU6050::getFSyncInterruptLevel() \{\par
+    I2Cdev::readBit(devAddr, MPU6050_RA_INT_PIN_CFG, MPU6050_INTCFG_FSYNC_INT_LEVEL_BIT, buffer);\par
+    return buffer[0];\par
+\}\par
+/** Set FSYNC interrupt logic level mode.\par
+ * @param mode New FSYNC interrupt mode (0=active-high, 1=active-low)\par
+ * @see getFSyncInterruptMode()\par
+ * @see MPU6050_RA_INT_PIN_CFG\par
+ * @see MPU6050_INTCFG_FSYNC_INT_LEVEL_BIT\par
+ */\par
+void MPU6050::setFSyncInterruptLevel(bool level) \{\par
+    I2Cdev::writeBit(devAddr, MPU6050_RA_INT_PIN_CFG, MPU6050_INTCFG_FSYNC_INT_LEVEL_BIT, level);\par
+\}\par
+/** Get FSYNC pin interrupt enabled setting.\par
+ * Will be set 0 for disabled, 1 for enabled.\par
+ * @return Current interrupt enabled setting\par
+ * @see MPU6050_RA_INT_PIN_CFG\par
+ * @see MPU6050_INTCFG_FSYNC_INT_EN_BIT\par
+ */\par
+bool MPU6050::getFSyncInterruptEnabled() \{\par
+    I2Cdev::readBit(devAddr, MPU6050_RA_INT_PIN_CFG, MPU6050_INTCFG_FSYNC_INT_EN_BIT, buffer);\par
+    return buffer[0];\par
+\}\par
+/** Set FSYNC pin interrupt enabled setting.\par
+ * @param enabled New FSYNC pin interrupt enabled setting\par
+ * @see getFSyncInterruptEnabled()\par
+ * @see MPU6050_RA_INT_PIN_CFG\par
+ * @see MPU6050_INTCFG_FSYNC_INT_EN_BIT\par
+ */\par
+void MPU6050::setFSyncInterruptEnabled(bool enabled) \{\par
+    I2Cdev::writeBit(devAddr, MPU6050_RA_INT_PIN_CFG, MPU6050_INTCFG_FSYNC_INT_EN_BIT, enabled);\par
+\}\par
+/** Get I2C bypass enabled status.\par
+ * When this bit is equal to 1 and I2C_MST_EN (Register 106 bit[5]) is equal to\par
+ * 0, the host application processor will be able to directly access the\par
+ * auxiliary I2C bus of the MPU-60X0. When this bit is equal to 0, the host\par
+ * application processor will not be able to directly access the auxiliary I2C\par
+ * bus of the MPU-60X0 regardless of the state of I2C_MST_EN (Register 106\par
+ * bit[5]).\par
+ * @return Current I2C bypass enabled status\par
+ * @see MPU6050_RA_INT_PIN_CFG\par
+ * @see MPU6050_INTCFG_I2C_BYPASS_EN_BIT\par
+ */\par
+bool MPU6050::getI2CBypassEnabled() \{\par
+    I2Cdev::readBit(devAddr, MPU6050_RA_INT_PIN_CFG, MPU6050_INTCFG_I2C_BYPASS_EN_BIT, buffer);\par
+    return buffer[0];\par
+\}\par
+/** Set I2C bypass enabled status.\par
+ * When this bit is equal to 1 and I2C_MST_EN (Register 106 bit[5]) is equal to\par
+ * 0, the host application processor will be able to directly access the\par
+ * auxiliary I2C bus of the MPU-60X0. When this bit is equal to 0, the host\par
+ * application processor will not be able to directly access the auxiliary I2C\par
+ * bus of the MPU-60X0 regardless of the state of I2C_MST_EN (Register 106\par
+ * bit[5]).\par
+ * @param enabled New I2C bypass enabled status\par
+ * @see MPU6050_RA_INT_PIN_CFG\par
+ * @see MPU6050_INTCFG_I2C_BYPASS_EN_BIT\par
+ */\par
+void MPU6050::setI2CBypassEnabled(bool enabled) \{\par
+    I2Cdev::writeBit(devAddr, MPU6050_RA_INT_PIN_CFG, MPU6050_INTCFG_I2C_BYPASS_EN_BIT, enabled);\par
+\}\par
+/** Get reference clock output enabled status.\par
+ * When this bit is equal to 1, a reference clock output is provided at the\par
+ * CLKOUT pin. When this bit is equal to 0, the clock output is disabled. For\par
+ * further information regarding CLKOUT, please refer to the MPU-60X0 Product\par
+ * Specification document.\par
+ * @return Current reference clock output enabled status\par
+ * @see MPU6050_RA_INT_PIN_CFG\par
+ * @see MPU6050_INTCFG_CLKOUT_EN_BIT\par
+ */\par
+bool MPU6050::getClockOutputEnabled() \{\par
+    I2Cdev::readBit(devAddr, MPU6050_RA_INT_PIN_CFG, MPU6050_INTCFG_CLKOUT_EN_BIT, buffer);\par
+    return buffer[0];\par
+\}\par
+/** Set reference clock output enabled status.\par
+ * When this bit is equal to 1, a reference clock output is provided at the\par
+ * CLKOUT pin. When this bit is equal to 0, the clock output is disabled. For\par
+ * further information regarding CLKOUT, please refer to the MPU-60X0 Product\par
+ * Specification document.\par
+ * @param enabled New reference clock output enabled status\par
+ * @see MPU6050_RA_INT_PIN_CFG\par
+ * @see MPU6050_INTCFG_CLKOUT_EN_BIT\par
+ */\par
+void MPU6050::setClockOutputEnabled(bool enabled) \{\par
+    I2Cdev::writeBit(devAddr, MPU6050_RA_INT_PIN_CFG, MPU6050_INTCFG_CLKOUT_EN_BIT, enabled);\par
+\}\par
+\par
+// INT_ENABLE register\par
+\par
+/** Get full interrupt enabled status.\par
+ * Full register byte for all interrupts, for quick reading. Each bit will be\par
+ * set 0 for disabled, 1 for enabled.\par
+ * @return Current interrupt enabled status\par
+ * @see MPU6050_RA_INT_ENABLE\par
+ * @see MPU6050_INTERRUPT_FF_BIT\par
+ **/\par
+uint8_t MPU6050::getIntEnabled() \{\par
+    I2Cdev::readByte(devAddr, MPU6050_RA_INT_ENABLE, buffer);\par
+    return buffer[0];\par
+\}\par
+/** Set full interrupt enabled status.\par
+ * Full register byte for all interrupts, for quick reading. Each bit should be\par
+ * set 0 for disabled, 1 for enabled.\par
+ * @param enabled New interrupt enabled status\par
+ * @see getIntFreefallEnabled()\par
+ * @see MPU6050_RA_INT_ENABLE\par
+ * @see MPU6050_INTERRUPT_FF_BIT\par
+ **/\par
+void MPU6050::setIntEnabled(uint8_t enabled) \{\par
+    I2Cdev::writeByte(devAddr, MPU6050_RA_INT_ENABLE, enabled);\par
+\}\par
+/** Get Free Fall interrupt enabled status.\par
+ * Will be set 0 for disabled, 1 for enabled.\par
+ * @return Current interrupt enabled status\par
+ * @see MPU6050_RA_INT_ENABLE\par
+ * @see MPU6050_INTERRUPT_FF_BIT\par
+ **/\par
+bool MPU6050::getIntFreefallEnabled() \{\par
+    I2Cdev::readBit(devAddr, MPU6050_RA_INT_ENABLE, MPU6050_INTERRUPT_FF_BIT, buffer);\par
+    return buffer[0];\par
+\}\par
+/** Set Free Fall interrupt enabled status.\par
+ * @param enabled New interrupt enabled status\par
+ * @see getIntFreefallEnabled()\par
+ * @see MPU6050_RA_INT_ENABLE\par
+ * @see MPU6050_INTERRUPT_FF_BIT\par
+ **/\par
+void MPU6050::setIntFreefallEnabled(bool enabled) \{\par
+    I2Cdev::writeBit(devAddr, MPU6050_RA_INT_ENABLE, MPU6050_INTERRUPT_FF_BIT, enabled);\par
+\}\par
+/** Get Motion Detection interrupt enabled status.\par
+ * Will be set 0 for disabled, 1 for enabled.\par
+ * @return Current interrupt enabled status\par
+ * @see MPU6050_RA_INT_ENABLE\par
+ * @see MPU6050_INTERRUPT_MOT_BIT\par
+ **/\par
+bool MPU6050::getIntMotionEnabled() \{\par
+    I2Cdev::readBit(devAddr, MPU6050_RA_INT_ENABLE, MPU6050_INTERRUPT_MOT_BIT, buffer);\par
+    return buffer[0];\par
+\}\par
+/** Set Motion Detection interrupt enabled status.\par
+ * @param enabled New interrupt enabled status\par
+ * @see getIntMotionEnabled()\par
+ * @see MPU6050_RA_INT_ENABLE\par
+ * @see MPU6050_INTERRUPT_MOT_BIT\par
+ **/\par
+void MPU6050::setIntMotionEnabled(bool enabled) \{\par
+    I2Cdev::writeBit(devAddr, MPU6050_RA_INT_ENABLE, MPU6050_INTERRUPT_MOT_BIT, enabled);\par
+\}\par
+/** Get Zero Motion Detection interrupt enabled status.\par
+ * Will be set 0 for disabled, 1 for enabled.\par
+ * @return Current interrupt enabled status\par
+ * @see MPU6050_RA_INT_ENABLE\par
+ * @see MPU6050_INTERRUPT_ZMOT_BIT\par
+ **/\par
+bool MPU6050::getIntZeroMotionEnabled() \{\par
+    I2Cdev::readBit(devAddr, MPU6050_RA_INT_ENABLE, MPU6050_INTERRUPT_ZMOT_BIT, buffer);\par
+    return buffer[0];\par
+\}\par
+/** Set Zero Motion Detection interrupt enabled status.\par
+ * @param enabled New interrupt enabled status\par
+ * @see getIntZeroMotionEnabled()\par
+ * @see MPU6050_RA_INT_ENABLE\par
+ * @see MPU6050_INTERRUPT_ZMOT_BIT\par
+ **/\par
+void MPU6050::setIntZeroMotionEnabled(bool enabled) \{\par
+    I2Cdev::writeBit(devAddr, MPU6050_RA_INT_ENABLE, MPU6050_INTERRUPT_ZMOT_BIT, enabled);\par
+\}\par
+/** Get FIFO Buffer Overflow interrupt enabled status.\par
+ * Will be set 0 for disabled, 1 for enabled.\par
+ * @return Current interrupt enabled status\par
+ * @see MPU6050_RA_INT_ENABLE\par
+ * @see MPU6050_INTERRUPT_FIFO_OFLOW_BIT\par
+ **/\par
+bool MPU6050::getIntFIFOBufferOverflowEnabled() \{\par
+    I2Cdev::readBit(devAddr, MPU6050_RA_INT_ENABLE, MPU6050_INTERRUPT_FIFO_OFLOW_BIT, buffer);\par
+    return buffer[0];\par
+\}\par
+/** Set FIFO Buffer Overflow interrupt enabled status.\par
+ * @param enabled New interrupt enabled status\par
+ * @see getIntFIFOBufferOverflowEnabled()\par
+ * @see MPU6050_RA_INT_ENABLE\par
+ * @see MPU6050_INTERRUPT_FIFO_OFLOW_BIT\par
+ **/\par
+void MPU6050::setIntFIFOBufferOverflowEnabled(bool enabled) \{\par
+    I2Cdev::writeBit(devAddr, MPU6050_RA_INT_ENABLE, MPU6050_INTERRUPT_FIFO_OFLOW_BIT, enabled);\par
+\}\par
+/** Get I2C Master interrupt enabled status.\par
+ * This enables any of the I2C Master interrupt sources to generate an\par
+ * interrupt. Will be set 0 for disabled, 1 for enabled.\par
+ * @return Current interrupt enabled status\par
+ * @see MPU6050_RA_INT_ENABLE\par
+ * @see MPU6050_INTERRUPT_I2C_MST_INT_BIT\par
+ **/\par
+bool MPU6050::getIntI2CMasterEnabled() \{\par
+    I2Cdev::readBit(devAddr, MPU6050_RA_INT_ENABLE, MPU6050_INTERRUPT_I2C_MST_INT_BIT, buffer);\par
+    return buffer[0];\par
+\}\par
+/** Set I2C Master interrupt enabled status.\par
+ * @param enabled New interrupt enabled status\par
+ * @see getIntI2CMasterEnabled()\par
+ * @see MPU6050_RA_INT_ENABLE\par
+ * @see MPU6050_INTERRUPT_I2C_MST_INT_BIT\par
+ **/\par
+void MPU6050::setIntI2CMasterEnabled(bool enabled) \{\par
+    I2Cdev::writeBit(devAddr, MPU6050_RA_INT_ENABLE, MPU6050_INTERRUPT_I2C_MST_INT_BIT, enabled);\par
+\}\par
+/** Get Data Ready interrupt enabled setting.\par
+ * This event occurs each time a write operation to all of the sensor registers\par
+ * has been completed. Will be set 0 for disabled, 1 for enabled.\par
+ * @return Current interrupt enabled status\par
+ * @see MPU6050_RA_INT_ENABLE\par
+ * @see MPU6050_INTERRUPT_DATA_RDY_BIT\par
+ */\par
+bool MPU6050::getIntDataReadyEnabled() \{\par
+    I2Cdev::readBit(devAddr, MPU6050_RA_INT_ENABLE, MPU6050_INTERRUPT_DATA_RDY_BIT, buffer);\par
+    return buffer[0];\par
+\}\par
+/** Set Data Ready interrupt enabled status.\par
+ * @param enabled New interrupt enabled status\par
+ * @see getIntDataReadyEnabled()\par
+ * @see MPU6050_RA_INT_CFG\par
+ * @see MPU6050_INTERRUPT_DATA_RDY_BIT\par
+ */\par
+void MPU6050::setIntDataReadyEnabled(bool enabled) \{\par
+    I2Cdev::writeBit(devAddr, MPU6050_RA_INT_ENABLE, MPU6050_INTERRUPT_DATA_RDY_BIT, enabled);\par
+\}\par
+\par
+// INT_STATUS register\par
+\par
+/** Get full set of interrupt status bits.\par
+ * These bits clear to 0 after the register has been read. Very useful\par
+ * for getting multiple INT statuses, since each single bit read clears\par
+ * all of them because it has to read the whole byte.\par
+ * @return Current interrupt status\par
+ * @see MPU6050_RA_INT_STATUS\par
+ */\par
+uint8_t MPU6050::getIntStatus() \{\par
+    I2Cdev::readByte(devAddr, MPU6050_RA_INT_STATUS, buffer);\par
+    return buffer[0];\par
+\}\par
+/** Get Free Fall interrupt status.\par
+ * This bit automatically sets to 1 when a Free Fall interrupt has been\par
+ * generated. The bit clears to 0 after the register has been read.\par
+ * @return Current interrupt status\par
+ * @see MPU6050_RA_INT_STATUS\par
+ * @see MPU6050_INTERRUPT_FF_BIT\par
+ */\par
+bool MPU6050::getIntFreefallStatus() \{\par
+    I2Cdev::readBit(devAddr, MPU6050_RA_INT_STATUS, MPU6050_INTERRUPT_FF_BIT, buffer);\par
+    return buffer[0];\par
+\}\par
+/** Get Motion Detection interrupt status.\par
+ * This bit automatically sets to 1 when a Motion Detection interrupt has been\par
+ * generated. The bit clears to 0 after the register has been read.\par
+ * @return Current interrupt status\par
+ * @see MPU6050_RA_INT_STATUS\par
+ * @see MPU6050_INTERRUPT_MOT_BIT\par
+ */\par
+bool MPU6050::getIntMotionStatus() \{\par
+    I2Cdev::readBit(devAddr, MPU6050_RA_INT_STATUS, MPU6050_INTERRUPT_MOT_BIT, buffer);\par
+    return buffer[0];\par
+\}\par
+/** Get Zero Motion Detection interrupt status.\par
+ * This bit automatically sets to 1 when a Zero Motion Detection interrupt has\par
+ * been generated. The bit clears to 0 after the register has been read.\par
+ * @return Current interrupt status\par
+ * @see MPU6050_RA_INT_STATUS\par
+ * @see MPU6050_INTERRUPT_ZMOT_BIT\par
+ */\par
+bool MPU6050::getIntZeroMotionStatus() \{\par
+    I2Cdev::readBit(devAddr, MPU6050_RA_INT_STATUS, MPU6050_INTERRUPT_ZMOT_BIT, buffer);\par
+    return buffer[0];\par
+\}\par
+/** Get FIFO Buffer Overflow interrupt status.\par
+ * This bit automatically sets to 1 when a Free Fall interrupt has been\par
+ * generated. The bit clears to 0 after the register has been read.\par
+ * @return Current interrupt status\par
+ * @see MPU6050_RA_INT_STATUS\par
+ * @see MPU6050_INTERRUPT_FIFO_OFLOW_BIT\par
+ */\par
+bool MPU6050::getIntFIFOBufferOverflowStatus() \{\par
+    I2Cdev::readBit(devAddr, MPU6050_RA_INT_STATUS, MPU6050_INTERRUPT_FIFO_OFLOW_BIT, buffer);\par
+    return buffer[0];\par
+\}\par
+/** Get I2C Master interrupt status.\par
+ * This bit automatically sets to 1 when an I2C Master interrupt has been\par
+ * generated. For a list of I2C Master interrupts, please refer to Register 54.\par
+ * The bit clears to 0 after the register has been read.\par
+ * @return Current interrupt status\par
+ * @see MPU6050_RA_INT_STATUS\par
+ * @see MPU6050_INTERRUPT_I2C_MST_INT_BIT\par
+ */\par
+bool MPU6050::getIntI2CMasterStatus() \{\par
+    I2Cdev::readBit(devAddr, MPU6050_RA_INT_STATUS, MPU6050_INTERRUPT_I2C_MST_INT_BIT, buffer);\par
+    return buffer[0];\par
+\}\par
+/** Get Data Ready interrupt status.\par
+ * This bit automatically sets to 1 when a Data Ready interrupt has been\par
+ * generated. The bit clears to 0 after the register has been read.\par
+ * @return Current interrupt status\par
+ * @see MPU6050_RA_INT_STATUS\par
+ * @see MPU6050_INTERRUPT_DATA_RDY_BIT\par
+ */\par
+bool MPU6050::getIntDataReadyStatus() \{\par
+    I2Cdev::readBit(devAddr, MPU6050_RA_INT_STATUS, MPU6050_INTERRUPT_DATA_RDY_BIT, buffer);\par
+    return buffer[0];\par
+\}\par
+\par
+// ACCEL_*OUT_* registers\par
+\par
+/** Get raw 9-axis motion sensor readings (accel/gyro/compass).\par
+ * FUNCTION NOT FULLY IMPLEMENTED YET.\par
+ * @param ax 16-bit signed integer container for accelerometer X-axis value\par
+ * @param ay 16-bit signed integer container for accelerometer Y-axis value\par
+ * @param az 16-bit signed integer container for accelerometer Z-axis value\par
+ * @param gx 16-bit signed integer container for gyroscope X-axis value\par
+ * @param gy 16-bit signed integer container for gyroscope Y-axis value\par
+ * @param gz 16-bit signed integer container for gyroscope Z-axis value\par
+ * @param mx 16-bit signed integer container for magnetometer X-axis value\par
+ * @param my 16-bit signed integer container for magnetometer Y-axis value\par
+ * @param mz 16-bit signed integer container for magnetometer Z-axis value\par
+ * @see getMotion6()\par
+ * @see getAcceleration()\par
+ * @see getRotation()\par
+ * @see MPU6050_RA_ACCEL_XOUT_H\par
+ */\par
+void MPU6050::getMotion9(int16_t* ax, int16_t* ay, int16_t* az, int16_t* gx, int16_t* gy, int16_t* gz, int16_t* mx, int16_t* my, int16_t* mz) \{\par
+    getMotion6(ax, ay, az, gx, gy, gz);\par
+    // TODO: magnetometer integration\par
+\}\par
+/** Get raw 6-axis motion sensor readings (accel/gyro).\par
+ * Retrieves all currently available motion sensor values.\par
+ * @param ax 16-bit signed integer container for accelerometer X-axis value\par
+ * @param ay 16-bit signed integer container for accelerometer Y-axis value\par
+ * @param az 16-bit signed integer container for accelerometer Z-axis value\par
+ * @param gx 16-bit signed integer container for gyroscope X-axis value\par
+ * @param gy 16-bit signed integer container for gyroscope Y-axis value\par
+ * @param gz 16-bit signed integer container for gyroscope Z-axis value\par
+ * @see getAcceleration()\par
+ * @see getRotation()\par
+ * @see MPU6050_RA_ACCEL_XOUT_H\par
+ */\par
+void MPU6050::getMotion6(int16_t* ax, int16_t* ay, int16_t* az, int16_t* gx, int16_t* gy, int16_t* gz) \{\par
+    I2Cdev::readBytes(devAddr, MPU6050_RA_ACCEL_XOUT_H, 14, buffer);\par
+    *ax = (((int16_t)buffer[0]) << 8) | buffer[1];\par
+    *ay = (((int16_t)buffer[2]) << 8) | buffer[3];\par
+    *az = (((int16_t)buffer[4]) << 8) | buffer[5];\par
+    *gx = (((int16_t)buffer[8]) << 8) | buffer[9];\par
+    *gy = (((int16_t)buffer[10]) << 8) | buffer[11];\par
+    *gz = (((int16_t)buffer[12]) << 8) | buffer[13];\par
+\}\par
+/** Get 3-axis accelerometer readings.\par
+ * These registers store the most recent accelerometer measurements.\par
+ * Accelerometer measurements are written to these registers at the Sample Rate\par
+ * as defined in Register 25.\par
+ *\par
+ * The accelerometer measurement registers, along with the temperature\par
+ * measurement registers, gyroscope measurement registers, and external sensor\par
+ * data registers, are composed of two sets of registers: an internal register\par
+ * set and a user-facing read register set.\par
+ *\par
+ * The data within the accelerometer sensors' internal register set is always\par
+ * updated at the Sample Rate. Meanwhile, the user-facing read register set\par
+ * duplicates the internal register set's data values whenever the serial\par
+ * interface is idle. This guarantees that a burst read of sensor registers will\par
+ * read measurements from the same sampling instant. Note that if burst reads\par
+ * are not used, the user is responsible for ensuring a set of single byte reads\par
+ * correspond to a single sampling instant by checking the Data Ready interrupt.\par
+ *\par
+ * Each 16-bit accelerometer measurement has a full scale defined in ACCEL_FS\par
+ * (Register 28). For each full scale setting, the accelerometers' sensitivity\par
+ * per LSB in ACCEL_xOUT is shown in the table below:\par
+ *\par
+ * <pre>\par
+ * AFS_SEL | Full Scale Range | LSB Sensitivity\par
+ * --------+------------------+----------------\par
+ * 0       | +/- 2g           | 8192 LSB/mg\par
+ * 1       | +/- 4g           | 4096 LSB/mg\par
+ * 2       | +/- 8g           | 2048 LSB/mg\par
+ * 3       | +/- 16g          | 1024 LSB/mg\par
+ * </pre>\par
+ *\par
+ * @param x 16-bit signed integer container for X-axis acceleration\par
+ * @param y 16-bit signed integer container for Y-axis acceleration\par
+ * @param z 16-bit signed integer container for Z-axis acceleration\par
+ * @see MPU6050_RA_GYRO_XOUT_H\par
+ */\par
+void MPU6050::getAcceleration(int16_t* x, int16_t* y, int16_t* z) \{\par
+    I2Cdev::readBytes(devAddr, MPU6050_RA_ACCEL_XOUT_H, 6, buffer);\par
+    *x = (((int16_t)buffer[0]) << 8) | buffer[1];\par
+    *y = (((int16_t)buffer[2]) << 8) | buffer[3];\par
+    *z = (((int16_t)buffer[4]) << 8) | buffer[5];\par
+\}\par
+/** Get X-axis accelerometer reading.\par
+ * @return X-axis acceleration measurement in 16-bit 2's complement format\par
+ * @see getMotion6()\par
+ * @see MPU6050_RA_ACCEL_XOUT_H\par
+ */\par
+int16_t MPU6050::getAccelerationX() \{\par
+    I2Cdev::readBytes(devAddr, MPU6050_RA_ACCEL_XOUT_H, 2, buffer);\par
+    return (((int16_t)buffer[0]) << 8) | buffer[1];\par
+\}\par
+/** Get Y-axis accelerometer reading.\par
+ * @return Y-axis acceleration measurement in 16-bit 2's complement format\par
+ * @see getMotion6()\par
+ * @see MPU6050_RA_ACCEL_YOUT_H\par
+ */\par
+int16_t MPU6050::getAccelerationY() \{\par
+    I2Cdev::readBytes(devAddr, MPU6050_RA_ACCEL_YOUT_H, 2, buffer);\par
+    return (((int16_t)buffer[0]) << 8) | buffer[1];\par
+\}\par
+/** Get Z-axis accelerometer reading.\par
+ * @return Z-axis acceleration measurement in 16-bit 2's complement format\par
+ * @see getMotion6()\par
+ * @see MPU6050_RA_ACCEL_ZOUT_H\par
+ */\par
+int16_t MPU6050::getAccelerationZ() \{\par
+    I2Cdev::readBytes(devAddr, MPU6050_RA_ACCEL_ZOUT_H, 2, buffer);\par
+    return (((int16_t)buffer[0]) << 8) | buffer[1];\par
+\}\par
+\par
+// TEMP_OUT_* registers\par
+\par
+/** Get current internal temperature.\par
+ * @return Temperature reading in 16-bit 2's complement format\par
+ * @see MPU6050_RA_TEMP_OUT_H\par
+ */\par
+int16_t MPU6050::getTemperature() \{\par
+    I2Cdev::readBytes(devAddr, MPU6050_RA_TEMP_OUT_H, 2, buffer);\par
+    return (((int16_t)buffer[0]) << 8) | buffer[1];\par
+\}\par
+\par
+// GYRO_*OUT_* registers\par
+\par
+/** Get 3-axis gyroscope readings.\par
+ * These gyroscope measurement registers, along with the accelerometer\par
+ * measurement registers, temperature measurement registers, and external sensor\par
+ * data registers, are composed of two sets of registers: an internal register\par
+ * set and a user-facing read register set.\par
+ * The data within the gyroscope sensors' internal register set is always\par
+ * updated at the Sample Rate. Meanwhile, the user-facing read register set\par
+ * duplicates the internal register set's data values whenever the serial\par
+ * interface is idle. This guarantees that a burst read of sensor registers will\par
+ * read measurements from the same sampling instant. Note that if burst reads\par
+ * are not used, the user is responsible for ensuring a set of single byte reads\par
+ * correspond to a single sampling instant by checking the Data Ready interrupt.\par
+ *\par
+ * Each 16-bit gyroscope measurement has a full scale defined in FS_SEL\par
+ * (Register 27). For each full scale setting, the gyroscopes' sensitivity per\par
+ * LSB in GYRO_xOUT is shown in the table below:\par
+ *\par
+ * <pre>\par
+ * FS_SEL | Full Scale Range   | LSB Sensitivity\par
+ * -------+--------------------+----------------\par
+ * 0      | +/- 250 degrees/s  | 131 LSB/deg/s\par
+ * 1      | +/- 500 degrees/s  | 65.5 LSB/deg/s\par
+ * 2      | +/- 1000 degrees/s | 32.8 LSB/deg/s\par
+ * 3      | +/- 2000 degrees/s | 16.4 LSB/deg/s\par
+ * </pre>\par
+ *\par
+ * @param x 16-bit signed integer container for X-axis rotation\par
+ * @param y 16-bit signed integer container for Y-axis rotation\par
+ * @param z 16-bit signed integer container for Z-axis rotation\par
+ * @see getMotion6()\par
+ * @see MPU6050_RA_GYRO_XOUT_H\par
+ */\par
+void MPU6050::getRotation(int16_t* x, int16_t* y, int16_t* z) \{\par
+    I2Cdev::readBytes(devAddr, MPU6050_RA_GYRO_XOUT_H, 6, buffer);\par
+    *x = (((int16_t)buffer[0]) << 8) | buffer[1];\par
+    *y = (((int16_t)buffer[2]) << 8) | buffer[3];\par
+    *z = (((int16_t)buffer[4]) << 8) | buffer[5];\par
+\}\par
+/** Get X-axis gyroscope reading.\par
+ * @return X-axis rotation measurement in 16-bit 2's complement format\par
+ * @see getMotion6()\par
+ * @see MPU6050_RA_GYRO_XOUT_H\par
+ */\par
+int16_t MPU6050::getRotationX() \{\par
+    I2Cdev::readBytes(devAddr, MPU6050_RA_GYRO_XOUT_H, 2, buffer);\par
+    return (((int16_t)buffer[0]) << 8) | buffer[1];\par
+\}\par
+/** Get Y-axis gyroscope reading.\par
+ * @return Y-axis rotation measurement in 16-bit 2's complement format\par
+ * @see getMotion6()\par
+ * @see MPU6050_RA_GYRO_YOUT_H\par
+ */\par
+int16_t MPU6050::getRotationY() \{\par
+    I2Cdev::readBytes(devAddr, MPU6050_RA_GYRO_YOUT_H, 2, buffer);\par
+    return (((int16_t)buffer[0]) << 8) | buffer[1];\par
+\}\par
+/** Get Z-axis gyroscope reading.\par
+ * @return Z-axis rotation measurement in 16-bit 2's complement format\par
+ * @see getMotion6()\par
+ * @see MPU6050_RA_GYRO_ZOUT_H\par
+ */\par
+int16_t MPU6050::getRotationZ() \{\par
+    I2Cdev::readBytes(devAddr, MPU6050_RA_GYRO_ZOUT_H, 2, buffer);\par
+    return (((int16_t)buffer[0]) << 8) | buffer[1];\par
+\}\par
+\par
+// EXT_SENS_DATA_* registers\par
+\par
+/** Read single byte from external sensor data register.\par
+ * These registers store data read from external sensors by the Slave 0, 1, 2,\par
+ * and 3 on the auxiliary I2C interface. Data read by Slave 4 is stored in\par
+ * I2C_SLV4_DI (Register 53).\par
+ *\par
+ * External sensor data is written to these registers at the Sample Rate as\par
+ * defined in Register 25. This access rate can be reduced by using the Slave\par
+ * Delay Enable registers (Register 103).\par
+ *\par
+ * External sensor data registers, along with the gyroscope measurement\par
+ * registers, accelerometer measurement registers, and temperature measurement\par
+ * registers, are composed of two sets of registers: an internal register set\par
+ * and a user-facing read register set.\par
+ *\par
+ * The data within the external sensors' internal register set is always updated\par
+ * at the Sample Rate (or the reduced access rate) whenever the serial interface\par
+ * is idle. This guarantees that a burst read of sensor registers will read\par
+ * measurements from the same sampling instant. Note that if burst reads are not\par
+ * used, the user is responsible for ensuring a set of single byte reads\par
+ * correspond to a single sampling instant by checking the Data Ready interrupt.\par
+ *\par
+ * Data is placed in these external sensor data registers according to\par
+ * I2C_SLV0_CTRL, I2C_SLV1_CTRL, I2C_SLV2_CTRL, and I2C_SLV3_CTRL (Registers 39,\par
+ * 42, 45, and 48). When more than zero bytes are read (I2C_SLVx_LEN > 0) from\par
+ * an enabled slave (I2C_SLVx_EN = 1), the slave is read at the Sample Rate (as\par
+ * defined in Register 25) or delayed rate (if specified in Register 52 and\par
+ * 103). During each Sample cycle, slave reads are performed in order of Slave\par
+ * number. If all slaves are enabled with more than zero bytes to be read, the\par
+ * order will be Slave 0, followed by Slave 1, Slave 2, and Slave 3.\par
+ *\par
+ * Each enabled slave will have EXT_SENS_DATA registers associated with it by\par
+ * number of bytes read (I2C_SLVx_LEN) in order of slave number, starting from\par
+ * EXT_SENS_DATA_00. Note that this means enabling or disabling a slave may\par
+ * change the higher numbered slaves' associated registers. Furthermore, if\par
+ * fewer total bytes are being read from the external sensors as a result of\par
+ * such a change, then the data remaining in the registers which no longer have\par
+ * an associated slave device (i.e. high numbered registers) will remain in\par
+ * these previously allocated registers unless reset.\par
+ *\par
+ * If the sum of the read lengths of all SLVx transactions exceed the number of\par
+ * available EXT_SENS_DATA registers, the excess bytes will be dropped. There\par
+ * are 24 EXT_SENS_DATA registers and hence the total read lengths between all\par
+ * the slaves cannot be greater than 24 or some bytes will be lost.\par
+ *\par
+ * Note: Slave 4's behavior is distinct from that of Slaves 0-3. For further\par
+ * information regarding the characteristics of Slave 4, please refer to\par
+ * Registers 49 to 53.\par
+ *\par
+ * EXAMPLE:\par
+ * Suppose that Slave 0 is enabled with 4 bytes to be read (I2C_SLV0_EN = 1 and\par
+ * I2C_SLV0_LEN = 4) while Slave 1 is enabled with 2 bytes to be read so that\par
+ * I2C_SLV1_EN = 1 and I2C_SLV1_LEN = 2. In such a situation, EXT_SENS_DATA _00\par
+ * through _03 will be associated with Slave 0, while EXT_SENS_DATA _04 and 05\par
+ * will be associated with Slave 1. If Slave 2 is enabled as well, registers\par
+ * starting from EXT_SENS_DATA_06 will be allocated to Slave 2.\par
+ *\par
+ * If Slave 2 is disabled while Slave 3 is enabled in this same situation, then\par
+ * registers starting from EXT_SENS_DATA_06 will be allocated to Slave 3\par
+ * instead.\par
+ *\par
+ * REGISTER ALLOCATION FOR DYNAMIC DISABLE VS. NORMAL DISABLE:\par
+ * If a slave is disabled at any time, the space initially allocated to the\par
+ * slave in the EXT_SENS_DATA register, will remain associated with that slave.\par
+ * This is to avoid dynamic adjustment of the register allocation.\par
+ *\par
+ * The allocation of the EXT_SENS_DATA registers is recomputed only when (1) all\par
+ * slaves are disabled, or (2) the I2C_MST_RST bit is set (Register 106).\par
+ *\par
+ * This above is also true if one of the slaves gets NACKed and stops\par
+ * functioning.\par
+ *\par
+ * @param position Starting position (0-23)\par
+ * @return Byte read from register\par
+ */\par
+uint8_t MPU6050::getExternalSensorByte(int position) \{\par
+    I2Cdev::readByte(devAddr, MPU6050_RA_EXT_SENS_DATA_00 + position, buffer);\par
+    return buffer[0];\par
+\}\par
+/** Read word (2 bytes) from external sensor data registers.\par
+ * @param position Starting position (0-21)\par
+ * @return Word read from register\par
+ * @see getExternalSensorByte()\par
+ */\par
+uint16_t MPU6050::getExternalSensorWord(int position) \{\par
+    I2Cdev::readBytes(devAddr, MPU6050_RA_EXT_SENS_DATA_00 + position, 2, buffer);\par
+    return (((uint16_t)buffer[0]) << 8) | buffer[1];\par
+\}\par
+/** Read double word (4 bytes) from external sensor data registers.\par
+ * @param position Starting position (0-20)\par
+ * @return Double word read from registers\par
+ * @see getExternalSensorByte()\par
+ */\par
+uint32_t MPU6050::getExternalSensorDWord(int position) \{\par
+    I2Cdev::readBytes(devAddr, MPU6050_RA_EXT_SENS_DATA_00 + position, 4, buffer);\par
+    return (((uint32_t)buffer[0]) << 24) | (((uint32_t)buffer[1]) << 16) | (((uint16_t)buffer[2]) << 8) | buffer[3];\par
+\}\par
+\par
+// MOT_DETECT_STATUS register\par
+\par
+/** Get full motion detection status register content (all bits).\par
+ * @return Motion detection status byte\par
+ * @see MPU6050_RA_MOT_DETECT_STATUS\par
+ */\par
+uint8_t MPU6050::getMotionStatus() \{\par
+    I2Cdev::readByte(devAddr, MPU6050_RA_MOT_DETECT_STATUS, buffer);\par
+    return buffer[0];\par
+\}\par
+/** Get X-axis negative motion detection interrupt status.\par
+ * @return Motion detection status\par
+ * @see MPU6050_RA_MOT_DETECT_STATUS\par
+ * @see MPU6050_MOTION_MOT_XNEG_BIT\par
+ */\par
+bool MPU6050::getXNegMotionDetected() \{\par
+    I2Cdev::readBit(devAddr, MPU6050_RA_MOT_DETECT_STATUS, MPU6050_MOTION_MOT_XNEG_BIT, buffer);\par
+    return buffer[0];\par
+\}\par
+/** Get X-axis positive motion detection interrupt status.\par
+ * @return Motion detection status\par
+ * @see MPU6050_RA_MOT_DETECT_STATUS\par
+ * @see MPU6050_MOTION_MOT_XPOS_BIT\par
+ */\par
+bool MPU6050::getXPosMotionDetected() \{\par
+    I2Cdev::readBit(devAddr, MPU6050_RA_MOT_DETECT_STATUS, MPU6050_MOTION_MOT_XPOS_BIT, buffer);\par
+    return buffer[0];\par
+\}\par
+/** Get Y-axis negative motion detection interrupt status.\par
+ * @return Motion detection status\par
+ * @see MPU6050_RA_MOT_DETECT_STATUS\par
+ * @see MPU6050_MOTION_MOT_YNEG_BIT\par
+ */\par
+bool MPU6050::getYNegMotionDetected() \{\par
+    I2Cdev::readBit(devAddr, MPU6050_RA_MOT_DETECT_STATUS, MPU6050_MOTION_MOT_YNEG_BIT, buffer);\par
+    return buffer[0];\par
+\}\par
+/** Get Y-axis positive motion detection interrupt status.\par
+ * @return Motion detection status\par
+ * @see MPU6050_RA_MOT_DETECT_STATUS\par
+ * @see MPU6050_MOTION_MOT_YPOS_BIT\par
+ */\par
+bool MPU6050::getYPosMotionDetected() \{\par
+    I2Cdev::readBit(devAddr, MPU6050_RA_MOT_DETECT_STATUS, MPU6050_MOTION_MOT_YPOS_BIT, buffer);\par
+    return buffer[0];\par
+\}\par
+/** Get Z-axis negative motion detection interrupt status.\par
+ * @return Motion detection status\par
+ * @see MPU6050_RA_MOT_DETECT_STATUS\par
+ * @see MPU6050_MOTION_MOT_ZNEG_BIT\par
+ */\par
+bool MPU6050::getZNegMotionDetected() \{\par
+    I2Cdev::readBit(devAddr, MPU6050_RA_MOT_DETECT_STATUS, MPU6050_MOTION_MOT_ZNEG_BIT, buffer);\par
+    return buffer[0];\par
+\}\par
+/** Get Z-axis positive motion detection interrupt status.\par
+ * @return Motion detection status\par
+ * @see MPU6050_RA_MOT_DETECT_STATUS\par
+ * @see MPU6050_MOTION_MOT_ZPOS_BIT\par
+ */\par
+bool MPU6050::getZPosMotionDetected() \{\par
+    I2Cdev::readBit(devAddr, MPU6050_RA_MOT_DETECT_STATUS, MPU6050_MOTION_MOT_ZPOS_BIT, buffer);\par
+    return buffer[0];\par
+\}\par
+/** Get zero motion detection interrupt status.\par
+ * @return Motion detection status\par
+ * @see MPU6050_RA_MOT_DETECT_STATUS\par
+ * @see MPU6050_MOTION_MOT_ZRMOT_BIT\par
+ */\par
+bool MPU6050::getZeroMotionDetected() \{\par
+    I2Cdev::readBit(devAddr, MPU6050_RA_MOT_DETECT_STATUS, MPU6050_MOTION_MOT_ZRMOT_BIT, buffer);\par
+    return buffer[0];\par
+\}\par
+\par
+// I2C_SLV*_DO register\par
+\par
+/** Write byte to Data Output container for specified slave.\par
+ * This register holds the output data written into Slave when Slave is set to\par
+ * write mode. For further information regarding Slave control, please\par
+ * refer to Registers 37 to 39 and immediately following.\par
+ * @param num Slave number (0-3)\par
+ * @param data Byte to write\par
+ * @see MPU6050_RA_I2C_SLV0_DO\par
+ */\par
+void MPU6050::setSlaveOutputByte(uint8_t num, uint8_t data) \{\par
+    if (num > 3) return;\par
+    I2Cdev::writeByte(devAddr, MPU6050_RA_I2C_SLV0_DO + num, data);\par
+\}\par
+\par
+// I2C_MST_DELAY_CTRL register\par
+\par
+/** Get external data shadow delay enabled status.\par
+ * This register is used to specify the timing of external sensor data\par
+ * shadowing. When DELAY_ES_SHADOW is set to 1, shadowing of external\par
+ * sensor data is delayed until all data has been received.\par
+ * @return Current external data shadow delay enabled status.\par
+ * @see MPU6050_RA_I2C_MST_DELAY_CTRL\par
+ * @see MPU6050_DELAYCTRL_DELAY_ES_SHADOW_BIT\par
+ */\par
+bool MPU6050::getExternalShadowDelayEnabled() \{\par
+    I2Cdev::readBit(devAddr, MPU6050_RA_I2C_MST_DELAY_CTRL, MPU6050_DELAYCTRL_DELAY_ES_SHADOW_BIT, buffer);\par
+    return buffer[0];\par
+\}\par
+/** Set external data shadow delay enabled status.\par
+ * @param enabled New external data shadow delay enabled status.\par
+ * @see getExternalShadowDelayEnabled()\par
+ * @see MPU6050_RA_I2C_MST_DELAY_CTRL\par
+ * @see MPU6050_DELAYCTRL_DELAY_ES_SHADOW_BIT\par
+ */\par
+void MPU6050::setExternalShadowDelayEnabled(bool enabled) \{\par
+    I2Cdev::writeBit(devAddr, MPU6050_RA_I2C_MST_DELAY_CTRL, MPU6050_DELAYCTRL_DELAY_ES_SHADOW_BIT, enabled);\par
+\}\par
+/** Get slave delay enabled status.\par
+ * When a particular slave delay is enabled, the rate of access for the that\par
+ * slave device is reduced. When a slave's access rate is decreased relative to\par
+ * the Sample Rate, the slave is accessed every:\par
+ *\par
+ *     1 / (1 + I2C_MST_DLY) Samples\par
+ *\par
+ * This base Sample Rate in turn is determined by SMPLRT_DIV (register  * 25)\par
+ * and DLPF_CFG (register 26).\par
+ *\par
+ * For further information regarding I2C_MST_DLY, please refer to register 52.\par
+ * For further information regarding the Sample Rate, please refer to register 25.\par
+ *\par
+ * @param num Slave number (0-4)\par
+ * @return Current slave delay enabled status.\par
+ * @see MPU6050_RA_I2C_MST_DELAY_CTRL\par
+ * @see MPU6050_DELAYCTRL_I2C_SLV0_DLY_EN_BIT\par
+ */\par
+bool MPU6050::getSlaveDelayEnabled(uint8_t num) \{\par
+    // MPU6050_DELAYCTRL_I2C_SLV4_DLY_EN_BIT is 4, SLV3 is 3, etc.\par
+    if (num > 4) return 0;\par
+    I2Cdev::readBit(devAddr, MPU6050_RA_I2C_MST_DELAY_CTRL, num, buffer);\par
+    return buffer[0];\par
+\}\par
+/** Set slave delay enabled status.\par
+ * @param num Slave number (0-4)\par
+ * @param enabled New slave delay enabled status.\par
+ * @see MPU6050_RA_I2C_MST_DELAY_CTRL\par
+ * @see MPU6050_DELAYCTRL_I2C_SLV0_DLY_EN_BIT\par
+ */\par
+void MPU6050::setSlaveDelayEnabled(uint8_t num, bool enabled) \{\par
+    I2Cdev::writeBit(devAddr, MPU6050_RA_I2C_MST_DELAY_CTRL, num, enabled);\par
+\}\par
+\par
+// SIGNAL_PATH_RESET register\par
+\par
+/** Reset gyroscope signal path.\par
+ * The reset will revert the signal path analog to digital converters and\par
+ * filters to their power up configurations.\par
+ * @see MPU6050_RA_SIGNAL_PATH_RESET\par
+ * @see MPU6050_PATHRESET_GYRO_RESET_BIT\par
+ */\par
+void MPU6050::resetGyroscopePath() \{\par
+    I2Cdev::writeBit(devAddr, MPU6050_RA_SIGNAL_PATH_RESET, MPU6050_PATHRESET_GYRO_RESET_BIT, true);\par
+\}\par
+/** Reset accelerometer signal path.\par
+ * The reset will revert the signal path analog to digital converters and\par
+ * filters to their power up configurations.\par
+ * @see MPU6050_RA_SIGNAL_PATH_RESET\par
+ * @see MPU6050_PATHRESET_ACCEL_RESET_BIT\par
+ */\par
+void MPU6050::resetAccelerometerPath() \{\par
+    I2Cdev::writeBit(devAddr, MPU6050_RA_SIGNAL_PATH_RESET, MPU6050_PATHRESET_ACCEL_RESET_BIT, true);\par
+\}\par
+/** Reset temperature sensor signal path.\par
+ * The reset will revert the signal path analog to digital converters and\par
+ * filters to their power up configurations.\par
+ * @see MPU6050_RA_SIGNAL_PATH_RESET\par
+ * @see MPU6050_PATHRESET_TEMP_RESET_BIT\par
+ */\par
+void MPU6050::resetTemperaturePath() \{\par
+    I2Cdev::writeBit(devAddr, MPU6050_RA_SIGNAL_PATH_RESET, MPU6050_PATHRESET_TEMP_RESET_BIT, true);\par
+\}\par
+\par
+// MOT_DETECT_CTRL register\par
+\par
+/** Get accelerometer power-on delay.\par
+ * The accelerometer data path provides samples to the sensor registers, Motion\par
+ * detection, Zero Motion detection, and Free Fall detection modules. The\par
+ * signal path contains filters which must be flushed on wake-up with new\par
+ * samples before the detection modules begin operations. The default wake-up\par
+ * delay, of 4ms can be lengthened by up to 3ms. This additional delay is\par
+ * specified in ACCEL_ON_DELAY in units of 1 LSB = 1 ms. The user may select\par
+ * any value above zero unless instructed otherwise by InvenSense. Please refer\par
+ * to Section 8 of the MPU-6000/MPU-6050 Product Specification document for\par
+ * further information regarding the detection modules.\par
+ * @return Current accelerometer power-on delay\par
+ * @see MPU6050_RA_MOT_DETECT_CTRL\par
+ * @see MPU6050_DETECT_ACCEL_ON_DELAY_BIT\par
+ */\par
+uint8_t MPU6050::getAccelerometerPowerOnDelay() \{\par
+    I2Cdev::readBits(devAddr, MPU6050_RA_MOT_DETECT_CTRL, MPU6050_DETECT_ACCEL_ON_DELAY_BIT, MPU6050_DETECT_ACCEL_ON_DELAY_LENGTH, buffer);\par
+    return buffer[0];\par
+\}\par
+/** Set accelerometer power-on delay.\par
+ * @param delay New accelerometer power-on delay (0-3)\par
+ * @see getAccelerometerPowerOnDelay()\par
+ * @see MPU6050_RA_MOT_DETECT_CTRL\par
+ * @see MPU6050_DETECT_ACCEL_ON_DELAY_BIT\par
+ */\par
+void MPU6050::setAccelerometerPowerOnDelay(uint8_t delay) \{\par
+    I2Cdev::writeBits(devAddr, MPU6050_RA_MOT_DETECT_CTRL, MPU6050_DETECT_ACCEL_ON_DELAY_BIT, MPU6050_DETECT_ACCEL_ON_DELAY_LENGTH, delay);\par
+\}\par
+/** Get Free Fall detection counter decrement configuration.\par
+ * Detection is registered by the Free Fall detection module after accelerometer\par
+ * measurements meet their respective threshold conditions over a specified\par
+ * number of samples. When the threshold conditions are met, the corresponding\par
+ * detection counter increments by 1. The user may control the rate at which the\par
+ * detection counter decrements when the threshold condition is not met by\par
+ * configuring FF_COUNT. The decrement rate can be set according to the\par
+ * following table:\par
+ *\par
+ * <pre>\par
+ * FF_COUNT | Counter Decrement\par
+ * ---------+------------------\par
+ * 0        | Reset\par
+ * 1        | 1\par
+ * 2        | 2\par
+ * 3        | 4\par
+ * </pre>\par
+ *\par
+ * When FF_COUNT is configured to 0 (reset), any non-qualifying sample will\par
+ * reset the counter to 0. For further information on Free Fall detection,\par
+ * please refer to Registers 29 to 32.\par
+ *\par
+ * @return Current decrement configuration\par
+ * @see MPU6050_RA_MOT_DETECT_CTRL\par
+ * @see MPU6050_DETECT_FF_COUNT_BIT\par
+ */\par
+uint8_t MPU6050::getFreefallDetectionCounterDecrement() \{\par
+    I2Cdev::readBits(devAddr, MPU6050_RA_MOT_DETECT_CTRL, MPU6050_DETECT_FF_COUNT_BIT, MPU6050_DETECT_FF_COUNT_LENGTH, buffer);\par
+    return buffer[0];\par
+\}\par
+/** Set Free Fall detection counter decrement configuration.\par
+ * @param decrement New decrement configuration value\par
+ * @see getFreefallDetectionCounterDecrement()\par
+ * @see MPU6050_RA_MOT_DETECT_CTRL\par
+ * @see MPU6050_DETECT_FF_COUNT_BIT\par
+ */\par
+void MPU6050::setFreefallDetectionCounterDecrement(uint8_t decrement) \{\par
+    I2Cdev::writeBits(devAddr, MPU6050_RA_MOT_DETECT_CTRL, MPU6050_DETECT_FF_COUNT_BIT, MPU6050_DETECT_FF_COUNT_LENGTH, decrement);\par
+\}\par
+/** Get Motion detection counter decrement configuration.\par
+ * Detection is registered by the Motion detection module after accelerometer\par
+ * measurements meet their respective threshold conditions over a specified\par
+ * number of samples. When the threshold conditions are met, the corresponding\par
+ * detection counter increments by 1. The user may control the rate at which the\par
+ * detection counter decrements when the threshold condition is not met by\par
+ * configuring MOT_COUNT. The decrement rate can be set according to the\par
+ * following table:\par
+ *\par
+ * <pre>\par
+ * MOT_COUNT | Counter Decrement\par
+ * ----------+------------------\par
+ * 0         | Reset\par
+ * 1         | 1\par
+ * 2         | 2\par
+ * 3         | 4\par
+ * </pre>\par
+ *\par
+ * When MOT_COUNT is configured to 0 (reset), any non-qualifying sample will\par
+ * reset the counter to 0. For further information on Motion detection,\par
+ * please refer to Registers 29 to 32.\par
+ *\par
+ */\par
+uint8_t MPU6050::getMotionDetectionCounterDecrement() \{\par
+    I2Cdev::readBits(devAddr, MPU6050_RA_MOT_DETECT_CTRL, MPU6050_DETECT_MOT_COUNT_BIT, MPU6050_DETECT_MOT_COUNT_LENGTH, buffer);\par
+    return buffer[0];\par
+\}\par
+/** Set Motion detection counter decrement configuration.\par
+ * @param decrement New decrement configuration value\par
+ * @see getMotionDetectionCounterDecrement()\par
+ * @see MPU6050_RA_MOT_DETECT_CTRL\par
+ * @see MPU6050_DETECT_MOT_COUNT_BIT\par
+ */\par
+void MPU6050::setMotionDetectionCounterDecrement(uint8_t decrement) \{\par
+    I2Cdev::writeBits(devAddr, MPU6050_RA_MOT_DETECT_CTRL, MPU6050_DETECT_MOT_COUNT_BIT, MPU6050_DETECT_MOT_COUNT_LENGTH, decrement);\par
+\}\par
+\par
+// USER_CTRL register\par
+\par
+/** Get FIFO enabled status.\par
+ * When this bit is set to 0, the FIFO buffer is disabled. The FIFO buffer\par
+ * cannot be written to or read from while disabled. The FIFO buffer's state\par
+ * does not change unless the MPU-60X0 is power cycled.\par
+ * @return Current FIFO enabled status\par
+ * @see MPU6050_RA_USER_CTRL\par
+ * @see MPU6050_USERCTRL_FIFO_EN_BIT\par
+ */\par
+bool MPU6050::getFIFOEnabled() \{\par
+    I2Cdev::readBit(devAddr, MPU6050_RA_USER_CTRL, MPU6050_USERCTRL_FIFO_EN_BIT, buffer);\par
+    return buffer[0];\par
+\}\par
+/** Set FIFO enabled status.\par
+ * @param enabled New FIFO enabled status\par
+ * @see getFIFOEnabled()\par
+ * @see MPU6050_RA_USER_CTRL\par
+ * @see MPU6050_USERCTRL_FIFO_EN_BIT\par
+ */\par
+void MPU6050::setFIFOEnabled(bool enabled) \{\par
+    I2Cdev::writeBit(devAddr, MPU6050_RA_USER_CTRL, MPU6050_USERCTRL_FIFO_EN_BIT, enabled);\par
+\}\par
+/** Get I2C Master Mode enabled status.\par
+ * When this mode is enabled, the MPU-60X0 acts as the I2C Master to the\par
+ * external sensor slave devices on the auxiliary I2C bus. When this bit is\par
+ * cleared to 0, the auxiliary I2C bus lines (AUX_DA and AUX_CL) are logically\par
+ * driven by the primary I2C bus (SDA and SCL). This is a precondition to\par
+ * enabling Bypass Mode. For further information regarding Bypass Mode, please\par
+ * refer to Register 55.\par
+ * @return Current I2C Master Mode enabled status\par
+ * @see MPU6050_RA_USER_CTRL\par
+ * @see MPU6050_USERCTRL_I2C_MST_EN_BIT\par
+ */\par
+bool MPU6050::getI2CMasterModeEnabled() \{\par
+    I2Cdev::readBit(devAddr, MPU6050_RA_USER_CTRL, MPU6050_USERCTRL_I2C_MST_EN_BIT, buffer);\par
+    return buffer[0];\par
+\}\par
+/** Set I2C Master Mode enabled status.\par
+ * @param enabled New I2C Master Mode enabled status\par
+ * @see getI2CMasterModeEnabled()\par
+ * @see MPU6050_RA_USER_CTRL\par
+ * @see MPU6050_USERCTRL_I2C_MST_EN_BIT\par
+ */\par
+void MPU6050::setI2CMasterModeEnabled(bool enabled) \{\par
+    I2Cdev::writeBit(devAddr, MPU6050_RA_USER_CTRL, MPU6050_USERCTRL_I2C_MST_EN_BIT, enabled);\par
+\}\par
+/** Switch from I2C to SPI mode (MPU-6000 only)\par
+ * If this is set, the primary SPI interface will be enabled in place of the\par
+ * disabled primary I2C interface.\par
+ */\par
+void MPU6050::switchSPIEnabled(bool enabled) \{\par
+    I2Cdev::writeBit(devAddr, MPU6050_RA_USER_CTRL, MPU6050_USERCTRL_I2C_IF_DIS_BIT, enabled);\par
+\}\par
+/** Reset the FIFO.\par
+ * This bit resets the FIFO buffer when set to 1 while FIFO_EN equals 0. This\par
+ * bit automatically clears to 0 after the reset has been triggered.\par
+ * @see MPU6050_RA_USER_CTRL\par
+ * @see MPU6050_USERCTRL_FIFO_RESET_BIT\par
+ */\par
+void MPU6050::resetFIFO() \{\par
+    I2Cdev::writeBit(devAddr, MPU6050_RA_USER_CTRL, MPU6050_USERCTRL_FIFO_RESET_BIT, true);\par
+\}\par
+/** Reset the I2C Master.\par
+ * This bit resets the I2C Master when set to 1 while I2C_MST_EN equals 0.\par
+ * This bit automatically clears to 0 after the reset has been triggered.\par
+ * @see MPU6050_RA_USER_CTRL\par
+ * @see MPU6050_USERCTRL_I2C_MST_RESET_BIT\par
+ */\par
+void MPU6050::resetI2CMaster() \{\par
+    I2Cdev::writeBit(devAddr, MPU6050_RA_USER_CTRL, MPU6050_USERCTRL_I2C_MST_RESET_BIT, true);\par
+\}\par
+/** Reset all sensor registers and signal paths.\par
+ * When set to 1, this bit resets the signal paths for all sensors (gyroscopes,\par
+ * accelerometers, and temperature sensor). This operation will also clear the\par
+ * sensor registers. This bit automatically clears to 0 after the reset has been\par
+ * triggered.\par
+ *\par
+ * When resetting only the signal path (and not the sensor registers), please\par
+ * use Register 104, SIGNAL_PATH_RESET.\par
+ *\par
+ * @see MPU6050_RA_USER_CTRL\par
+ * @see MPU6050_USERCTRL_SIG_COND_RESET_BIT\par
+ */\par
+void MPU6050::resetSensors() \{\par
+    I2Cdev::writeBit(devAddr, MPU6050_RA_USER_CTRL, MPU6050_USERCTRL_SIG_COND_RESET_BIT, true);\par
+\}\par
+\par
+// PWR_MGMT_1 register\par
+\par
+/** Trigger a full device reset.\par
+ * A small delay of ~50ms may be desirable after triggering a reset.\par
+ * @see MPU6050_RA_PWR_MGMT_1\par
+ * @see MPU6050_PWR1_DEVICE_RESET_BIT\par
+ */\par
+void MPU6050::reset() \{\par
+    I2Cdev::writeBit(devAddr, MPU6050_RA_PWR_MGMT_1, MPU6050_PWR1_DEVICE_RESET_BIT, true);\par
+\}\par
+/** Get sleep mode status.\par
+ * Setting the SLEEP bit in the register puts the device into very low power\par
+ * sleep mode. In this mode, only the serial interface and internal registers\par
+ * remain active, allowing for a very low standby current. Clearing this bit\par
+ * puts the device back into normal mode. To save power, the individual standby\par
+ * selections for each of the gyros should be used if any gyro axis is not used\par
+ * by the application.\par
+ * @return Current sleep mode enabled status\par
+ * @see MPU6050_RA_PWR_MGMT_1\par
+ * @see MPU6050_PWR1_SLEEP_BIT\par
+ */\par
+bool MPU6050::getSleepEnabled() \{\par
+    I2Cdev::readBit(devAddr, MPU6050_RA_PWR_MGMT_1, MPU6050_PWR1_SLEEP_BIT, buffer);\par
+    return buffer[0];\par
+\}\par
+/** Set sleep mode status.\par
+ * @param enabled New sleep mode enabled status\par
+ * @see getSleepEnabled()\par
+ * @see MPU6050_RA_PWR_MGMT_1\par
+ * @see MPU6050_PWR1_SLEEP_BIT\par
+ */\par
+void MPU6050::setSleepEnabled(bool enabled) \{\par
+    I2Cdev::writeBit(devAddr, MPU6050_RA_PWR_MGMT_1, MPU6050_PWR1_SLEEP_BIT, enabled);\par
+\}\par
+/** Get wake cycle enabled status.\par
+ * When this bit is set to 1 and SLEEP is disabled, the MPU-60X0 will cycle\par
+ * between sleep mode and waking up to take a single sample of data from active\par
+ * sensors at a rate determined by LP_WAKE_CTRL (register 108).\par
+ * @return Current sleep mode enabled status\par
+ * @see MPU6050_RA_PWR_MGMT_1\par
+ * @see MPU6050_PWR1_CYCLE_BIT\par
+ */\par
+bool MPU6050::getWakeCycleEnabled() \{\par
+    I2Cdev::readBit(devAddr, MPU6050_RA_PWR_MGMT_1, MPU6050_PWR1_CYCLE_BIT, buffer);\par
+    return buffer[0];\par
+\}\par
+/** Set wake cycle enabled status.\par
+ * @param enabled New sleep mode enabled status\par
+ * @see getWakeCycleEnabled()\par
+ * @see MPU6050_RA_PWR_MGMT_1\par
+ * @see MPU6050_PWR1_CYCLE_BIT\par
+ */\par
+void MPU6050::setWakeCycleEnabled(bool enabled) \{\par
+    I2Cdev::writeBit(devAddr, MPU6050_RA_PWR_MGMT_1, MPU6050_PWR1_CYCLE_BIT, enabled);\par
+\}\par
+/** Get temperature sensor enabled status.\par
+ * Control the usage of the internal temperature sensor.\par
+ *\par
+ * Note: this register stores the *disabled* value, but for consistency with the\par
+ * rest of the code, the function is named and used with standard true/false\par
+ * values to indicate whether the sensor is enabled or disabled, respectively.\par
+ *\par
+ * @return Current temperature sensor enabled status\par
+ * @see MPU6050_RA_PWR_MGMT_1\par
+ * @see MPU6050_PWR1_TEMP_DIS_BIT\par
+ */\par
+bool MPU6050::getTempSensorEnabled() \{\par
+    I2Cdev::readBit(devAddr, MPU6050_RA_PWR_MGMT_1, MPU6050_PWR1_TEMP_DIS_BIT, buffer);\par
+    return buffer[0] == 0; // 1 is actually disabled here\par
+\}\par
+/** Set temperature sensor enabled status.\par
+ * Note: this register stores the *disabled* value, but for consistency with the\par
+ * rest of the code, the function is named and used with standard true/false\par
+ * values to indicate whether the sensor is enabled or disabled, respectively.\par
+ *\par
+ * @param enabled New temperature sensor enabled status\par
+ * @see getTempSensorEnabled()\par
+ * @see MPU6050_RA_PWR_MGMT_1\par
+ * @see MPU6050_PWR1_TEMP_DIS_BIT\par
+ */\par
+void MPU6050::setTempSensorEnabled(bool enabled) \{\par
+    // 1 is actually disabled here\par
+    I2Cdev::writeBit(devAddr, MPU6050_RA_PWR_MGMT_1, MPU6050_PWR1_TEMP_DIS_BIT, !enabled);\par
+\}\par
+/** Get clock source setting.\par
+ * @return Current clock source setting\par
+ * @see MPU6050_RA_PWR_MGMT_1\par
+ * @see MPU6050_PWR1_CLKSEL_BIT\par
+ * @see MPU6050_PWR1_CLKSEL_LENGTH\par
+ */\par
+uint8_t MPU6050::getClockSource() \{\par
+    I2Cdev::readBits(devAddr, MPU6050_RA_PWR_MGMT_1, MPU6050_PWR1_CLKSEL_BIT, MPU6050_PWR1_CLKSEL_LENGTH, buffer);\par
+    return buffer[0];\par
+\}\par
+/** Set clock source setting.\par
+ * An internal 8MHz oscillator, gyroscope based clock, or external sources can\par
+ * be selected as the MPU-60X0 clock source. When the internal 8 MHz oscillator\par
+ * or an external source is chosen as the clock source, the MPU-60X0 can operate\par
+ * in low power modes with the gyroscopes disabled.\par
+ *\par
+ * Upon power up, the MPU-60X0 clock source defaults to the internal oscillator.\par
+ * However, it is highly recommended that the device be configured to use one of\par
+ * the gyroscopes (or an external clock source) as the clock reference for\par
+ * improved stability. The clock source can be selected according to the following table:\par
+ *\par
+ * <pre>\par
+ * CLK_SEL | Clock Source\par
+ * --------+--------------------------------------\par
+ * 0       | Internal oscillator\par
+ * 1       | PLL with X Gyro reference\par
+ * 2       | PLL with Y Gyro reference\par
+ * 3       | PLL with Z Gyro reference\par
+ * 4       | PLL with external 32.768kHz reference\par
+ * 5       | PLL with external 19.2MHz reference\par
+ * 6       | Reserved\par
+ * 7       | Stops the clock and keeps the timing generator in reset\par
+ * </pre>\par
+ *\par
+ * @param source New clock source setting\par
+ * @see getClockSource()\par
+ * @see MPU6050_RA_PWR_MGMT_1\par
+ * @see MPU6050_PWR1_CLKSEL_BIT\par
+ * @see MPU6050_PWR1_CLKSEL_LENGTH\par
+ */\par
+void MPU6050::setClockSource(uint8_t source) \{\par
+    I2Cdev::writeBits(devAddr, MPU6050_RA_PWR_MGMT_1, MPU6050_PWR1_CLKSEL_BIT, MPU6050_PWR1_CLKSEL_LENGTH, source);\par
+\}\par
+\par
+// PWR_MGMT_2 register\par
+\par
+/** Get wake frequency in Accel-Only Low Power Mode.\par
+ * The MPU-60X0 can be put into Accerlerometer Only Low Power Mode by setting\par
+ * PWRSEL to 1 in the Power Management 1 register (Register 107). In this mode,\par
+ * the device will power off all devices except for the primary I2C interface,\par
+ * waking only the accelerometer at fixed intervals to take a single\par
+ * measurement. The frequency of wake-ups can be configured with LP_WAKE_CTRL\par
+ * as shown below:\par
+ *\par
+ * <pre>\par
+ * LP_WAKE_CTRL | Wake-up Frequency\par
+ * -------------+------------------\par
+ * 0            | 1.25 Hz\par
+ * 1            | 2.5 Hz\par
+ * 2            | 5 Hz\par
+ * 3            | 10 Hz\par
+ * </pre>\par
+ *\par
+ * For further information regarding the MPU-60X0's power modes, please refer to\par
+ * Register 107.\par
+ *\par
+ * @return Current wake frequency\par
+ * @see MPU6050_RA_PWR_MGMT_2\par
+ */\par
+uint8_t MPU6050::getWakeFrequency() \{\par
+    I2Cdev::readBits(devAddr, MPU6050_RA_PWR_MGMT_2, MPU6050_PWR2_LP_WAKE_CTRL_BIT, MPU6050_PWR2_LP_WAKE_CTRL_LENGTH, buffer);\par
+    return buffer[0];\par
+\}\par
+/** Set wake frequency in Accel-Only Low Power Mode.\par
+ * @param frequency New wake frequency\par
+ * @see MPU6050_RA_PWR_MGMT_2\par
+ */\par
+void MPU6050::setWakeFrequency(uint8_t frequency) \{\par
+    I2Cdev::writeBits(devAddr, MPU6050_RA_PWR_MGMT_2, MPU6050_PWR2_LP_WAKE_CTRL_BIT, MPU6050_PWR2_LP_WAKE_CTRL_LENGTH, frequency);\par
+\}\par
+\par
+/** Get X-axis accelerometer standby enabled status.\par
+ * If enabled, the X-axis will not gather or report data (or use power).\par
+ * @return Current X-axis standby enabled status\par
+ * @see MPU6050_RA_PWR_MGMT_2\par
+ * @see MPU6050_PWR2_STBY_XA_BIT\par
+ */\par
+bool MPU6050::getStandbyXAccelEnabled() \{\par
+    I2Cdev::readBit(devAddr, MPU6050_RA_PWR_MGMT_2, MPU6050_PWR2_STBY_XA_BIT, buffer);\par
+    return buffer[0];\par
+\}\par
+/** Set X-axis accelerometer standby enabled status.\par
+ * @param New X-axis standby enabled status\par
+ * @see getStandbyXAccelEnabled()\par
+ * @see MPU6050_RA_PWR_MGMT_2\par
+ * @see MPU6050_PWR2_STBY_XA_BIT\par
+ */\par
+void MPU6050::setStandbyXAccelEnabled(bool enabled) \{\par
+    I2Cdev::writeBit(devAddr, MPU6050_RA_PWR_MGMT_2, MPU6050_PWR2_STBY_XA_BIT, enabled);\par
+\}\par
+/** Get Y-axis accelerometer standby enabled status.\par
+ * If enabled, the Y-axis will not gather or report data (or use power).\par
+ * @return Current Y-axis standby enabled status\par
+ * @see MPU6050_RA_PWR_MGMT_2\par
+ * @see MPU6050_PWR2_STBY_YA_BIT\par
+ */\par
+bool MPU6050::getStandbyYAccelEnabled() \{\par
+    I2Cdev::readBit(devAddr, MPU6050_RA_PWR_MGMT_2, MPU6050_PWR2_STBY_YA_BIT, buffer);\par
+    return buffer[0];\par
+\}\par
+/** Set Y-axis accelerometer standby enabled status.\par
+ * @param New Y-axis standby enabled status\par
+ * @see getStandbyYAccelEnabled()\par
+ * @see MPU6050_RA_PWR_MGMT_2\par
+ * @see MPU6050_PWR2_STBY_YA_BIT\par
+ */\par
+void MPU6050::setStandbyYAccelEnabled(bool enabled) \{\par
+    I2Cdev::writeBit(devAddr, MPU6050_RA_PWR_MGMT_2, MPU6050_PWR2_STBY_YA_BIT, enabled);\par
+\}\par
+/** Get Z-axis accelerometer standby enabled status.\par
+ * If enabled, the Z-axis will not gather or report data (or use power).\par
+ * @return Current Z-axis standby enabled status\par
+ * @see MPU6050_RA_PWR_MGMT_2\par
+ * @see MPU6050_PWR2_STBY_ZA_BIT\par
+ */\par
+bool MPU6050::getStandbyZAccelEnabled() \{\par
+    I2Cdev::readBit(devAddr, MPU6050_RA_PWR_MGMT_2, MPU6050_PWR2_STBY_ZA_BIT, buffer);\par
+    return buffer[0];\par
+\}\par
+/** Set Z-axis accelerometer standby enabled status.\par
+ * @param New Z-axis standby enabled status\par
+ * @see getStandbyZAccelEnabled()\par
+ * @see MPU6050_RA_PWR_MGMT_2\par
+ * @see MPU6050_PWR2_STBY_ZA_BIT\par
+ */\par
+void MPU6050::setStandbyZAccelEnabled(bool enabled) \{\par
+    I2Cdev::writeBit(devAddr, MPU6050_RA_PWR_MGMT_2, MPU6050_PWR2_STBY_ZA_BIT, enabled);\par
+\}\par
+/** Get X-axis gyroscope standby enabled status.\par
+ * If enabled, the X-axis will not gather or report data (or use power).\par
+ * @return Current X-axis standby enabled status\par
+ * @see MPU6050_RA_PWR_MGMT_2\par
+ * @see MPU6050_PWR2_STBY_XG_BIT\par
+ */\par
+bool MPU6050::getStandbyXGyroEnabled() \{\par
+    I2Cdev::readBit(devAddr, MPU6050_RA_PWR_MGMT_2, MPU6050_PWR2_STBY_XG_BIT, buffer);\par
+    return buffer[0];\par
+\}\par
+/** Set X-axis gyroscope standby enabled status.\par
+ * @param New X-axis standby enabled status\par
+ * @see getStandbyXGyroEnabled()\par
+ * @see MPU6050_RA_PWR_MGMT_2\par
+ * @see MPU6050_PWR2_STBY_XG_BIT\par
+ */\par
+void MPU6050::setStandbyXGyroEnabled(bool enabled) \{\par
+    I2Cdev::writeBit(devAddr, MPU6050_RA_PWR_MGMT_2, MPU6050_PWR2_STBY_XG_BIT, enabled);\par
+\}\par
+/** Get Y-axis gyroscope standby enabled status.\par
+ * If enabled, the Y-axis will not gather or report data (or use power).\par
+ * @return Current Y-axis standby enabled status\par
+ * @see MPU6050_RA_PWR_MGMT_2\par
+ * @see MPU6050_PWR2_STBY_YG_BIT\par
+ */\par
+bool MPU6050::getStandbyYGyroEnabled() \{\par
+    I2Cdev::readBit(devAddr, MPU6050_RA_PWR_MGMT_2, MPU6050_PWR2_STBY_YG_BIT, buffer);\par
+    return buffer[0];\par
+\}\par
+/** Set Y-axis gyroscope standby enabled status.\par
+ * @param New Y-axis standby enabled status\par
+ * @see getStandbyYGyroEnabled()\par
+ * @see MPU6050_RA_PWR_MGMT_2\par
+ * @see MPU6050_PWR2_STBY_YG_BIT\par
+ */\par
+void MPU6050::setStandbyYGyroEnabled(bool enabled) \{\par
+    I2Cdev::writeBit(devAddr, MPU6050_RA_PWR_MGMT_2, MPU6050_PWR2_STBY_YG_BIT, enabled);\par
+\}\par
+/** Get Z-axis gyroscope standby enabled status.\par
+ * If enabled, the Z-axis will not gather or report data (or use power).\par
+ * @return Current Z-axis standby enabled status\par
+ * @see MPU6050_RA_PWR_MGMT_2\par
+ * @see MPU6050_PWR2_STBY_ZG_BIT\par
+ */\par
+bool MPU6050::getStandbyZGyroEnabled() \{\par
+    I2Cdev::readBit(devAddr, MPU6050_RA_PWR_MGMT_2, MPU6050_PWR2_STBY_ZG_BIT, buffer);\par
+    return buffer[0];\par
+\}\par
+/** Set Z-axis gyroscope standby enabled status.\par
+ * @param New Z-axis standby enabled status\par
+ * @see getStandbyZGyroEnabled()\par
+ * @see MPU6050_RA_PWR_MGMT_2\par
+ * @see MPU6050_PWR2_STBY_ZG_BIT\par
+ */\par
+void MPU6050::setStandbyZGyroEnabled(bool enabled) \{\par
+    I2Cdev::writeBit(devAddr, MPU6050_RA_PWR_MGMT_2, MPU6050_PWR2_STBY_ZG_BIT, enabled);\par
+\}\par
+\par
+// FIFO_COUNT* registers\par
+\par
+/** Get current FIFO buffer size.\par
+ * This value indicates the number of bytes stored in the FIFO buffer. This\par
+ * number is in turn the number of bytes that can be read from the FIFO buffer\par
+ * and it is directly proportional to the number of samples available given the\par
+ * set of sensor data bound to be stored in the FIFO (register 35 and 36).\par
+ * @return Current FIFO buffer size\par
+ */\par
+uint16_t MPU6050::getFIFOCount() \{\par
+    I2Cdev::readBytes(devAddr, MPU6050_RA_FIFO_COUNTH, 2, buffer);\par
+    return (((uint16_t)buffer[0]) << 8) | buffer[1];\par
+\}\par
+\par
+// FIFO_R_W register\par
+\par
+/** Get byte from FIFO buffer.\par
+ * This register is used to read and write data from the FIFO buffer. Data is\par
+ * written to the FIFO in order of register number (from lowest to highest). If\par
+ * all the FIFO enable flags (see below) are enabled and all External Sensor\par
+ * Data registers (Registers 73 to 96) are associated with a Slave device, the\par
+ * contents of registers 59 through 96 will be written in order at the Sample\par
+ * Rate.\par
+ *\par
+ * The contents of the sensor data registers (Registers 59 to 96) are written\par
+ * into the FIFO buffer when their corresponding FIFO enable flags are set to 1\par
+ * in FIFO_EN (Register 35). An additional flag for the sensor data registers\par
+ * associated with I2C Slave 3 can be found in I2C_MST_CTRL (Register 36).\par
+ *\par
+ * If the FIFO buffer has overflowed, the status bit FIFO_OFLOW_INT is\par
+ * automatically set to 1. This bit is located in INT_STATUS (Register 58).\par
+ * When the FIFO buffer has overflowed, the oldest data will be lost and new\par
+ * data will be written to the FIFO.\par
+ *\par
+ * If the FIFO buffer is empty, reading this register will return the last byte\par
+ * that was previously read from the FIFO until new data is available. The user\par
+ * should check FIFO_COUNT to ensure that the FIFO buffer is not read when\par
+ * empty.\par
+ *\par
+ * @return Byte from FIFO buffer\par
+ */\par
+uint8_t MPU6050::getFIFOByte() \{\par
+    I2Cdev::readByte(devAddr, MPU6050_RA_FIFO_R_W, buffer);\par
+    return buffer[0];\par
+\}\par
+void MPU6050::getFIFOBytes(uint8_t *data, uint8_t length) \{\par
+    if(length > 0)\{\par
+        I2Cdev::readBytes(devAddr, MPU6050_RA_FIFO_R_W, length, data);\par
+    \} else \{\par
+    \tab *data = 0;\par
+    \}\par
+\}\par
+/** Write byte to FIFO buffer.\par
+ * @see getFIFOByte()\par
+ * @see MPU6050_RA_FIFO_R_W\par
+ */\par
+void MPU6050::setFIFOByte(uint8_t data) \{\par
+    I2Cdev::writeByte(devAddr, MPU6050_RA_FIFO_R_W, data);\par
+\}\par
+\par
+// WHO_AM_I register\par
+\par
+/** Get Device ID.\par
+ * This register is used to verify the identity of the device (0b110100, 0x34).\par
+ * @return Device ID (6 bits only! should be 0x34)\par
+ * @see MPU6050_RA_WHO_AM_I\par
+ * @see MPU6050_WHO_AM_I_BIT\par
+ * @see MPU6050_WHO_AM_I_LENGTH\par
+ */\par
+uint8_t MPU6050::getDeviceID() \{\par
+    I2Cdev::readBits(devAddr, MPU6050_RA_WHO_AM_I, MPU6050_WHO_AM_I_BIT, MPU6050_WHO_AM_I_LENGTH, buffer);\par
+    return buffer[0];\par
+\}\par
+/** Set Device ID.\par
+ * Write a new ID into the WHO_AM_I register (no idea why this should ever be\par
+ * necessary though).\par
+ * @param id New device ID to set.\par
+ * @see getDeviceID()\par
+ * @see MPU6050_RA_WHO_AM_I\par
+ * @see MPU6050_WHO_AM_I_BIT\par
+ * @see MPU6050_WHO_AM_I_LENGTH\par
+ */\par
+void MPU6050::setDeviceID(uint8_t id) \{\par
+    I2Cdev::writeBits(devAddr, MPU6050_RA_WHO_AM_I, MPU6050_WHO_AM_I_BIT, MPU6050_WHO_AM_I_LENGTH, id);\par
+\}\par
+\par
+// ======== UNDOCUMENTED/DMP REGISTERS/METHODS ========\par
+\par
+// XG_OFFS_TC register\par
+\par
+uint8_t MPU6050::getOTPBankValid() \{\par
+    I2Cdev::readBit(devAddr, MPU6050_RA_XG_OFFS_TC, MPU6050_TC_OTP_BNK_VLD_BIT, buffer);\par
+    return buffer[0];\par
+\}\par
+void MPU6050::setOTPBankValid(bool enabled) \{\par
+    I2Cdev::writeBit(devAddr, MPU6050_RA_XG_OFFS_TC, MPU6050_TC_OTP_BNK_VLD_BIT, enabled);\par
+\}\par
+int8_t MPU6050::getXGyroOffsetTC() \{\par
+    I2Cdev::readBits(devAddr, MPU6050_RA_XG_OFFS_TC, MPU6050_TC_OFFSET_BIT, MPU6050_TC_OFFSET_LENGTH, buffer);\par
+    return buffer[0];\par
+\}\par
+void MPU6050::setXGyroOffsetTC(int8_t offset) \{\par
+    I2Cdev::writeBits(devAddr, MPU6050_RA_XG_OFFS_TC, MPU6050_TC_OFFSET_BIT, MPU6050_TC_OFFSET_LENGTH, offset);\par
+\}\par
+\par
+// YG_OFFS_TC register\par
+\par
+int8_t MPU6050::getYGyroOffsetTC() \{\par
+    I2Cdev::readBits(devAddr, MPU6050_RA_YG_OFFS_TC, MPU6050_TC_OFFSET_BIT, MPU6050_TC_OFFSET_LENGTH, buffer);\par
+    return buffer[0];\par
+\}\par
+void MPU6050::setYGyroOffsetTC(int8_t offset) \{\par
+    I2Cdev::writeBits(devAddr, MPU6050_RA_YG_OFFS_TC, MPU6050_TC_OFFSET_BIT, MPU6050_TC_OFFSET_LENGTH, offset);\par
+\}\par
+\par
+// ZG_OFFS_TC register\par
+\par
+int8_t MPU6050::getZGyroOffsetTC() \{\par
+    I2Cdev::readBits(devAddr, MPU6050_RA_ZG_OFFS_TC, MPU6050_TC_OFFSET_BIT, MPU6050_TC_OFFSET_LENGTH, buffer);\par
+    return buffer[0];\par
+\}\par
+void MPU6050::setZGyroOffsetTC(int8_t offset) \{\par
+    I2Cdev::writeBits(devAddr, MPU6050_RA_ZG_OFFS_TC, MPU6050_TC_OFFSET_BIT, MPU6050_TC_OFFSET_LENGTH, offset);\par
+\}\par
+\par
+// X_FINE_GAIN register\par
+\par
+int8_t MPU6050::getXFineGain() \{\par
+    I2Cdev::readByte(devAddr, MPU6050_RA_X_FINE_GAIN, buffer);\par
+    return buffer[0];\par
+\}\par
+void MPU6050::setXFineGain(int8_t gain) \{\par
+    I2Cdev::writeByte(devAddr, MPU6050_RA_X_FINE_GAIN, gain);\par
+\}\par
+\par
+// Y_FINE_GAIN register\par
+\par
+int8_t MPU6050::getYFineGain() \{\par
+    I2Cdev::readByte(devAddr, MPU6050_RA_Y_FINE_GAIN, buffer);\par
+    return buffer[0];\par
+\}\par
+void MPU6050::setYFineGain(int8_t gain) \{\par
+    I2Cdev::writeByte(devAddr, MPU6050_RA_Y_FINE_GAIN, gain);\par
+\}\par
+\par
+// Z_FINE_GAIN register\par
+\par
+int8_t MPU6050::getZFineGain() \{\par
+    I2Cdev::readByte(devAddr, MPU6050_RA_Z_FINE_GAIN, buffer);\par
+    return buffer[0];\par
+\}\par
+void MPU6050::setZFineGain(int8_t gain) \{\par
+    I2Cdev::writeByte(devAddr, MPU6050_RA_Z_FINE_GAIN, gain);\par
+\}\par
+\par
+// XA_OFFS_* registers\par
+\par
+int16_t MPU6050::getXAccelOffset() \{\par
+    I2Cdev::readBytes(devAddr, MPU6050_RA_XA_OFFS_H, 2, buffer);\par
+    return (((int16_t)buffer[0]) << 8) | buffer[1];\par
+\}\par
+void MPU6050::setXAccelOffset(int16_t offset) \{\par
+    I2Cdev::writeWord(devAddr, MPU6050_RA_XA_OFFS_H, offset);\par
+\}\par
+\par
+// YA_OFFS_* register\par
+\par
+int16_t MPU6050::getYAccelOffset() \{\par
+    I2Cdev::readBytes(devAddr, MPU6050_RA_YA_OFFS_H, 2, buffer);\par
+    return (((int16_t)buffer[0]) << 8) | buffer[1];\par
+\}\par
+void MPU6050::setYAccelOffset(int16_t offset) \{\par
+    I2Cdev::writeWord(devAddr, MPU6050_RA_YA_OFFS_H, offset);\par
+\}\par
+\par
+// ZA_OFFS_* register\par
+\par
+int16_t MPU6050::getZAccelOffset() \{\par
+    I2Cdev::readBytes(devAddr, MPU6050_RA_ZA_OFFS_H, 2, buffer);\par
+    return (((int16_t)buffer[0]) << 8) | buffer[1];\par
+\}\par
+void MPU6050::setZAccelOffset(int16_t offset) \{\par
+    I2Cdev::writeWord(devAddr, MPU6050_RA_ZA_OFFS_H, offset);\par
+\}\par
+\par
+// XG_OFFS_USR* registers\par
+\par
+int16_t MPU6050::getXGyroOffset() \{\par
+    I2Cdev::readBytes(devAddr, MPU6050_RA_XG_OFFS_USRH, 2, buffer);\par
+    return (((int16_t)buffer[0]) << 8) | buffer[1];\par
+\}\par
+void MPU6050::setXGyroOffset(int16_t offset) \{\par
+    I2Cdev::writeWord(devAddr, MPU6050_RA_XG_OFFS_USRH, offset);\par
+\}\par
+\par
+// YG_OFFS_USR* register\par
+\par
+int16_t MPU6050::getYGyroOffset() \{\par
+    I2Cdev::readBytes(devAddr, MPU6050_RA_YG_OFFS_USRH, 2, buffer);\par
+    return (((int16_t)buffer[0]) << 8) | buffer[1];\par
+\}\par
+void MPU6050::setYGyroOffset(int16_t offset) \{\par
+    I2Cdev::writeWord(devAddr, MPU6050_RA_YG_OFFS_USRH, offset);\par
+\}\par
+\par
+// ZG_OFFS_USR* register\par
+\par
+int16_t MPU6050::getZGyroOffset() \{\par
+    I2Cdev::readBytes(devAddr, MPU6050_RA_ZG_OFFS_USRH, 2, buffer);\par
+    return (((int16_t)buffer[0]) << 8) | buffer[1];\par
+\}\par
+void MPU6050::setZGyroOffset(int16_t offset) \{\par
+    I2Cdev::writeWord(devAddr, MPU6050_RA_ZG_OFFS_USRH, offset);\par
+\}\par
+\par
+// INT_ENABLE register (DMP functions)\par
+\par
+bool MPU6050::getIntPLLReadyEnabled() \{\par
+    I2Cdev::readBit(devAddr, MPU6050_RA_INT_ENABLE, MPU6050_INTERRUPT_PLL_RDY_INT_BIT, buffer);\par
+    return buffer[0];\par
+\}\par
+void MPU6050::setIntPLLReadyEnabled(bool enabled) \{\par
+    I2Cdev::writeBit(devAddr, MPU6050_RA_INT_ENABLE, MPU6050_INTERRUPT_PLL_RDY_INT_BIT, enabled);\par
+\}\par
+bool MPU6050::getIntDMPEnabled() \{\par
+    I2Cdev::readBit(devAddr, MPU6050_RA_INT_ENABLE, MPU6050_INTERRUPT_DMP_INT_BIT, buffer);\par
+    return buffer[0];\par
+\}\par
+void MPU6050::setIntDMPEnabled(bool enabled) \{\par
+    I2Cdev::writeBit(devAddr, MPU6050_RA_INT_ENABLE, MPU6050_INTERRUPT_DMP_INT_BIT, enabled);\par
+\}\par
+\par
+// DMP_INT_STATUS\par
+\par
+bool MPU6050::getDMPInt5Status() \{\par
+    I2Cdev::readBit(devAddr, MPU6050_RA_DMP_INT_STATUS, MPU6050_DMPINT_5_BIT, buffer);\par
+    return buffer[0];\par
+\}\par
+bool MPU6050::getDMPInt4Status() \{\par
+    I2Cdev::readBit(devAddr, MPU6050_RA_DMP_INT_STATUS, MPU6050_DMPINT_4_BIT, buffer);\par
+    return buffer[0];\par
+\}\par
+bool MPU6050::getDMPInt3Status() \{\par
+    I2Cdev::readBit(devAddr, MPU6050_RA_DMP_INT_STATUS, MPU6050_DMPINT_3_BIT, buffer);\par
+    return buffer[0];\par
+\}\par
+bool MPU6050::getDMPInt2Status() \{\par
+    I2Cdev::readBit(devAddr, MPU6050_RA_DMP_INT_STATUS, MPU6050_DMPINT_2_BIT, buffer);\par
+    return buffer[0];\par
+\}\par
+bool MPU6050::getDMPInt1Status() \{\par
+    I2Cdev::readBit(devAddr, MPU6050_RA_DMP_INT_STATUS, MPU6050_DMPINT_1_BIT, buffer);\par
+    return buffer[0];\par
+\}\par
+bool MPU6050::getDMPInt0Status() \{\par
+    I2Cdev::readBit(devAddr, MPU6050_RA_DMP_INT_STATUS, MPU6050_DMPINT_0_BIT, buffer);\par
+    return buffer[0];\par
+\}\par
+\par
+// INT_STATUS register (DMP functions)\par
+\par
+bool MPU6050::getIntPLLReadyStatus() \{\par
+    I2Cdev::readBit(devAddr, MPU6050_RA_INT_STATUS, MPU6050_INTERRUPT_PLL_RDY_INT_BIT, buffer);\par
+    return buffer[0];\par
+\}\par
+bool MPU6050::getIntDMPStatus() \{\par
+    I2Cdev::readBit(devAddr, MPU6050_RA_INT_STATUS, MPU6050_INTERRUPT_DMP_INT_BIT, buffer);\par
+    return buffer[0];\par
+\}\par
+\par
+// USER_CTRL register (DMP functions)\par
+\par
+bool MPU6050::getDMPEnabled() \{\par
+    I2Cdev::readBit(devAddr, MPU6050_RA_USER_CTRL, MPU6050_USERCTRL_DMP_EN_BIT, buffer);\par
+    return buffer[0];\par
+\}\par
+void MPU6050::setDMPEnabled(bool enabled) \{\par
+    I2Cdev::writeBit(devAddr, MPU6050_RA_USER_CTRL, MPU6050_USERCTRL_DMP_EN_BIT, enabled);\par
+\}\par
+void MPU6050::resetDMP() \{\par
+    I2Cdev::writeBit(devAddr, MPU6050_RA_USER_CTRL, MPU6050_USERCTRL_DMP_RESET_BIT, true);\par
+\}\par
+\par
+// BANK_SEL register\par
+\par
+void MPU6050::setMemoryBank(uint8_t bank, bool prefetchEnabled, bool userBank) \{\par
+    bank &= 0x1F;\par
+    if (userBank) bank |= 0x20;\par
+    if (prefetchEnabled) bank |= 0x40;\par
+    I2Cdev::writeByte(devAddr, MPU6050_RA_BANK_SEL, bank);\par
+\}\par
+\par
+// MEM_START_ADDR register\par
+\par
+void MPU6050::setMemoryStartAddress(uint8_t address) \{\par
+    I2Cdev::writeByte(devAddr, MPU6050_RA_MEM_START_ADDR, address);\par
+\}\par
+\par
+// MEM_R_W register\par
+\par
+uint8_t MPU6050::readMemoryByte() \{\par
+    I2Cdev::readByte(devAddr, MPU6050_RA_MEM_R_W, buffer);\par
+    return buffer[0];\par
+\}\par
+void MPU6050::writeMemoryByte(uint8_t data) \{\par
+    I2Cdev::writeByte(devAddr, MPU6050_RA_MEM_R_W, data);\par
+\}\par
+void MPU6050::readMemoryBlock(uint8_t *data, uint16_t dataSize, uint8_t bank, uint8_t address) \{\par
+    setMemoryBank(bank);\par
+    setMemoryStartAddress(address);\par
+    uint8_t chunkSize;\par
+    for (uint16_t i = 0; i < dataSize;) \{\par
+        // determine correct chunk size according to bank position and data size\par
+        chunkSize = MPU6050_DMP_MEMORY_CHUNK_SIZE;\par
+\par
+        // make sure we don't go past the data size\par
+        if (i + chunkSize > dataSize) chunkSize = dataSize - i;\par
+\par
+        // make sure this chunk doesn't go past the bank boundary (256 bytes)\par
+        if (chunkSize > 256 - address) chunkSize = 256 - address;\par
+\par
+        // read the chunk of data as specified\par
+        I2Cdev::readBytes(devAddr, MPU6050_RA_MEM_R_W, chunkSize, data + i);\par
+        \par
+        // increase byte index by [chunkSize]\par
+        i += chunkSize;\par
+\par
+        // uint8_t automatically wraps to 0 at 256\par
+        address += chunkSize;\par
+\par
+        // if we aren't done, update bank (if necessary) and address\par
+        if (i < dataSize) \{\par
+            if (address == 0) bank++;\par
+            setMemoryBank(bank);\par
+            setMemoryStartAddress(address);\par
+        \}\par
+    \}\par
+\}\par
+bool MPU6050::writeMemoryBlock(const uint8_t *data, uint16_t dataSize, uint8_t bank, uint8_t address, bool verify, bool useProgMem) \{\par
+    setMemoryBank(bank);\par
+    setMemoryStartAddress(address);\par
+    uint8_t chunkSize;\par
+    uint8_t *verifyBuffer;\par
+    uint8_t *progBuffer=0;\par
+    uint16_t i;\par
+    uint8_t j;\par
+    if (verify) verifyBuffer = (uint8_t *)malloc(MPU6050_DMP_MEMORY_CHUNK_SIZE);\par
+    if (useProgMem) progBuffer = (uint8_t *)malloc(MPU6050_DMP_MEMORY_CHUNK_SIZE);\par
+    for (i = 0; i < dataSize;) \{\par
+        // determine correct chunk size according to bank position and data size\par
+        chunkSize = MPU6050_DMP_MEMORY_CHUNK_SIZE;\par
+\par
+        // make sure we don't go past the data size\par
+        if (i + chunkSize > dataSize) chunkSize = dataSize - i;\par
+\par
+        // make sure this chunk doesn't go past the bank boundary (256 bytes)\par
+        if (chunkSize > 256 - address) chunkSize = 256 - address;\par
+        \par
+        if (useProgMem) \{\par
+            // write the chunk of data as specified\par
+            for (j = 0; j < chunkSize; j++) progBuffer[j] = pgm_read_byte(data + i + j);\par
+        \} else \{\par
+            // write the chunk of data as specified\par
+            progBuffer = (uint8_t *)data + i;\par
+        \}\par
+\par
+        I2Cdev::writeBytes(devAddr, MPU6050_RA_MEM_R_W, chunkSize, progBuffer);\par
+\par
+        // verify data if needed\par
+        if (verify && verifyBuffer) \{\par
+            setMemoryBank(bank);\par
+            setMemoryStartAddress(address);\par
+            I2Cdev::readBytes(devAddr, MPU6050_RA_MEM_R_W, chunkSize, verifyBuffer);\par
+            if (memcmp(progBuffer, verifyBuffer, chunkSize) != 0) \{\par
+                /*Serial.print("Block write verification error, bank ");\par
+                Serial.print(bank, DEC);\par
+                Serial.print(", address ");\par
+                Serial.print(address, DEC);\par
+                Serial.print("!\\nExpected:");\par
+                for (j = 0; j < chunkSize; j++) \{\par
+                    Serial.print(" 0x");\par
+                    if (progBuffer[j] < 16) Serial.print("0");\par
+                    Serial.print(progBuffer[j], HEX);\par
+                \}\par
+                Serial.print("\\nReceived:");\par
+                for (uint8_t j = 0; j < chunkSize; j++) \{\par
+                    Serial.print(" 0x");\par
+                    if (verifyBuffer[i + j] < 16) Serial.print("0");\par
+                    Serial.print(verifyBuffer[i + j], HEX);\par
+                \}\par
+                Serial.print("\\n");*/\par
+                free(verifyBuffer);\par
+                if (useProgMem) free(progBuffer);\par
+                return false; // uh oh.\par
+            \}\par
+        \}\par
+\par
+        // increase byte index by [chunkSize]\par
+        i += chunkSize;\par
+\par
+        // uint8_t automatically wraps to 0 at 256\par
+        address += chunkSize;\par
+\par
+        // if we aren't done, update bank (if necessary) and address\par
+        if (i < dataSize) \{\par
+            if (address == 0) bank++;\par
+            setMemoryBank(bank);\par
+            setMemoryStartAddress(address);\par
+        \}\par
+    \}\par
+    if (verify) free(verifyBuffer);\par
+    if (useProgMem) free(progBuffer);\par
+    return true;\par
+\}\par
+bool MPU6050::writeProgMemoryBlock(const uint8_t *data, uint16_t dataSize, uint8_t bank, uint8_t address, bool verify) \{\par
+    return writeMemoryBlock(data, dataSize, bank, address, verify, true);\par
+\}\par
+bool MPU6050::writeDMPConfigurationSet(const uint8_t *data, uint16_t dataSize, bool useProgMem) \{\par
+    uint8_t *progBuffer = 0;\par
+\tab uint8_t success, special;\par
+    uint16_t i, j;\par
+    if (useProgMem) \{\par
+        progBuffer = (uint8_t *)malloc(8); // assume 8-byte blocks, realloc later if necessary\par
+    \}\par
+\par
+    // config set data is a long string of blocks with the following structure:\par
+    // [bank] [offset] [length] [byte[0], byte[1], ..., byte[length]]\par
+    uint8_t bank, offset, length;\par
+    for (i = 0; i < dataSize;) \{\par
+        if (useProgMem) \{\par
+            bank = pgm_read_byte(data + i++);\par
+            offset = pgm_read_byte(data + i++);\par
+            length = pgm_read_byte(data + i++);\par
+        \} else \{\par
+            bank = data[i++];\par
+            offset = data[i++];\par
+            length = data[i++];\par
+        \}\par
+\par
+        // write data or perform special action\par
+        if (length > 0) \{\par
+            // regular block of data to write\par
+            /*Serial.print("Writing config block to bank ");\par
+            Serial.print(bank);\par
+            Serial.print(", offset ");\par
+            Serial.print(offset);\par
+            Serial.print(", length=");\par
+            Serial.println(length);*/\par
+            if (useProgMem) \{\par
+                if (sizeof(progBuffer) < length) progBuffer = (uint8_t *)realloc(progBuffer, length);\par
+                for (j = 0; j < length; j++) progBuffer[j] = pgm_read_byte(data + i + j);\par
+            \} else \{\par
+                progBuffer = (uint8_t *)data + i;\par
+            \}\par
+            success = writeMemoryBlock(progBuffer, length, bank, offset, true);\par
+            i += length;\par
+        \} else \{\par
+            // special instruction\par
+            // NOTE: this kind of behavior (what and when to do certain things)\par
+            // is totally undocumented. This code is in here based on observed\par
+            // behavior only, and exactly why (or even whether) it has to be here\par
+            // is anybody's guess for now.\par
+            if (useProgMem) \{\par
+                special = pgm_read_byte(data + i++);\par
+            \} else \{\par
+                special = data[i++];\par
+            \}\par
+            /*Serial.print("Special command code ");\par
+            Serial.print(special, HEX);\par
+            Serial.println(" found...");*/\par
+            if (special == 0x01) \{\par
+                // enable DMP-related interrupts\par
+                \par
+                //setIntZeroMotionEnabled(true);\par
+                //setIntFIFOBufferOverflowEnabled(true);\par
+                //setIntDMPEnabled(true);\par
+                I2Cdev::writeByte(devAddr, MPU6050_RA_INT_ENABLE, 0x32);  // single operation\par
+\par
+                success = true;\par
+            \} else \{\par
+                // unknown special command\par
+                success = false;\par
+            \}\par
+        \}\par
+        \par
+        if (!success) \{\par
+            if (useProgMem) free(progBuffer);\par
+            return false; // uh oh\par
+        \}\par
+    \}\par
+    if (useProgMem) free(progBuffer);\par
+    return true;\par
+\}\par
+bool MPU6050::writeProgDMPConfigurationSet(const uint8_t *data, uint16_t dataSize) \{\par
+    return writeDMPConfigurationSet(data, dataSize, true);\par
+\}\par
+\par
+// DMP_CFG_1 register\par
+\par
+uint8_t MPU6050::getDMPConfig1() \{\par
+    I2Cdev::readByte(devAddr, MPU6050_RA_DMP_CFG_1, buffer);\par
+    return buffer[0];\par
+\}\par
+void MPU6050::setDMPConfig1(uint8_t config) \{\par
+    I2Cdev::writeByte(devAddr, MPU6050_RA_DMP_CFG_1, config);\par
+\}\par
+\par
+// DMP_CFG_2 register\par
+\par
+uint8_t MPU6050::getDMPConfig2() \{\par
+    I2Cdev::readByte(devAddr, MPU6050_RA_DMP_CFG_2, buffer);\par
+    return buffer[0];\par
+\}\par
+void MPU6050::setDMPConfig2(uint8_t config) \{\par
+    I2Cdev::writeByte(devAddr, MPU6050_RA_DMP_CFG_2, config);\par
+\}\par
+\par
+}
+ 

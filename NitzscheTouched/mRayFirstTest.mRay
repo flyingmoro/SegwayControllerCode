@@ -2,18 +2,6 @@
     "channels": [
         {
             "displayName": "", 
-            "name": "SPEED_OUT", 
-            "show": true, 
-            "color": [
-                252, 
-                241, 
-                147
-            ], 
-            "isRequested": true, 
-            "id": 0
-        }, 
-        {
-            "displayName": "", 
             "name": "KIPPWINKEL_OUT", 
             "show": true, 
             "color": [
@@ -22,19 +10,43 @@
                 42
             ], 
             "isRequested": true, 
+            "id": 0
+        }, 
+        {
+            "displayName": "", 
+            "name": "mR_phi", 
+            "show": true, 
+            "color": [
+                255, 
+                85, 
+                0
+            ], 
+            "isRequested": true, 
             "id": 1
         }, 
         {
             "displayName": "", 
-            "name": "loopTime_OUT", 
+            "name": "mR_a", 
             "show": true, 
             "color": [
-                64, 
-                100, 
-                111
+                189, 
+                119, 
+                83
             ], 
             "isRequested": true, 
             "id": 2
+        }, 
+        {
+            "displayName": "", 
+            "name": "mR_phi_p", 
+            "show": true, 
+            "color": [
+                28, 
+                50, 
+                255
+            ], 
+            "isRequested": true, 
+            "id": 3
         }
     ], 
     "commands": [
@@ -70,11 +82,11 @@
                 "displayName": "Generische Ansicht"
             }
         ], 
-        "comPortBaudRate": 38400, 
-        "comPortDescription": "STMicroelectronics STLink Virtual COM Port (COM3)", 
+        "comPortBaudRate": 115200, 
+        "comPortDescription": "Arduino Mega 2560 (COM8)", 
         "computerIP": "192.168.0.133", 
         "udpPort": 10000, 
-        "pathToControllerCodeFolder": "D:\\00 eigene Daten\\000 FH\\S 6\\Segway\\SegwayControllerCode\\alterArduinoCodeNitzsche", 
+        "pathToControllerCodeFolder": "D:\\00 eigene Daten\\000 FH\\S 6\\Segway\\SegwayControllerCode\\NitzscheTouched", 
         "suppressParameterConfirmation": false, 
         "controllerLoopCycleTimeInUs": 2000, 
         "controllerIP": "192.168.0.15"
