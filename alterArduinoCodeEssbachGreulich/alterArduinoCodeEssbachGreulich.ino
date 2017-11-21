@@ -1,370 +1,442 @@
+// ======        PROGRAMMCODE SELBSTBALANCIERENDER ROBOTER        ====== //
 
-// use your gains from WOK
-#define KP 10.0
-#define TV 0.005
+//=== DEFINITION DER SCHALTER PINS ===//
+#define Schalter1 36        // Schalter 1 an Pin 36
+#define Schalter2 37        // Schalter 2 an Pin 37
+#define ZyklusZeitPin 39
 
+//=== DEFINITION DER MOTOR-ENCODER PINS ===//
+#define EncoderPinA1 18       // Gelbes Kabel Motor1 in 18
+#define EncoderPinB1 28       // Weißes Kabel Motor1 in 28
+#define EncoderPinA2 19       // Gelbes Kabel Motor 2 in 19
+#define EncoderPinB2 30       // Weißes Kabel Motor 2 in 30
 
-// DON'T TOUCH
+//=== DEFINITIONEN DER REGLERPARAMETER ===//
+#define KP1 4                 // Proportionalfaktor des Kipp-Reglers
+#define Nm2Speed 190          // Umrechungsfaktor um von Nm auf Speedwert zu kommen
+#define KD 0                  // Differentialfaktor des Kipp-Reglers
+#define Tv 0.08               // Vorhaltzeit D-Anteil Kippregler
+#define KI 0.0                // Integralfaktor
+#define Tn 0.001              // Nachstellzeit I-Anteil Kippregler
+#define IntegratorMax 0.5     // Grenze des Integralanteils
+#define KP2 0.0               // Proportionalfaktor des Geschwindigeitsreglers
+#define RO 0                  // PWM Offset zur Überwindung der Reibung in Motor und Getriebe
+#define WinkelSoll 0          // Roboter soll immer aufrecht stehen
+#define Balancepunkt 0.018    // Der gemessene Winkel in aufrechter Position
+#define LimitAn  0.2
+#define LimitAus 0.8
 
-#include <math.h>
-#include <I2Cdev.h>
-#include <MPU6050.h>
+//=== DEFINITIONEN ULTRASCHALLSENSOR ===//
+#define TriggerPin  26  // Ultraschall Trigger-Pin in 26
+#define EchoPin     27  // Ultraschall Echo-Pin in 27
+#define DistanzMax 400  // Maximale Distanz (in cm) auf die gepingt wird. Maximale Sensordistanz etwa bei 400-500cm.
+
+//=== EINBINDUNG DER BIBLIOTHEKEN ===//
 #include <DualVNH5019MotorShield.h>     // Bibliothek für den Motorcontroller
+#include <MPU6050_6Axis_MotionApps20.h> // Bibliothek für Bewegungssensor MPU6050
+#include <I2Cdev.h>                     // Bibliothek für Bussystem des MPU6050
+#include <helper_3dmath.h>              // Bibliothek für mathematische Berechnungen des MPU6050
+#include <NewPing.h>                    // Bibliothek für den Ultraschallsensor
+MPU6050 mpu;                            // Teilte der Bibliothek mit welcher Sensor verwendet wird
+DualVNH5019MotorShield md;              // Zugriff auf den Motorcontroller über md
+NewPing sonar(TriggerPin, EchoPin, DistanzMax); // NewPing-Setup der Pins und der maximalen Distanz.
 
+//=== MÖGLICHE UMSETZUNG DES GESCHWINDIGKEITSPROFIL (wird aktuell nicht verwendet)
+float vVerlaufZeit[]={0, 3.0};    // Zeit-Vektor Geschwindigkeitsprofil
+float vVerlaufGeschw[]={0, 4.0};  // Geschwindigkeits-Vektor Geschwindigkeitsprofil
+float vVerlaufAnzahl = 2;         // Anzahl an Stützstellen des Geschwindigkeitsprofils
 
-#define SW1 36        // Schalter 1 an Pin 36
-#define SW2 37        // Schalter 2 an Pin 37
+//=== GLOBALE VARIABLEN ZUM AUSLESEN VON STATUS & SENSORDATEN MIT MPU6050_6Axis_MotionApps20.h ===//
+#define InterruptPin 3  // PIN 20 wird als Interrupt-Pin definiert
+bool dmpReady = false;  // Wir auf true gesetzt, wenn die Initialisierung des DMP erfolgreich war
+uint8_t mpuIntStatus;   // Besitzt das eigentliche Unterbrechungsstatusbyte des MPU
+uint8_t devStatus;      // Gibt nach jeder Deviceoperation deren Status zurück (0 = success, !0 = error)
+uint16_t PacketSize;    // Erwartete Größe der ausgelesenen Datenpakete (Standardwert ist 42 Bytes)
+int SPEED;              // Variable für die Ansteuerung der Motoren
 
-#define ENCA1 18       // Gelbes Kabel Motor1 in 18
-#define ENCB1 28       // Weißes Kabel Motor1 in 28
-#define ENCA2 19       // Gelbes Kabel Motor 2 in 19
-#define ENCB2 30       // Weißes Kabel Motor 2 in 30
-
-
-
+//=== GLOBALE VARIABLEN ENCODER ===//
 volatile long EncoderPos1 = 0; // Zählvariable des Encoders 1 (LINKS)
 volatile long EncoderPos2 = 0; // Zählvariable des Encoders 2 (RECHTS)
-#define REV2INC 960.0 //Incremente pro Umdrehung
 
-#define T_MOTION 3.0
-
-#define DB(x) Serial.println(x)
-//#define DB(x)
-
-
-#define OFFSET_PHI 0.01 //-0.015
-#define OFFSET_PHIP -0.03
-
-#define NM2SPEED 200.0
-#define KV 0.0
-#define ROL 0 // Friction Compensation Left
-#define ROR 5 // Friction Compensation Right
-#define MAX_PHI 0.35 // Switch off if phi exceeds this value
-
-#define LBUF 700
-
-#define PI_HALBE 1.570796
-#define PI_ 3.1415927
-
-unsigned int _time[LBUF];
-int _phi[LBUF];
-int _a[LBUF];
-int _phiP[LBUF];
-
-
-MPU6050 mpu;
-DualVNH5019MotorShield md;              // Zugriff auf den Motorcontroller über md
-
-//960 Inc per rev
-void doENCA1() {
-  int a, b;
-  b = digitalRead(ENCB1);//read B first, since A just changed and will change again only after B has changed
-  a = digitalRead(ENCA1);
-  if (a == HIGH) {
-    if (b == HIGH) EncoderPos1++;
-    else EncoderPos1--;
-  }
-  else {
-    if (b == HIGH) EncoderPos1--;
-    else EncoderPos1++;
-  }
-}
-void doENCA2() {
-  int a, b;
-  b = digitalRead(ENCB2);//read B first, since A just changed and will change again only after B has changed
-  a = digitalRead(ENCA2);
-  if (a == HIGH) {
-    if (b == HIGH) EncoderPos2--;
-    else EncoderPos2++;
-  }
-  else {
-    if (b == HIGH) EncoderPos2++;
-    else EncoderPos2--;
-  }
+//=== INTERRUPT DETECTION ROUTINE DES BEWEGUNGSSENSORS ===//
+volatile bool mpuInterrupt = false;    // Stellt fest, ob der MPU Interrupt-Pin auf 'HIGH' gesetzt wurde
+void dmpDataReady()
+{
+    mpuInterrupt = true;
 }
 
-
-void setupENC() {
-  pinMode (ENCA1, INPUT); digitalWrite (ENCA1, HIGH);
-  pinMode (ENCB1, INPUT); digitalWrite (ENCB1, HIGH);
-  //  attachInterrupt(5, doEncoder1, CHANGE);
-  attachInterrupt(digitalPinToInterrupt(ENCA1), doENCA1, CHANGE);
-
-  pinMode (ENCA2, INPUT); digitalWrite (ENCA2, HIGH);
-  pinMode (ENCB2, INPUT); digitalWrite (ENCB2, HIGH);
-  //  attachInterrupt(4, doEncoder2, CHANGE);
-  attachInterrupt(digitalPinToInterrupt(ENCA2), doENCA2, CHANGE);
-}
-
-void setupMPU() {
-  Wire.begin();
-  mpu.initialize();
-  Serial.println(mpu.testConnection() ? "MPU6050 connection successful" : "MPU6050 connection failed");
-}
-
-
-
-
-void setup() {
-  Serial.begin(115200);            // Initialisierung der seriellen Schnittstelle zur Kommunikation mit PC
-
-  Serial.println(F("Hello World")); // the F-Macro makes the string flash-memory
-
-  Serial.print(0); Serial.print("\t"); Serial.print(0); Serial.print("\r\n");
-
-  Serial.print(digitalPinToInterrupt(ENCA1)); Serial.print("\r\n");
-  Serial.print(digitalPinToInterrupt(ENCA2)); Serial.print("\r\n");
-
-
-
-
-  pinMode(SW1, INPUT);
-  pinMode(SW2, INPUT);
-
-  setupMPU();
-  md.init();
-
-  setupENC();
-
-  
-  Serial.println(F("---"));
-}
-
-int read_SW() {
-  static int sw_ = 0;
-  static int swState = -1;
-  static unsigned long nextSwitchMillis;
-  int s1, s2, sw;
-
-  s1 = digitalRead(SW1);
-  s2 = digitalRead(SW2);
-  sw = s1 == HIGH ? 1 : s2 == HIGH ? 2 : 0;
-
-  if (swState == -1) {
-    swState = sw;
-  }
-  else {
-  }
-  if (sw != sw_) {
-    nextSwitchMillis = millis() + 200;
-  }
-  if ((millis() > nextSwitchMillis) || (swState == -1)) swState = sw;
-  sw_ = sw;
-  return swState;
-}
-
-
-void dumpSingleBuffer(int idx) {
-  Serial.print(idx); Serial.print("\t");
-  Serial.print(_time[idx]); Serial.print("\t");
-  Serial.print(_a[idx]); Serial.print("\t");
-  Serial.print(_phi[idx]); Serial.print("\t");
-  Serial.print(_phiP[idx]); Serial.print("\t");
-  Serial.print("\r\n");
-
-}
-
-void dumpBuffer(unsigned int k) {
-  unsigned int idx;
-  Serial.println("------------------------------------------------");
-  for (idx = k; idx < LBUF; idx++) {
-    dumpSingleBuffer(idx);
-  }
-  for (idx = 0; idx < k; idx++) {
-    dumpSingleBuffer(idx);
-  }
-}
-
-
-void getMotion(float *phi, float *a, float *phiP, int *mm, int reset) {
-  int16_t ax, ay, az, px, py, pz;
-  static unsigned long last = 0;
-  unsigned long now;
-  float h;
-  float ax2, az2;
-  static float phiF = 0; // Phi gefiltert (Beobachter)
-  float phiA;  //Phi aus Beschleunigungen
-  float phiPS; //phiP vom Sensor
-
-  mpu.getMotion6(&ax, &ay, &az, &px, &py, &pz);
-  now = micros();
-
-  ax2 = (float)ax;
-  az2 = (float)az;
-  phiA = atan2(az2, ax2) - PI_HALBE - OFFSET_PHI;
-  
-  if ((last < 20000) || reset) {
-    last = now;
-    phiF = phiA;
-    return;
-  }
-  *mm = (now - last);
-  h = (float)(*mm) * 1.0e-6;
-  last = now;
-
-
-  phiPS = (float)py / 5000.0 - OFFSET_PHIP;
-
-  phiF = ((phiF + h * phiPS) * T_MOTION + phiA * h) / (T_MOTION + h);
-
-  *phi = phiF;
-  *a = phiA;
-  *phiP = phiPS;
-
-  // Anzeige fuer Offsets
-#if 0
-  Serial.print(phiA, 4); Serial.print("\t");
-  Serial.print(phiPS, 4); Serial.print("\t");
-  Serial.println("");
-#endif
-
-#if 0
-  Serial.print(ax); Serial.print("\t");
-  Serial.print(ay); Serial.print("\t");
-  Serial.print(az); Serial.print("\t");
-  Serial.print(px); Serial.print("\t");
-  Serial.print(py); Serial.print("\t");
-  Serial.println(pz);
-#endif
-}
-
-void getVelo(float *v1, float *v2){
-  static int first=1;
-  static long enc1_last=0;
-  static long enc2_last=0;
-  long enc1,enc2;
-  static float v1_last=0.0;
-  static float v2_last=0.0;
-
-  static unsigned long last = 0;
-  unsigned long now;
-
-  if (first){
-    *v1=0;*v2=0;
-    first = 0;
-  }
-  else {
-    now=micros();
-    enc1=EncoderPos1;
-    enc2=EncoderPos2;
-    *v1 = ((float)(enc1-enc1_last)/(float)(now-last)*1000.0 + 5.0*v1_last)/6.0;
-    *v2 = ((float)(enc2-enc2_last)/(float)(now-last)*1000.0 + 5.0*v2_last)/6.0;
-
-    v1_last = *v1;
-    v2_last = *v2;
-    last = now;
-    enc1_last=enc1;
-    enc2_last=enc2;
-  }
-}
-
-void control(unsigned int k, int reset, int active) {
-  float phiR, phi, phiP;
-  int mm;
-  float u; //Reglerausgang
-  int SPEEDL, SPEEDR, SPEED;
-  static long enc1=0;
-  static long enc2=0;
-
-  float v1,v2;
-  
-  int modk;
-  float ud=0;
-
-#if 0 //Spruenge auf Moment
-  modk = k%100;
-  if (modk<20) ud=0.0;
-  else if (modk<50) ud=0.5;
-  else if (modk<70) ud=0.0;
-  else ud=-0.5;
-#endif
-
-  SPEEDL = SPEEDR = 0;
-
-  getMotion(&phi, &phiR, &phiP, &mm, reset);
-  getVelo(&v1,&v2);
-  
-#if 0
-  _a[k] = (int)(phiR * 10000);
-  _phi[k] = (int)(phi * 10000);
-  _phiP[k] = (int)(phiP * 10000);
-#endif
-#if 1
-  _a[k] = (int)(v1 *   1000);
-  _phi[k] = (int)(phi * 10000);
-  _phiP[k] = (int)(v2 *1000);
-#endif
-  _time[k] = mm;
-
-  if ((abs(phi) < MAX_PHI) && active) {
-    u = -(phi + phiP * TV) * KP+ud+KV*(v1+v1)/2.0;
-    SPEED = (int) (u * NM2SPEED);
-
-    if (SPEED > 0) {
-      SPEEDL = SPEED + ROL;
-      SPEEDR = SPEED + ROR;
-    }
-    else {
-      SPEEDL = SPEED - ROL;
-      SPEEDR = SPEED - ROR;
-    }
-  }
-  md.setM1Speed(SPEEDL);
-  md.setM2Speed(SPEEDR);
-#if 0
-  Serial.print(phi); Serial.print("\t");
-  Serial.print(u); Serial.print("\t");
-  Serial.print(active); Serial.print("\t");
-  Serial.print(SPEEDL); Serial.print("\t");
-  Serial.print(SPEEDR); Serial.print("\t");
-  Serial.println("");
-#endif
-}
-
-void stopMotors() {
-  md.setM1Speed(0);
-  md.setM2Speed(0);
-}
-
-void loop() {
-  static unsigned int k = 0;
-  static unsigned long cnt=0;
-  static unsigned long start;
-  static int done1 = 0;
-  static int done3 = 0;
-  int sw;
-
-  cnt++;
-
-  sw = read_SW();
-  switch (sw)
+//=== FUNKTION MOTOR-ENCODER 1 (LINKS) ===//
+void doEncoderA1()
+{
+  if (SPEED > 0)
   {
-    case 1:
-      stopMotors();
-      done3 = 0;
-      if (!done1) {
-        dumpBuffer(k);
-        done1 = 1;
-      }
-      break;
-
-    default:
-      done1 = 0;
-
-      if (!done3) start = millis();
-      //_time[k] = (unsigned int)(millis() - start);
-      control(k, !done3, sw == 0);
-      if ((cnt&0x1)==0){
-        k++;
-        if (k == LBUF) k = 0;
-      }
-      done3 = 1;
-
-      if (k % 20 == 0) {
-        //Serial.print(EncoderPos1);Serial.print("\t");Serial.print(EncoderPos2);Serial.println("");
-      }
-
-      break;
+    if (digitalRead(EncoderPinA1) == HIGH)    // Falls an Kanal A low-to-high festgestellt wird
+    {         // An Kanal B wird gecheckt in welche Richtung er dreht. Encoder dreht um
+      if (digitalRead(EncoderPinB1) == LOW) EncoderPos1 = EncoderPos1 - 1;   // Gegen den Uhrzeigersinn
+      else EncoderPos1 = EncoderPos1 + 1;     // Im Uhrzeigersinn
+    }
+    else      // Falls an Kanal A ein high-to-low festgestellt wird
+    {
+      if (digitalRead(EncoderPinB1) == LOW) EncoderPos1 = EncoderPos1 + 1;   // Im Uhrzeugersinn
+      else EncoderPos1 = EncoderPos1 - 1;     // Gegen den Uhrzeigersinn
+    }
   }
-}
+  else    // Falls Motor anders herum dreht
+  {
+    if (digitalRead(EncoderPinA1) == HIGH)    // low-to-high an Kanal A
+    {
+      if (digitalRead(EncoderPinB1) == LOW) EncoderPos1 = EncoderPos1 + 1;   // Gegen den Uhrzeigersinn
+      else EncoderPos1 = EncoderPos1 - 1;     // Im Uhrzeigersinn
+    }
+    else     // high-to-low an Kanal A
+    {
+      if (digitalRead(EncoderPinB1) == LOW) EncoderPos1 = EncoderPos1 - 1;   // Im Uhrzeigersinn
+      else EncoderPos1 = EncoderPos1 + 1;     // Gegen den Uhrzeigersinn
+    }
+  }// end if-Schleife
+}// end doEncoderA1
+
+//=== FUNKTION MOTOR-ENCODER 2 (RECHTS) ===//
+void doEncoderA2()
+{
+  if (SPEED < 0)
+  {
+    if (digitalRead(EncoderPinA2) == HIGH)    // Falls an Kanal A low-to-high festgestellt wird
+    {    // An Kanal B wird gecheckt in welche Richtung er dreht. Encoder dreht um
+      if (digitalRead(EncoderPinB2) == LOW) EncoderPos2 = EncoderPos2 - 1;   // Gegen den Uhrzeigersinn
+      else EncoderPos2 = EncoderPos2 + 1;     // Im Uhrzeigersinn
+    }
+    else      // Falls an Kanal A ein high-to-low festgestellt wird
+    {
+      if (digitalRead(EncoderPinB2) == LOW) EncoderPos2 = EncoderPos2 + 1;   // Im Uhrzeigersinn
+      else EncoderPos2 = EncoderPos2 - 1;     // Gegen den Uhrzeigersinn
+    }
+  }
+  else
+  {
+    if (digitalRead(EncoderPinA2) == HIGH)    // low-to-high an Kanal A
+    {
+      if (digitalRead(EncoderPinB2) == LOW) EncoderPos2 = EncoderPos2 + 1;   // Gegen den Uhrzeigersinn
+      else EncoderPos2 = EncoderPos2 - 1;     // Im Uhrzeigersinn
+    }
+    else     // high-to-low an Kanal A
+    {
+      if (digitalRead(EncoderPinB2) == LOW) EncoderPos2 = EncoderPos2 - 1;    // Im Uhrzeigersinn
+      else EncoderPos2 = EncoderPos2 + 1;     // Gegen den Uhrzeigersinn
+     }
+  }// end if-Schleife
+}// end doEncoderA2
+
+//=== FUNKTION MOTORFEHLER ===//
+void stopIfFault()
+{
+  if (md.getM1Fault())
+  {
+    Serial.println("M1 Fehler");
+    while(1);
+  }
+  if (md.getM2Fault())
+  {
+    Serial.println("M2 Fehler");
+    while(1);
+  }
+}// end stopIfFault
+
+// ================        SETUP - FUNKTION        ================ //
+// ================        SETUP - FUNKTION        ================ //
+
+void setup()
+{
+  Serial.begin(115200);            // Initialisierung der seriellen Schnittstelle zur Kommunikation mit PC
+  Wire.begin();
+  Serial.println(F("Initializing I2C devices..."));
+  mpu.initialize();                 // Initialisierung des Bewegungssensors
+  Serial.println(F("ZyklusZeitPining device connections..."));
+  Serial.println(mpu.testConnection() ? F("MPU6050 connection successful") : F("MPU6050 connection failed"));
+  Serial.println(F("Initializing DMP..."));
+  devStatus = mpu.dmpInitialize();  // Laden und Konfigurieren des DMP
+
+// Sicherstellung, dass Initialisierung funktioniert hat (Gibt in dem Fall 0 zurück)
+  if (devStatus == 0)
+  {
+    Serial.println(F("Enabling DMP..."));
+    mpu.setDMPEnabled(true);        // Schaltet den DMP an, da er jetzt bereit ist
+    Serial.println(F("Enabling interrupt detection (Arduino external interrupt 0)..."));
+    attachInterrupt(digitalPinToInterrupt(InterruptPin), dmpDataReady, RISING);
+    mpuIntStatus = mpu.getIntStatus();  // Einschalten der Interrupt Detection
+    Serial.println(F("DMP ready! Waiting for first interrupt..."));
+    dmpReady = true;  // Setzt die DMP-Ready-Flagge, damit void loop() weiß, dass der DMP benutzt werden kann
+    PacketSize = mpu.dmpGetFIFOPacketSize();  // Die Größe der Datenpakete wird ermittelt
+  }
+  else // FEHLER!
+  {
+    // 1 = Fehler beim Laden des Speichers
+    // 2 = Fehler beim Update der DMP Konfiguration
+    // (Falls die Schleife abbricht wird der Code in der Regel "1" sein)
+    Serial.print(F("DMP Initialisierung fehlgeschlagen (code "));
+    Serial.print(devStatus);
+    Serial.println(F(")"));
+  }// end if-Schleife zur Initialisierung des Bewegungssensors
+
+  // Einstellen der Offsetwerte aufgrund Produktionssteuungen. Gemessen über einen separaten Programmcode
+  mpu.setXGyroOffset(124);
+  mpu.setYGyroOffset(40);
+  mpu.setZGyroOffset(-54);
+  mpu.setZAccelOffset(1504);
+
+// INITIALISIERUNG ENCODER 1 (LINKS)
+  pinMode (EncoderPinA1,INPUT); digitalWrite (EncoderPinA1,HIGH);
+  pinMode (EncoderPinB1,INPUT); digitalWrite (EncoderPinB1,HIGH);
+  attachInterrupt(5, doEncoderA1, CHANGE);
+
+// INITIALISIERUNG ENCODER 2 (RECHTS)
+  pinMode (EncoderPinA2,INPUT); digitalWrite (EncoderPinA2,HIGH);
+  pinMode (EncoderPinB2,INPUT); digitalWrite (EncoderPinB2,HIGH);
+  attachInterrupt(4, doEncoderA2, CHANGE);
+
+  md.init(); // INITIALISIERUNG MOTOREN
+
+  //== INITIALISIERUNG SCHALTER
+  pinMode(Schalter1, INPUT);
+  pinMode(Schalter2, INPUT);
+
+}// end void setup()
+
+// ============== HAUPTPROGRAMMSCHLEIFE =============//
+// ============== HAUPTPROGRAMMSCHLEIFE =============//
+
+void loop()
+{
+//=== DEFINITION LOKALER VARIABLEN ===//
+
+  // Regelung
+  float WinkelIst;            // Kippwinkel in rad
+  float WinkelGrad;           // Kippwinkel in Grad
+  float WinkelDifferenz;      // Regeldifferenz Kippregler
+  float WinkelGeschw;
+  float GeschwSoll;           // Muss eingegeben werden (Wert in rad/s erforderlich)
+  float GeschwIst;            // Bekommen wir über die Encoder
+  float GeschwDifferenz;      // Geschwindigkeitsdifferenz (Regeldiff. V-Regler)
+  float MomentTeil1;          // Ergebnis Kippregler
+  float MomentTeil2;          // Ergebnis Geschwindigkeitsregler
+  float Integrator = 0;
+  static int SPEEDAlt;
+  static int Umgefallen;      // Markierung wird gesetzt wenn der Roboter umfällt
+
+  // Encoder
+  long PositionNeu1;              // Variable für aktuellen Positionswert Encoder 1
+  long PositionNeu2;              // Variable für aktuellen Positionswert Encoder 2
+  static long PositionAlt1 = 0;   // Variable für alten Positionswert Encoder 1
+  static long PositionAlt2 = 0;   // Variable für alten Positionswert Encoder 2
+  unsigned long ZeitNeu1;         // Variable für aktuelle Zeit (ms) Encoder 1
+  unsigned long ZeitNeu2;         // Variable für aktuelle Zeit (ms) Encoder 2
+  static unsigned long ZeitAlt1 = 0; // Variable für alte Zeit (ms) Encoder 1
+  static unsigned long ZeitAlt2 = 0; // Variable für alte Zeit (ms) Encoder 1
+  float Impulse1;                 // gezählte Impulse pro Zeitabschnitt
+  float Impulse2;                 // gezählte Impulse pro Zeitabschnitt
+  float UmdrehungenSek1;          // Umdrehungen pro Sekunde der Motorabtriebswelle
+  float UmdrehungenSek2;          // Umdrehungen pro Sekunde der Motorabtriebswelle
+  float UmdrehungenMin1;          // Umdrehungen pro Minute der Motorabtriebswelle
+  float UmdrehungenMin2;          // Umdrehungen pro Minute der Motorabtriebswelle
+  float dt;                       // jeweilige Zeitdifferenz
+
+  // Schalter
+  int SchalterZustand1 = 0;           // Variable zum Lesen des Zustands Schalter 1
+  int SchalterZustand2 = 0;           // Variable zum Lesen des Zustands Schalter 2
+  static unsigned int ZustandAlt = 0; // Um zu dedektieren, dass gerade der Schalter geändert wurde
+  unsigned int Zustand = 0;           // Um zu dedektieren, dass gerade der Schalter geändert wurde
+  int PinZustand = 0;                 // Toggelnder Pin
+
+  // Geschwindigkeitsprofil
+  static unsigned long ZeitStartZustand2; // Zeit beim Starten des Geschwindigkeitsprofils
+  float t;                                // Zeit, die seit Starten des Geschwindigkeitsprofils vergangen ist
+
+  // Bewegungssensor
+  uint8_t FifoBuffer[64];   // Speicherpuffer für den FIFO Speicher
+  uint16_t FifoCount;       // Anzahl aller Bytes, die aktuell im First-In-First-Out Speicher sind
+  unsigned int NumGyroData; // Variable zur Überprüfung der Vollständigkeit eines Datenpakets
+  float NumGyroDataFloat;   // Variable zur Überprüfung der Vollständigkeit eines Datenpakets
+  unsigned int k;           // Zählvariable
+  float YawPitchRoll[3];    // [z, y, x] Vector enthält Winkel: Gieren um Z, Kippen um Y, Rollen um X
+  int16_t Gyros[3];         // [x, y, z] Vektor enthält WinkelGeschwen um X, Y, Z
+  Quaternion q;             // [w, x, y, z] Enthält die Quaternionen
+  VectorFloat gravity;      // [x, y, z] Vector zur Kompensation der Gravitation
+
+  // Ultraschallsensor
+  unsigned long MillisAktuell = 0;  // Vergangene ms seit Start des Programms
+  unsigned long MillisAlt = 0;
+  int ZeitIntervall = 30;           // Zeitabschnitt nach dem gepingt wird darf nicht kleiner als 29ms sein
+  float Abstand;                    // Abstand des Ultraschallsensors zu einem Gegenstand
+
+//=== TOGGELNDER PIN ===//
+
+  PinZustand = digitalRead(ZyklusZeitPin);
+  if (PinZustand == LOW) digitalWrite(ZyklusZeitPin, HIGH);
+  else digitalWrite(ZyklusZeitPin, LOW);
+
+//=== ZUSTAND DES SCHALTERS ===//
+
+  SchalterZustand1 = digitalRead(Schalter1); // Liest den Zustand des Pins aus
+  SchalterZustand2 = digitalRead(Schalter2);
+  if (SchalterZustand1 == HIGH) Zustand = 1;
+  else if (SchalterZustand2 == HIGH) Zustand = 2;
+  else Zustand = 0;
+
+  switch(Zustand) // Weißt GeschwSoll je nach Schalterstellung den passenden Wert zu.
+  {
+  case 1:
+    GeschwSoll = 0;
+    break; // case Zustand == 1
+
+  case 2:         // Geschwindigkeitsprofil ODER Mittels Vektoren arbeiten (siehe Bsp. ganz oben)
+    if (ZustandAlt!=2) ZeitStartZustand2 = millis();
+    t = (float)(millis() - ZeitStartZustand2) / (float)1000; // float-Division
+    if (t <= 1.5) GeschwSoll = 0;
+    else if (t > 3 && t + 6) GeschwSoll = 0.5;
+    else GeschwSoll = 0;
+    break;  // case Zustand == 2
+  } // end switch Zustand
+
+//=== AUSLESEN DER SENSORDATEN & LADEN IN FIFO-PUFFER ===//
+
+  if (!dmpReady) return;              // Sollte der DMP nicht bereit sein, soll er nichts machen
+  mpuInterrupt = false;               // Zurücksetzen der Interrupt-Flagge
+  mpuIntStatus = mpu.getIntStatus();  // Gibt Statusbyte des Sensors
+  FifoCount = mpu.getFIFOCount();     // Anzahl der Werte, die im FIFO Speicher abgelegt werden
+
+  if((mpuIntStatus & 0x10) || FifoCount >= 1024) //0x10 bedeutet 16 als Hexadezimalzahl, & bedeutet bitweise logisches UND
+  {
+    mpu.resetFIFO();                  // FIFO-Speicher (Zwischenspeicher) leeren
+    Serial.println("FIFO OVERFLOW");
+  }
+  else if(mpuIntStatus & 0x02)        // Status in Ordnung // 0x02 bedeutet 2 als Hexadezimalzahl
+  {
+    NumGyroDataFloat = (float)FifoCount / (float)PacketSize;
+    NumGyroData = FifoCount / PacketSize;
+    if (abs(NumGyroDataFloat-(float)NumGyroData)<0.001) // nimmt nur Datenpakete, wenn der FIFO vollständige Datenpakete besitzt
+    {
+      for (k = 0; k < NumGyroData; k++) mpu.getFIFOBytes(FifoBuffer, PacketSize); // Das aktuellste Datenpaket wird in den Puffer geladen
+    }
+    else Serial.println(NumGyroDataFloat);
+  }// end FIFO-IF-Schleife
+
+  mpu.resetFIFO();                      // FIFO-Speicher leeren
+
+  mpu.dmpGetQuaternion(&q, FifoBuffer); // Die Daten aus dem Puffer werden in die Bewegungsvektoren geschrieben
+  mpu.dmpGetGravity(&gravity, &q);
+  mpu.dmpGetYawPitchRoll(YawPitchRoll, &q, &gravity);
+  mpu.dmpGetGyro(Gyros, FifoBuffer);
+
+//===       ENCODER      ===//
+
+  // ENCODER 1 (LINKS)
+  PositionNeu1 = EncoderPos1;
+  ZeitNeu1 = millis(); // Zeit wird in Millisekunden mitgezählt
+  dt = (float)(ZeitNeu1-ZeitAlt1)/1000.0; // Zeitdiffenrenz; 1000: Umrechnung in Sekunden
+  Impulse1 = (float)(PositionNeu1-PositionAlt1)/dt; // Anzahl Impulse = Wegunterschied / Zeitunterschied
+  PositionAlt1 = PositionNeu1;
+  ZeitAlt1 = ZeitNeu1;
+  UmdrehungenSek1 = Impulse1/64.0/30.0*2.0;
+  // Umrechnung der Impulse in Umdrehungen pro Sekunde
+  // Faktor 64: Eine Umdrehung entspricht 64 Impulsen des Sensors
+  // Faktor 30: Getriebeübersetzung des Motors
+  // Faktor 2: Da nur Pin A des Encoders verwendet wird --> nur halbe Auflösung
+  // Grund: Der frei werdende Interrupt-Pin am Arduino wird benötigt
+  UmdrehungenMin1 = UmdrehungenSek1*60; // Umrechnen der Geschwindigkeit in Umdrehungen pro Minute
+
+  // ENCODER 2 (RECHTS)
+  PositionNeu2 = EncoderPos2;
+  ZeitNeu2 = millis();
+  dt = (float)(ZeitNeu2-ZeitAlt2)/1000.0;
+  Impulse2 = (float)(PositionNeu2-PositionAlt2)/dt;
+  PositionAlt2 = PositionNeu2;
+  ZeitAlt2 = ZeitNeu2;
+  UmdrehungenSek2 = Impulse2/64.0/30.0*2.0;
+  UmdrehungenMin2 = UmdrehungenSek2*60;
+
+  GeschwIst = (UmdrehungenSek1 + UmdrehungenSek2)*M_PI; // Eigentlich (UmdrehungenSek1 + UmdrehungenSek2)/2*2*M_PI
+  if (abs(GeschwIst>1)) GeschwIst=(abs(GeschwIst)-1.0)*(SPEEDAlt>0 ? 1.0:-1.0);
+  else GeschwIst = 0;
+
+//=== ULTRASCHALLSENSOR ===//
+
+  MillisAktuell = millis();
+  if (MillisAktuell - MillisAlt >= ZeitIntervall)
+  {
+    // Wartet 50ms zwischen Pings (ca. 20 Pings/sek). 29ms sollte die kürzeste Zeit zwischen 2 Pings sein.
+    MillisAlt = MillisAktuell;
+    float uS = sonar.ping(); // Ping wird gesendet und Pingzeit in µS(uS) kommt zurück.
+    Abstand = uS / US_ROUNDTRIP_CM; // Abstand in cm
+  }
+  if (Abstand < 5 && Abstand > 0) GeschwSoll = 0; // Lässt den Roboter stoppen, wenn dieser sich einem Hindernis nähert.
+
+// === KASKADENREGELUNG & ANSTEUERUNG DER MOTOREN === //
+
+  WinkelIst = YawPitchRoll[1] - Balancepunkt; // Kompensation der Nulllage
+  WinkelGrad = WinkelIst*180.0/M_PI;          // Umrechnung des Kippwinkels von Radiant in Grad (dient nur dem besseren Verständnis)
+  WinkelDifferenz = WinkelIst - WinkelSoll;   // Regeldifferenz Kippwinkel
+  WinkelGeschw = (float)Gyros[1] * (-1.0) /180.0*M_PI; // Winkelgeschwindigkeit: Drehrate kommt mit falschem Vorzeichen und in °/s an
+
+  Integrator = constrain (Integrator + WinkelDifferenz, -IntegratorMax, IntegratorMax); // I-Anteil
+
+  // Kippregelung
+  MomentTeil1 = KP1 * (WinkelDifferenz + Tv * WinkelGeschw) + KI * Integrator ;  // PID-Regler gemischte Schreibweise
+  //MomentTeil1 = KP1 * (WinkelDifferenz + 1/Tn * Integrator + Tv * WinkelGeschw); // PID-Regler mit Tv und Tn
+  //MomentTeil1 = KP1 * WinkelDifferenz + KI * Integrator + KD * WinkelGeschw;     // PID-Regler mit KI und KD
+
+  GeschwDifferenz = GeschwSoll - GeschwIst;     // Regeldifferenz Geschwindigkeit
+
+  // Geschwindigkeitsregelung
+  MomentTeil2 = KP2 * GeschwDifferenz;          // P-Regler
+
+  SPEED = Nm2Speed*(MomentTeil1 + MomentTeil2); // Berechnung des Speed-Wertes
+  if (SPEED>0) SPEED+=RO;                       // Innere Reibung der Motoren und Getriebe kann kompensiert werden
+  else if (SPEED<0) SPEED-=RO;
+  SPEED = constrain (SPEED, -400, 400);         // Die Geschwindigkeit wird auf -400 bzw. 400 begrenzt
+
+  md.setM1Speed(SPEED);                         // Ansteuerung der Motoren
+  md.setM2Speed(SPEED);
+  stopIfFault();                                // Fragt den Fehler-Pin des Motorcontrollers ab
+  SPEEDAlt=SPEED;
+
+  // Fällt der Roboter um, werden die Motoren gestoppt. Ist der Roboter aufgerichtet, werden die Motoren angesteuert.
+  if (WinkelIst > LimitAus || WinkelIst < -LimitAus) Umgefallen = 1; //entspricht ca. 45 Grad
+  if (Umgefallen && WinkelIst < LimitAn && WinkelIst > -LimitAn) Umgefallen = 0; //entspricht ca. 20 Grad
+  if (Umgefallen)
+  {
+    md.setM1Brake(400);                         // Motoren werden sofort gestoppt
+    md.setM2Brake(400);
+    SPEEDAlt = 0;
+    Integrator = 0;                             // Damit der Integrator einen frischen Wert hat
+    Serial.println("Ich bin Umgefallen! Richte mich bitte wieder auf");
+  }// end Umgefallen
+
+//=== SERIELLE AUSGABEN BEI SCHALTER O ===//
+
+  if (SchalterZustand1 == LOW && SchalterZustand2 == LOW) // SCHALTERSTELLUNG auf O
+  {
+    //Serial.print(YawPitchRoll[1],4);  Serial.print("\t");
+    //Serial.print(WinkelIst,4);        Serial.print("\t");
+    //Serial.print(WinkelGrad,2);       Serial.print("\t");
+    Serial.print(WinkelDifferenz,4);  Serial.print("\t");
+    Serial.print(WinkelGeschw,4);     Serial.print("\t");
+    Serial.print(MomentTeil1);        Serial.print("\t");
+    Serial.print(MomentTeil2);        Serial.print("\t");
+    Serial.print(SPEED);              Serial.print("\t");
+    Serial.print(PositionNeu1);       Serial.print("\t");
+    //Serial.print(Impulse1);           Serial.print("\t");
+    //Serial.print(UmdrehungenSek1);    Serial.print("\t");
+    //Serial.print(UmdrehungenMin1);    Serial.print("\t");
+    Serial.print(PositionNeu2);       Serial.print("\t");
+    //Serial.print(Impulse2);           Serial.print("\t");
+    //Serial.print(UmdrehungenSek2);    Serial.print("\t");
+    //Serial.print(UmdrehungenMin2);    Serial.print("\t");
+    Serial.print(GeschwIst);          Serial.print("\t");
+    //Serial.print(Abstand); Serial.print("\t");//0 = Außerhalb Reichweite, kein Ping-Echo
+    Serial.println(millis());
+  }// end serial prints
+
+  ZustandAlt = Zustand;
+
+}// end void loop()
 
