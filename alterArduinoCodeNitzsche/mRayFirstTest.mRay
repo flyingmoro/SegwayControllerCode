@@ -1,0 +1,82 @@
+{
+    "channels": [
+        {
+            "displayName": "", 
+            "name": "SPEED_OUT", 
+            "show": true, 
+            "color": [
+                252, 
+                241, 
+                147
+            ], 
+            "isRequested": true, 
+            "id": 0
+        }, 
+        {
+            "displayName": "", 
+            "name": "KIPPWINKEL_OUT", 
+            "show": true, 
+            "color": [
+                134, 
+                161, 
+                42
+            ], 
+            "isRequested": true, 
+            "id": 1
+        }, 
+        {
+            "displayName": "", 
+            "name": "loopTime_OUT", 
+            "show": true, 
+            "color": [
+                64, 
+                100, 
+                111
+            ], 
+            "isRequested": true, 
+            "id": 2
+        }
+    ], 
+    "commands": [
+        {
+            "initialValue": 3.0, 
+            "displayName": "", 
+            "name": "mR_k_pid", 
+            "min": 0.0, 
+            "max": 15.0, 
+            "valueType": 2, 
+            "pendingMode": false, 
+            "inputMethod": 1, 
+            "id": 0
+        }, 
+        {
+            "initialValue": 0.065, 
+            "displayName": "", 
+            "name": "mR_tv", 
+            "min": 0.0, 
+            "max": 1.0, 
+            "valueType": 2, 
+            "pendingMode": false, 
+            "inputMethod": 1, 
+            "id": 1
+        }
+    ], 
+    "miscSettings": {
+        "controllerFrameworkAndInterface": "ARDUINO_SERIAL", 
+        "tabs": [
+            {
+                "className": "TabSmallGenericView", 
+                "pathToClassFile": "gui.tabSmallGenericView", 
+                "displayName": "Generische Ansicht"
+            }
+        ], 
+        "comPortBaudRate": 38400, 
+        "comPortDescription": "STMicroelectronics STLink Virtual COM Port (COM3)", 
+        "computerIP": "192.168.0.133", 
+        "udpPort": 10000, 
+        "pathToControllerCodeFolder": "D:\\00 eigene Daten\\000 FH\\S 6\\Segway\\SegwayControllerCode\\alterArduinoCodeNitzsche", 
+        "suppressParameterConfirmation": false, 
+        "controllerLoopCycleTimeInUs": 2000, 
+        "controllerIP": "192.168.0.15"
+    }
+}

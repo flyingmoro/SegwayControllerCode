@@ -7,9 +7,9 @@
 // DON'T TOUCH
 
 #include <math.h>
-#include <Wire.h>
-#include <MPU6050.h>
-#include <DualVNH5019MotorShield.h>     // Bibliothek für den Motorcontroller
+#include "I2Cdev.h"
+#include "MPU6050.h"
+#include "DualVNH5019MotorShield.h"     // Bibliothek für den Motorcontroller
 
 
 #define SW1 36        // Schalter 1 an Pin 36
