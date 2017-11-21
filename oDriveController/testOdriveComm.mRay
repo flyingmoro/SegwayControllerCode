@@ -1,0 +1,58 @@
+{
+    "channels": [
+        {
+            "displayName": "", 
+            "name": "hallo", 
+            "show": true, 
+            "color": [
+                170, 
+                170, 
+                0
+            ], 
+            "isRequested": true, 
+            "id": 0
+        }
+    ], 
+    "commands": [
+        {
+            "initialValue": 0.0, 
+            "displayName": "", 
+            "name": "mR_torqueMotorOne", 
+            "min": -4.253529586511731e+37, 
+            "max": 100000.0, 
+            "valueType": 2, 
+            "pendingMode": false, 
+            "inputMethod": 1, 
+            "id": 0
+        }, 
+        {
+            "initialValue": 0.0, 
+            "displayName": "", 
+            "name": "mR_torqueMotorTwo", 
+            "min": -100000.0, 
+            "max": 100000.0, 
+            "valueType": 2, 
+            "pendingMode": false, 
+            "inputMethod": 1, 
+            "id": 1
+        }
+    ], 
+    "miscSettings": {
+        "controllerFrameworkAndInterface": "MBED_OS_SERIAL", 
+        "tabs": [
+            {
+                "className": "TabSmallGenericView", 
+                "pathToClassFile": "gui.tabSmallGenericView", 
+                "displayName": "Generische Ansicht"
+            }
+        ], 
+        "comPortBaudRate": 921600, 
+        "comPortDescription": "STMicroelectronics STLink Virtual COM Port (COM3)", 
+        "computerIP": "192.168.0.133", 
+        "udpPort": 10000, 
+        "pathToControllerCodeFolder": "D:\\00 eigene Daten\\000 FH\\S 6\\Segway\\SegwayControllerCode\\src", 
+        "suppressParameterConfirmation": false, 
+        "controllerLoopCycleTimeInUs": 5000, 
+        "controllerIP": "192.168.0.15"
+    }
+}
