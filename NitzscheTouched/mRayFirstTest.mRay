@@ -2,51 +2,111 @@
     "channels": [
         {
             "displayName": "", 
-            "name": "KIPPWINKEL_OUT", 
+            "name": "mrWorldX", 
             "show": true, 
             "color": [
-                134, 
-                161, 
-                42
+                222, 
+                82, 
+                55
             ], 
             "isRequested": true, 
             "id": 0
         }, 
         {
             "displayName": "", 
-            "name": "mR_phi", 
+            "name": "mrWorldY", 
             "show": true, 
             "color": [
-                255, 
-                85, 
-                0
+                249, 
+                252, 
+                3
             ], 
             "isRequested": true, 
             "id": 1
         }, 
         {
             "displayName": "", 
-            "name": "mR_a", 
+            "name": "mrWorldGamma", 
             "show": true, 
             "color": [
-                189, 
-                119, 
-                83
+                126, 
+                225, 
+                61
             ], 
             "isRequested": true, 
             "id": 2
         }, 
         {
             "displayName": "", 
-            "name": "mR_phi_p", 
+            "name": "mrAlphaDeriv", 
             "show": true, 
             "color": [
-                28, 
-                50, 
-                255
+                92, 
+                248, 
+                173
             ], 
             "isRequested": true, 
             "id": 3
+        }, 
+        {
+            "displayName": "", 
+            "name": "mrBetaDeriv", 
+            "show": true, 
+            "color": [
+                196, 
+                155, 
+                66
+            ], 
+            "isRequested": true, 
+            "id": 4
+        }, 
+        {
+            "displayName": "", 
+            "name": "mrGammaDeriv", 
+            "show": true, 
+            "color": [
+                189, 
+                217, 
+                172
+            ], 
+            "isRequested": true, 
+            "id": 5
+        }, 
+        {
+            "displayName": "", 
+            "name": "mrAX", 
+            "show": true, 
+            "color": [
+                26, 
+                146, 
+                12
+            ], 
+            "isRequested": true, 
+            "id": 6
+        }, 
+        {
+            "displayName": "", 
+            "name": "mrAY", 
+            "show": true, 
+            "color": [
+                18, 
+                247, 
+                221
+            ], 
+            "isRequested": true, 
+            "id": 7
+        }, 
+        {
+            "displayName": "", 
+            "name": "mrAZ", 
+            "show": true, 
+            "color": [
+                158, 
+                44, 
+                152
+            ], 
+            "isRequested": true, 
+            "id": 8
         }
     ], 
     "commands": [
@@ -83,7 +143,7 @@
             }
         ], 
         "comPortBaudRate": 115200, 
-        "comPortDescription": "Arduino Mega 2560 (COM8)", 
+        "comPortDescription": "STMicroelectronics STLink Virtual COM Port (COM3)", 
         "computerIP": "192.168.0.133", 
         "udpPort": 10000, 
         "pathToControllerCodeFolder": "D:\\00 eigene Daten\\000 FH\\S 6\\Segway\\SegwayControllerCode\\NitzscheTouched", 

@@ -5,8 +5,8 @@
 
 // must have parameters
 #define loopCycleTimeUs                            2000
-#define CHANNELS_AVAILABLE_COUNT                      4
-#define CHANNELS_REQUESTED_COUNT                      4
+#define CHANNELS_AVAILABLE_COUNT                      9
+#define CHANNELS_REQUESTED_COUNT                      9
 #define CHANNELS_UNREQUESTED_COUNT                    0
 #define PARAMETER_COUNT                               2
 #define SPECIAL_COMMANDS_COUNT                        2
@@ -15,10 +15,15 @@
 #define FLOAT_TYPE                                    2
 
 // All requested channels
-#define KIPPWINKEL_OUT                           (messageOutBuffer.channels[0])
-#define mR_phi                                   (messageOutBuffer.channels[1])
-#define mR_a                                     (messageOutBuffer.channels[2])
-#define mR_phi_p                                 (messageOutBuffer.channels[3])
+#define mrWorldX                                 (messageOutBuffer.channels[0])
+#define mrWorldY                                 (messageOutBuffer.channels[1])
+#define mrWorldGamma                             (messageOutBuffer.channels[2])
+#define mrAlphaDeriv                             (messageOutBuffer.channels[3])
+#define mrBetaDeriv                              (messageOutBuffer.channels[4])
+#define mrGammaDeriv                             (messageOutBuffer.channels[5])
+#define mrAX                                     (messageOutBuffer.channels[6])
+#define mrAY                                     (messageOutBuffer.channels[7])
+#define mrAZ                                     (messageOutBuffer.channels[8])
 
 // All unrequested channels
 
