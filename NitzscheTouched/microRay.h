@@ -5,9 +5,9 @@
 
 // must have parameters
 #define loopCycleTimeUs                            2000
-#define CHANNELS_AVAILABLE_COUNT                      9
-#define CHANNELS_REQUESTED_COUNT                      9
-#define CHANNELS_UNREQUESTED_COUNT                    0
+#define CHANNELS_AVAILABLE_COUNT                     10
+#define CHANNELS_REQUESTED_COUNT                      4
+#define CHANNELS_UNREQUESTED_COUNT                    6
 #define PARAMETER_COUNT                               2
 #define SPECIAL_COMMANDS_COUNT                        2
 #define BAUD_RATE                                115200
@@ -18,14 +18,15 @@
 #define mrWorldX                                 (messageOutBuffer.channels[0])
 #define mrWorldY                                 (messageOutBuffer.channels[1])
 #define mrWorldGamma                             (messageOutBuffer.channels[2])
-#define mrAlphaDeriv                             (messageOutBuffer.channels[3])
-#define mrBetaDeriv                              (messageOutBuffer.channels[4])
-#define mrGammaDeriv                             (messageOutBuffer.channels[5])
-#define mrAX                                     (messageOutBuffer.channels[6])
-#define mrAY                                     (messageOutBuffer.channels[7])
-#define mrAZ                                     (messageOutBuffer.channels[8])
+#define mrGamma                                  (messageOutBuffer.channels[3])
 
 // All unrequested channels
+#define mrAlphaDeriv                             (unrequestedChannels[0])
+#define mrBetaDeriv                              (unrequestedChannels[1])
+#define mrGammaDeriv                             (unrequestedChannels[2])
+#define mrAX                                     (unrequestedChannels[3])
+#define mrAY                                     (unrequestedChannels[4])
+#define mrAZ                                     (unrequestedChannels[5])
 
 // all parameters
 #define mR_k_pid                                 (parameters[0]).valueFloat

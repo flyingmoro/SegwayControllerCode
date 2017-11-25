@@ -79,7 +79,7 @@ void microRayCommunicate()
 }
 
 Parameter parameters[] = {
-    { 2, { .valueFloat = 3.0f} },
+    { 2, { .valueFloat = 1.0f} },
     { 2, { .valueFloat = 0.065f} }
 };
 
