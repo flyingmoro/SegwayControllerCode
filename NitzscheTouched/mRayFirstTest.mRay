@@ -9,7 +9,7 @@
                 82, 
                 55
             ], 
-            "isRequested": true, 
+            "isRequested": false, 
             "id": 0
         }, 
         {
@@ -21,7 +21,7 @@
                 252, 
                 3
             ], 
-            "isRequested": true, 
+            "isRequested": false, 
             "id": 1
         }, 
         {
@@ -33,7 +33,7 @@
                 225, 
                 61
             ], 
-            "isRequested": true, 
+            "isRequested": false, 
             "id": 2
         }, 
         {
@@ -110,7 +110,7 @@
         }, 
         {
             "displayName": "", 
-            "name": "mrGamma", 
+            "name": "mrBeta", 
             "show": true, 
             "color": [
                 183, 
@@ -119,6 +119,30 @@
             ], 
             "isRequested": true, 
             "id": 9
+        }, 
+        {
+            "displayName": "", 
+            "name": "mrSpeed", 
+            "show": true, 
+            "color": [
+                143, 
+                185, 
+                114
+            ], 
+            "isRequested": true, 
+            "id": 10
+        }, 
+        {
+            "displayName": "", 
+            "name": "mrE", 
+            "show": true, 
+            "color": [
+                53, 
+                32, 
+                113
+            ], 
+            "isRequested": true, 
+            "id": 11
         }
     ], 
     "commands": [

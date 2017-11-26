@@ -96,30 +96,29 @@ void doENC1A() {
     if (b == HIGH){
       EncoderPos1++;
       deadReckonWheelEncoders(LEFT_WHEEL_FORWARDS);
-      digitalWrite(TESTPIN_ENC_1, LOW);
     }
     else {
       EncoderPos1--;
       deadReckonWheelEncoders(LEFT_WHEEL_BACKWARDS);
-      digitalWrite(TESTPIN_ENC_1, LOW);
     }
   }
   else {
     if (b == HIGH) {
       EncoderPos1--;
       deadReckonWheelEncoders(LEFT_WHEEL_BACKWARDS);
-      digitalWrite(TESTPIN_ENC_1, LOW);
     }
     else {
       EncoderPos1++;
       deadReckonWheelEncoders(LEFT_WHEEL_FORWARDS);
-      digitalWrite(TESTPIN_ENC_1, LOW);
     }
   }
+  digitalWrite(TESTPIN_ENC_1, LOW);
 }
 
 void doENC2A() {
+
   digitalWrite(TESTPIN_ENC_2, HIGH);
+
   static int a, b;
   b = digitalRead(ENC2B);//read B first, since A just changed and will change again only after B has changed
   a = digitalRead(ENC2A);
@@ -127,26 +126,24 @@ void doENC2A() {
     if (b == HIGH) {
       EncoderPos2--;
       deadReckonWheelEncoders(RIGHT_WHEEL_BACKWARDS);
-      digitalWrite(TESTPIN_ENC_2, LOW);
     }
     else {
       EncoderPos2++;
       deadReckonWheelEncoders(RIGHT_WHEEL_FORWARDS);
-      digitalWrite(TESTPIN_ENC_2, LOW);
     }
   }
   else {
     if (b == HIGH) {
       EncoderPos2++;
       deadReckonWheelEncoders(RIGHT_WHEEL_FORWARDS);
-      digitalWrite(TESTPIN_ENC_2, LOW);
     }
     else {
       EncoderPos2--;
       deadReckonWheelEncoders(RIGHT_WHEEL_BACKWARDS);
-      digitalWrite(TESTPIN_ENC_2, LOW);
     }
   }
+
+  digitalWrite(TESTPIN_ENC_2, LOW);
 }
 
 
@@ -239,40 +236,6 @@ void deadReckonWheelEncoders(int direction) {
       ISR_world_position.gamma += SPECIAL_TWO_PI;
     }
 }
-
-// void deadReckonWheelRightForwards(){
-//   long long tiltCorrection = KIPPWINKEL * R_RAD;
-//   long long fullDeltaX = DELTA_X + tiltCorrection;
-//   float gammaOld = (float)worldPosition().gamma / 1000000.0f;
-//   ISR_world_position.x += cos(gammaOld) * fullDeltaX - sin(gammaOld) * DELTA_Y;
-//   ISR_world_position.y += sin(gammaOld) * fullDeltaX + cos(gammaOld) * DELTA_Y;
-//   ISR_world_position.gamma += DELTA_GAMMA;
-//   constrainGamma();
-// }
-//
-// void deadReckonWheelRightBackwards(){
-//   float gammaOld = (float)worldPosition().gamma / 1000000.0f;
-//   ISR_world_position.x -= cos(gammaOld) * DELTA_X - sin(gammaOld) * DELTA_Y;
-//   ISR_world_position.y -= sin(gammaOld) * DELTA_X + cos(gammaOld) * DELTA_Y;
-//   ISR_world_position.gamma -= DELTA_GAMMA;
-//   constrainGamma();
-// }
-//
-// void deadReckonWheelLeftForwards(){
-//   float gammaOld = (float)worldPosition().gamma / 1000000.0f;
-//   ISR_world_position.x += cos(gammaOld) * DELTA_X - sin(gammaOld) * DELTA_Y;
-//   ISR_world_position.y += sin(gammaOld) * DELTA_X + cos(gammaOld) * DELTA_Y;
-//   ISR_world_position.gamma -= DELTA_GAMMA;
-//   constrainGamma();
-// }
-//
-// void deadReckonWheelLeftBackwards(){
-//   float gammaOld = (float)worldPosition().gamma / 1000000.0f;
-//   ISR_world_position.x -= cos(gammaOld) * DELTA_X - sin(gammaOld) * DELTA_Y;
-//   ISR_world_position.y -= sin(gammaOld) * DELTA_X + cos(gammaOld) * DELTA_Y;
-//   ISR_world_position.gamma += DELTA_GAMMA;
-//   constrainGamma();
-// }
 
 WorldPosition worldPosition() {
     WorldPosition wp;
@@ -386,15 +349,16 @@ void getVelo(float *v1, float *v2){
   static int first=1;
   static long enc1_last=0;
   static long enc2_last=0;
-  long enc1,enc2;
+  long enc1 = 0, enc2 = 0;
   static float v1_last=0.0;
   static float v2_last=0.0;
 
   static unsigned long last = 0;
-  unsigned long now;
+  unsigned long now = 0;
 
   if (first){
-    *v1=0;*v2=0;
+    *v1=0;
+    *v2=0;
     first = 0;
   }
   else {
@@ -412,26 +376,25 @@ void getVelo(float *v1, float *v2){
   }
 }
 
-void control(int active) {
+void control() {
 
   int mm;
   float u; //Reglerausgang
-  int SPEEDL, SPEEDR, SPEED;
+  int SPEEDL = 0, SPEEDR = 0, SPEED = 0;
   static long enc1=0;
   static long enc2=0;
 
-  float v1,v2;
+  float v1 = 0.0f, v2 = 0.0f;
 
   int modk;
-  float ud=0;
-
-  SPEEDL = SPEEDR = 0;
+  float ud=0.0f;
 
   getMotion(&phi, &phiR, &phiP, &mm);
   getVelo(&v1,&v2);
 
-  if ((abs(phi) < MAX_PHI) && active) {
-    u = -(phi + phiP * TV) * KP+ud+KV*(v1+v1)/2.0;
+  if (abs(phi) < MAX_PHI) {
+    u = -(phi + phiP * TV) * KP          +ud+KV*(v1+v2)/2.0;
+    mrE = (float)u;
     SPEED = (int) (u * NM2SPEED);
 
     if (SPEED > 0) {
@@ -443,8 +406,15 @@ void control(int active) {
       SPEEDR = SPEED - ROR;
     }
   }
+  else {
+      mrE = 0.0f;
+      SPEEDL = 0;
+      SPEEDR = 0;
+  }
   md.setM1Speed(SPEEDL);
   md.setM2Speed(SPEEDR);
+  mrSpeed = SPEED;
+
 }
 
 void stopMotors() {
@@ -456,9 +426,7 @@ unsigned long loopStart = 0;
 void loop() {
   loopStart = micros();
 
-  int sw;
-  sw = read_SW();
-  control(sw == 0);
+  control();
 
 
   // Ausgabe der Position im Welt-KS
@@ -473,7 +441,8 @@ void loop() {
   mrAX = ax;
   mrAY = ay;
   mrAZ = az;
-  mrGamma = phi;
+  mrBeta = phi;
+
 
   microRayCommunicate();
 }
