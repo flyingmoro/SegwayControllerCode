@@ -83,8 +83,8 @@ int16_t ax, ay, az, px, py, pz;
 MPU6050 mpu;
 DualVNH5019MotorShield md;              // Zugriff auf den Motorcontroller über md
 
-#define TESTPIN_ENC_1 25
-#define TESTPIN_ENC_2 26
+#define TESTPIN_ENC_1 39
+#define TESTPIN_ENC_2 41
 
 //960 Inc per rev
 void doENC1A() {
@@ -149,32 +149,84 @@ void doENC2A() {
   }
 }
 
+
+uint8_t isinTable8[] = {
+  0, 4, 9, 13, 18, 22, 27, 31, 35, 40, 44,
+  49, 53, 57, 62, 66, 70, 75, 79, 83, 87,
+  91, 96, 100, 104, 108, 112, 116, 120, 124, 128,
+
+  131, 135, 139, 143, 146, 150, 153, 157, 160, 164,
+  167, 171, 174, 177, 180, 183, 186, 190, 192, 195,
+  198, 201, 204, 206, 209, 211, 214, 216, 219, 221,
+
+  223, 225, 227, 229, 231, 233, 235, 236, 238, 240,
+  241, 243, 244, 245, 246, 247, 248, 249, 250, 251,
+  252, 253, 253, 254, 254, 254, 255, 255, 255, 255,
+};
+
+
+int isin(int x)
+{
+  boolean pos = true;  // positive - keeps an eye on the sign.
+  uint8_t idx;
+  // remove next 6 lines for fastestl!
+   if (x < 0)
+    {
+      x = -x;
+      pos = !pos;
+    }
+   if (x >= 360) x %= 360;
+  if (x > 180)
+  {
+    idx = x - 180;
+    pos = !pos;
+  }
+  else idx = x;
+  if (idx > 90) idx = 180 - idx;
+  if (pos) return isinTable8[idx]/2 ;
+  return -(isinTable8[idx]/2);
+}
+
+int icos(int x) {
+    return isin(x + 90);
+}
+
 float oldPhi = 0.0f;
 void deadReckonWheelEncoders(int direction) {
     float tiltCorrection = (phi - oldPhi) * R_RAD;
     oldPhi = phi;
 
     float gammaOld = ISR_world_position.gamma;
+    int gammaIntOld;
+    gammaIntOld = (int)(gammaOld * 180.0f / PI);
 
     switch (direction) {
         case LEFT_WHEEL_FORWARDS:
-            ISR_world_position.x += cos(gammaOld) * (DELTA_X - tiltCorrection);
-            ISR_world_position.y += sin(gammaOld) * (DELTA_X - tiltCorrection);
+            // ISR_world_position.x += cos(gammaOld) * (DELTA_X - tiltCorrection);
+            // ISR_world_position.y += sin(gammaOld) * (DELTA_X - tiltCorrection);
+            ISR_world_position.x += icos(gammaIntOld) * 0.007843f * (DELTA_X - tiltCorrection);
+            ISR_world_position.y += isin(gammaIntOld) * 0.007843f * (DELTA_X - tiltCorrection);
             ISR_world_position.gamma -= DELTA_GAMMA;
             break;
         case LEFT_WHEEL_BACKWARDS:
-            ISR_world_position.x -= cos(gammaOld) * (DELTA_X + tiltCorrection);
-            ISR_world_position.y -= sin(gammaOld) * (DELTA_X + tiltCorrection);
+            // ISR_world_position.x -= cos(gammaOld) * (DELTA_X + tiltCorrection);
+            // ISR_world_position.y -= sin(gammaOld) * (DELTA_X + tiltCorrection);
+            ISR_world_position.x -= icos(gammaIntOld) * 0.007843f * (DELTA_X + tiltCorrection);
+            ISR_world_position.y -= isin(gammaIntOld) * 0.007843f * (DELTA_X + tiltCorrection);
             ISR_world_position.gamma += DELTA_GAMMA;
             break;
         case RIGHT_WHEEL_FORWARDS:
-            ISR_world_position.x += cos(gammaOld) * (DELTA_X - tiltCorrection);
-            ISR_world_position.y += sin(gammaOld) * (DELTA_X - tiltCorrection);
+            // ISR_world_position.x += cos(gammaOld) * (DELTA_X - tiltCorrection);
+            // ISR_world_position.y += sin(gammaOld) * (DELTA_X - tiltCorrection);
+            ISR_world_position.x += icos(gammaIntOld) * 0.007843f * (DELTA_X - tiltCorrection);
+            ISR_world_position.y += isin(gammaIntOld) * 0.007843f * (DELTA_X - tiltCorrection);
             ISR_world_position.gamma += DELTA_GAMMA;
             break;
         case RIGHT_WHEEL_BACKWARDS:
-            ISR_world_position.x -= cos(gammaOld) * (DELTA_X + tiltCorrection);
-            ISR_world_position.y -= sin(gammaOld) * (DELTA_X + tiltCorrection);
+            // ISR_world_position.x -= cos(gammaOld) * (DELTA_X + tiltCorrection);
+            // ISR_world_position.y -= sin(gammaOld) * (DELTA_X + tiltCorrection);
+            ISR_world_position.x -= icos(gammaIntOld) * 0.007843f * (DELTA_X + tiltCorrection);
+            ISR_world_position.y -= isin(gammaIntOld) * 0.007843f * (DELTA_X + tiltCorrection);
             ISR_world_position.gamma -= DELTA_GAMMA;
             break;
     }
