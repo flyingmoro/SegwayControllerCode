@@ -452,6 +452,7 @@ void loop() {
   mrAZ = az;
   mrBetaA = phi;
 
+  Serial.println("duda");
 
   microRayCommunicate();
 }

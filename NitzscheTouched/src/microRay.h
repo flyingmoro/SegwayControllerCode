@@ -9,10 +9,11 @@
 #define CHANNELS_REQUESTED_COUNT                      3
 #define CHANNELS_UNREQUESTED_COUNT                   11
 #define PARAMETER_COUNT                               2
-#define SPECIAL_COMMANDS_COUNT                        2
+#define SPECIAL_COMMANDS_COUNT                        3
 #define BAUD_RATE                                115200
 #define INT_TYPE                                      1
 #define FLOAT_TYPE                                    2
+#define RECORD_BUFFER_LENGTH                         10
 
 // All requested channels
 #define mrWorldX                                 (messageOutBuffer.channels[0])
@@ -39,6 +40,7 @@
 // all special parameters
 #define loopCycleTimeExceededByUs                (specialCommands[0])
 #define serialTransmissionLag                    (specialCommands[1])
+#define mrRecordModeEnable                       (specialCommands[2])
 
 
 void microRayInit();

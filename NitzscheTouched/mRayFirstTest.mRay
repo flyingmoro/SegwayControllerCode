@@ -203,9 +203,11 @@
             }
         ], 
         "comPortBaudRate": 115200, 
+        "recordMode": false, 
         "comPortDescription": "Arduino Mega 2560 (COM8)", 
         "computerIP": "192.168.0.133", 
         "udpPort": 10000, 
+        "recordBufferLength": 10, 
         "debugMode": false, 
         "pathToControllerCodeFolder": "D:\\00 eigene Daten\\000 FH\\S 6\\Segway\\SegwayControllerCode\\NitzscheTouched\\src", 
         "suppressParameterConfirmation": false, 
