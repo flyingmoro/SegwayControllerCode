@@ -9,7 +9,7 @@
                 82, 
                 55
             ], 
-            "isRequested": false, 
+            "isRequested": true, 
             "id": 0
         }, 
         {
@@ -21,7 +21,7 @@
                 252, 
                 3
             ], 
-            "isRequested": false, 
+            "isRequested": true, 
             "id": 1
         }, 
         {
@@ -33,7 +33,7 @@
                 225, 
                 61
             ], 
-            "isRequested": false, 
+            "isRequested": true, 
             "id": 2
         }, 
         {
@@ -110,39 +110,63 @@
         }, 
         {
             "displayName": "", 
-            "name": "mrBeta", 
+            "name": "mrBetaA", 
             "show": true, 
             "color": [
                 183, 
                 8, 
                 69
             ], 
-            "isRequested": true, 
+            "isRequested": false, 
             "id": 9
         }, 
         {
             "displayName": "", 
-            "name": "mrSpeed", 
+            "name": "mrBetaPS", 
             "show": true, 
             "color": [
-                143, 
-                185, 
-                114
+                24, 
+                128, 
+                26
             ], 
-            "isRequested": true, 
+            "isRequested": false, 
             "id": 10
+        }, 
+        {
+            "displayName": "", 
+            "name": "mrBetaFiltered", 
+            "show": true, 
+            "color": [
+                107, 
+                31, 
+                139
+            ], 
+            "isRequested": false, 
+            "id": 11
         }, 
         {
             "displayName": "", 
             "name": "mrE", 
             "show": true, 
             "color": [
-                53, 
-                32, 
-                113
+                70, 
+                248, 
+                86
             ], 
-            "isRequested": true, 
-            "id": 11
+            "isRequested": false, 
+            "id": 12
+        }, 
+        {
+            "displayName": "", 
+            "name": "mrSpeed", 
+            "show": true, 
+            "color": [
+                34, 
+                200, 
+                95
+            ], 
+            "isRequested": false, 
+            "id": 13
         }
     ], 
     "commands": [
@@ -182,7 +206,8 @@
         "comPortDescription": "Arduino Mega 2560 (COM8)", 
         "computerIP": "192.168.0.133", 
         "udpPort": 10000, 
-        "pathToControllerCodeFolder": "D:\\00 eigene Daten\\000 FH\\S 6\\Segway\\SegwayControllerCode\\NitzscheTouched", 
+        "debugMode": false, 
+        "pathToControllerCodeFolder": "D:\\00 eigene Daten\\000 FH\\S 6\\Segway\\SegwayControllerCode\\NitzscheTouched\\src", 
         "suppressParameterConfirmation": false, 
         "controllerLoopCycleTimeInUs": 2000, 
         "controllerIP": "192.168.0.15"

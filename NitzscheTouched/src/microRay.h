@@ -5,9 +5,9 @@
 
 // must have parameters
 #define loopCycleTimeUs                            2000
-#define CHANNELS_AVAILABLE_COUNT                     12
+#define CHANNELS_AVAILABLE_COUNT                     14
 #define CHANNELS_REQUESTED_COUNT                      3
-#define CHANNELS_UNREQUESTED_COUNT                    9
+#define CHANNELS_UNREQUESTED_COUNT                   11
 #define PARAMETER_COUNT                               2
 #define SPECIAL_COMMANDS_COUNT                        2
 #define BAUD_RATE                                115200
@@ -15,20 +15,22 @@
 #define FLOAT_TYPE                                    2
 
 // All requested channels
-#define mrBeta                                   (messageOutBuffer.channels[0])
-#define mrSpeed                                  (messageOutBuffer.channels[1])
-#define mrE                                      (messageOutBuffer.channels[2])
+#define mrWorldX                                 (messageOutBuffer.channels[0])
+#define mrWorldY                                 (messageOutBuffer.channels[1])
+#define mrWorldGamma                             (messageOutBuffer.channels[2])
 
 // All unrequested channels
-#define mrWorldX                                 (unrequestedChannels[0])
-#define mrWorldY                                 (unrequestedChannels[1])
-#define mrWorldGamma                             (unrequestedChannels[2])
-#define mrAlphaDeriv                             (unrequestedChannels[3])
-#define mrBetaDeriv                              (unrequestedChannels[4])
-#define mrGammaDeriv                             (unrequestedChannels[5])
-#define mrAX                                     (unrequestedChannels[6])
-#define mrAY                                     (unrequestedChannels[7])
-#define mrAZ                                     (unrequestedChannels[8])
+#define mrAlphaDeriv                             (unrequestedChannels[0])
+#define mrBetaDeriv                              (unrequestedChannels[1])
+#define mrGammaDeriv                             (unrequestedChannels[2])
+#define mrAX                                     (unrequestedChannels[3])
+#define mrAY                                     (unrequestedChannels[4])
+#define mrAZ                                     (unrequestedChannels[5])
+#define mrBetaA                                  (unrequestedChannels[6])
+#define mrBetaPS                                 (unrequestedChannels[7])
+#define mrBetaFiltered                           (unrequestedChannels[8])
+#define mrE                                      (unrequestedChannels[9])
+#define mrSpeed                                  (unrequestedChannels[10])
 
 // all parameters
 #define mR_k_pid                                 (parameters[0]).valueFloat

@@ -1,3 +1,4 @@
+#include <Arduino.h>
 #include "microRay.h"
 
 // use your gains from WOK
@@ -21,15 +22,19 @@
 #define ENC2A 19       // Gelbes Kabel Motor 2 in 19
 #define ENC2B 30       // Weißes Kabel Motor 2 in 30
 
+
+
+
 typedef struct {
-    float x;
-    float y;
-    float gamma;
+    int32_t x;
+    int32_t y;
+    int32_t gamma;
 } WorldPosition;
+
+
 
 // dont use this directly, instead use the function getWorldPosition()
 volatile WorldPosition ISR_world_position = { 0, 0, 0 };
-
 
 void deadReckonWheelEncoders(int);
 WorldPosition worldPosition();
@@ -40,15 +45,22 @@ WorldPosition worldPosition();
 #define RIGHT_WHEEL_BACKWARDS 3
 
 // fixed size deltas for dead reckoning world position
-#define DELTA_X 0.00016362f
-#define DELTA_Y 0.00000014511f
-#define DELTA_GAMMA 0.0018f
-#define SPECIAL_TWO_PI 6.283186f
-#define R_RAD 0.05f  // Radradius in m
+// #define DELTA_X 0.00016362f
+// #define DELTA_Y 0.00000014511f
+// #define DELTA_GAMMA 0.0018f
+// #define SPECIAL_TWO_PI 6.283186f
+// #define R_RAD 0.05f  // Radradius in m
+
+// fixed size deltas for dead reckoning world position with integer math
+#define DELTA_X 164 // in micro metern
+// #define DELTA_Y 000000145 // in nano metern
+#define DELTA_GAMMA 2 // in milli rad
+#define SPECIAL_TWO_PI 6283  // in milli pi
+#define R_RAD 50  // Radradius in milli metern
+#define I_SINCOS_FACTOR 127  // because of fast sin cos functions
 
 // Zählvariable des Encoders 1 (links in Fahrtrichtung gesehen)
 volatile long EncoderPos1 = 0;
-
 // Zählvariable des Encoders 2 (rechts in Fahrtrichtung gesehen)
 volatile long EncoderPos2 = 0;
 
@@ -188,42 +200,37 @@ int icos(int x) {
     return isin(x + 90);
 }
 
-float oldPhi = 0.0f;
+int oldMilliPhi = 0.0f;
 void deadReckonWheelEncoders(int direction) {
-    float tiltCorrection = (phi - oldPhi) * R_RAD;
-    oldPhi = phi;
+    int32_t milliPhi = phi*1000;
+    int32_t tiltCorrection = (milliPhi - oldMilliPhi) * R_RAD;
+    oldMilliPhi = milliPhi;
 
-    float gammaOld = ISR_world_position.gamma;
-    int gammaIntOld;
-    gammaIntOld = (int)(gammaOld * 180.0f / PI);
+    int32_t gammaOld = ISR_world_position.gamma;
+    int32_t gammaOldDegrees;
+
+    gammaOldDegrees = gammaOld * 360;
+    gammaOldDegrees /= SPECIAL_TWO_PI;
 
     switch (direction) {
         case LEFT_WHEEL_FORWARDS:
-            // ISR_world_position.x += cos(gammaOld) * (DELTA_X - tiltCorrection);
-            // ISR_world_position.y += sin(gammaOld) * (DELTA_X - tiltCorrection);
-            ISR_world_position.x += icos(gammaIntOld) * 0.007843f * (DELTA_X - tiltCorrection);
-            ISR_world_position.y += isin(gammaIntOld) * 0.007843f * (DELTA_X - tiltCorrection);
+            ISR_world_position.x += (icos(gammaOldDegrees) * (DELTA_X - tiltCorrection)) / I_SINCOS_FACTOR;
+            ISR_world_position.y += (isin(gammaOldDegrees)  * (DELTA_X - tiltCorrection)) / I_SINCOS_FACTOR;
             ISR_world_position.gamma -= DELTA_GAMMA;
             break;
         case LEFT_WHEEL_BACKWARDS:
-            // ISR_world_position.x -= cos(gammaOld) * (DELTA_X + tiltCorrection);
-            // ISR_world_position.y -= sin(gammaOld) * (DELTA_X + tiltCorrection);
-            ISR_world_position.x -= icos(gammaIntOld) * 0.007843f * (DELTA_X + tiltCorrection);
-            ISR_world_position.y -= isin(gammaIntOld) * 0.007843f * (DELTA_X + tiltCorrection);
+            ISR_world_position.x -= (icos(gammaOldDegrees) * (DELTA_X + tiltCorrection)) / I_SINCOS_FACTOR;
+            ISR_world_position.y -= (isin(gammaOldDegrees)  * (DELTA_X + tiltCorrection)) / I_SINCOS_FACTOR;
             ISR_world_position.gamma += DELTA_GAMMA;
             break;
         case RIGHT_WHEEL_FORWARDS:
-            // ISR_world_position.x += cos(gammaOld) * (DELTA_X - tiltCorrection);
-            // ISR_world_position.y += sin(gammaOld) * (DELTA_X - tiltCorrection);
-            ISR_world_position.x += icos(gammaIntOld) * 0.007843f * (DELTA_X - tiltCorrection);
-            ISR_world_position.y += isin(gammaIntOld) * 0.007843f * (DELTA_X - tiltCorrection);
+            ISR_world_position.x += (icos(gammaOldDegrees) * (DELTA_X - tiltCorrection)) / I_SINCOS_FACTOR;
+            ISR_world_position.y += (isin(gammaOldDegrees)  * (DELTA_X - tiltCorrection)) / I_SINCOS_FACTOR;
             ISR_world_position.gamma += DELTA_GAMMA;
             break;
         case RIGHT_WHEEL_BACKWARDS:
-            // ISR_world_position.x -= cos(gammaOld) * (DELTA_X + tiltCorrection);
-            // ISR_world_position.y -= sin(gammaOld) * (DELTA_X + tiltCorrection);
-            ISR_world_position.x -= icos(gammaIntOld) * 0.007843f * (DELTA_X + tiltCorrection);
-            ISR_world_position.y -= isin(gammaIntOld) * 0.007843f * (DELTA_X + tiltCorrection);
+            ISR_world_position.x -= (icos(gammaOldDegrees) * (DELTA_X + tiltCorrection)) / I_SINCOS_FACTOR;
+            ISR_world_position.y -= (isin(gammaOldDegrees)  * (DELTA_X + tiltCorrection)) / I_SINCOS_FACTOR;
             ISR_world_position.gamma -= DELTA_GAMMA;
             break;
     }
@@ -232,7 +239,7 @@ void deadReckonWheelEncoders(int direction) {
     while (ISR_world_position.gamma >= SPECIAL_TWO_PI) {
       ISR_world_position.gamma -= SPECIAL_TWO_PI;
     }
-    while (ISR_world_position.gamma <= 0.0f) {
+    while (ISR_world_position.gamma <= 0) {
       ISR_world_position.gamma += SPECIAL_TWO_PI;
     }
 }
@@ -343,6 +350,8 @@ void getMotion(float *phi, float *a, float *phiP, int *mm) {
   *a = phiA;
   *phiP = phiPS;
   sei();
+  mrBetaPS = phiPS;
+  mrBetaFiltered = phiF;
 }
 
 void getVelo(float *v1, float *v2){
@@ -381,12 +390,12 @@ void control() {
   int mm;
   float u; //Reglerausgang
   int SPEEDL = 0, SPEEDR = 0, SPEED = 0;
-  static long enc1=0;
-  static long enc2=0;
+  // static long enc1=0;
+  // static long enc2=0;
 
   float v1 = 0.0f, v2 = 0.0f;
 
-  int modk;
+  // int modk;
   float ud=0.0f;
 
   getMotion(&phi, &phiR, &phiP, &mm);
@@ -430,9 +439,9 @@ void loop() {
 
 
   // Ausgabe der Position im Welt-KS
-  mrWorldX = worldPosition().x;
-  mrWorldY = worldPosition().y;
-  mrWorldGamma = worldPosition().gamma * 180.0f / PI;
+  mrWorldX = (float)worldPosition().x / 1000000.0f;
+  mrWorldY = (float)worldPosition().y / 1000000.0f;
+  mrWorldGamma = (float)worldPosition().gamma * 180.0f / PI / 1000.0f;
 
   // Ausgabe aller Werte des Bewegungssensors
   mrAlphaDeriv = px;
@@ -441,7 +450,7 @@ void loop() {
   mrAX = ax;
   mrAY = ay;
   mrAZ = az;
-  mrBeta = phi;
+  mrBetaA = phi;
 
 
   microRayCommunicate();

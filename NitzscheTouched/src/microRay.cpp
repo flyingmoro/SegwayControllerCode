@@ -74,8 +74,10 @@ void prepareInMessage() {
 
 void microRayCommunicate()
 {
+    #ifndef mrDEBUG
     receiveMessage();
     sendMessage();
+    #endif
 }
 
 Parameter parameters[] = {
