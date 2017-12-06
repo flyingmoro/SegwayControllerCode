@@ -57,7 +57,7 @@ static void initSpaceVectorPWM(void)
     HAL_TIM_PWM_ConfigChannel(&htim2, &sConfigOC, TIM_CHANNEL_3);
     HAL_TIM_PWM_ConfigChannel(&htim2, &sConfigOC, TIM_CHANNEL_4);
 
-    
+
 
     // das hier is wichtig und kommt nicht aus dem StmCube Dings raus !!!!!!!!!!!!!!!
     // (damit wird auch das preload Verhalten angeschaltet)
@@ -77,8 +77,9 @@ void initEncoderCounter(){
     // __TIM3_CLK_ENABLE();
 
     TIM_Encoder_InitTypeDef sConfig;
-    // TIM_MasterConfigTypeDef sMasterConfig;
+    TIM_MasterConfigTypeDef sMasterConfig;
     TIM_IC_InitTypeDef sConfigIC;
+    TIM_OC_InitTypeDef sConfigOC;
 
     htim3.Instance = TIM3;
     htim3.Init.Prescaler = 0;
@@ -99,9 +100,9 @@ void initEncoderCounter(){
     sConfig.IC2Filter = 0;
     HAL_TIM_Encoder_Init(&htim3, &sConfig);
 
-    // sMasterConfig.MasterOutputTrigger = TIM_TRGO_RESET;
-    // sMasterConfig.MasterSlaveMode = TIM_MASTERSLAVEMODE_DISABLE;
-    // HAL_TIMEx_MasterConfigSynchronization(&htim3, &sMasterConfig);
+    sMasterConfig.MasterOutputTrigger = TIM_TRGO_RESET;
+    sMasterConfig.MasterSlaveMode = TIM_MASTERSLAVEMODE_DISABLE;
+    HAL_TIMEx_MasterConfigSynchronization(&htim3, &sMasterConfig);
 
     sConfigIC.ICPolarity = TIM_INPUTCHANNELPOLARITY_RISING;
     sConfigIC.ICSelection = TIM_ICSELECTION_DIRECTTI;
@@ -110,9 +111,17 @@ void initEncoderCounter(){
     HAL_TIM_IC_ConfigChannel(&htim3, &sConfigIC, TIM_CHANNEL_1);
     HAL_TIM_IC_ConfigChannel(&htim3, &sConfigIC, TIM_CHANNEL_2);
 
+    // activate channel 4 capture/compare mode
+    //TIM3->DIER |= TIM_DIER_CC4IE;
+    sConfigOC.OCMode = TIM_OCMODE_ACTIVE;
+    // sConfigOC.Pulse = 0;
+    // sConfigOC.OCPolarity = TIM_OCPOLARITY_HIGH;
+    // sConfigOC.OCFastMode = TIM_OCFAST_ENABLE;
+    HAL_TIM_OC_ConfigChannel(&htim3, &sConfigOC, TIM_CHANNEL_4);
+
     // manuell hinzugefügt
     HAL_TIM_Encoder_Start_IT(&htim3, TIM_CHANNEL_ALL);
-
+    HAL_TIM_Base_Start_IT(&htim3);
 }
 
 void initTimerInterrupt() {
@@ -258,6 +267,8 @@ void TIM3_IRQHandler(void) {
 volatile int ISR_currentMotorSector = 0;
 extern "C" void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim);
 void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim) {
+
+    // ISR_currentMotorSector++;
     if (htim->Instance == TIM3) {
         HAL_GPIO_TogglePin(GPIOE, GPIO_PIN_15);
         bool isCountingDown = __HAL_TIM_IS_TIM_COUNTING_DOWN(&htim4);
@@ -267,19 +278,24 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim) {
         else {
             ISR_currentMotorSector++;
         }
-
-        if (ISR_currentMotorSector > 5) {
-            ISR_currentMotorSector = 0;
-        }
-        if (ISR_currentMotorSector < 0) {
-            ISR_currentMotorSector = 5;
-        }
-
-        HAL_GPIO_TogglePin(GPIOE, GPIO_PIN_15);
-
+    //
+    //     if (ISR_currentMotorSector > 5) {
+    //         ISR_currentMotorSector = 0;
+    //     }
+    //     if (ISR_currentMotorSector < 0) {
+    //         ISR_currentMotorSector = 5;
+    //     }
+    //
+    //     HAL_GPIO_TogglePin(GPIOE, GPIO_PIN_15);
+    //
     }
 }
 
+
+// extern "C" void HAL_TIM_OC_DelayElapsedCallback (TIM_HandleTypeDef * htim);
+// void HAL_TIM_OC_DelayElapsedCallback (TIM_HandleTypeDef * htim) {
+//     HAL_GPIO_TogglePin(GPIOE, GPIO_PIN_15);
+// }
 
 int main(void) {
 
@@ -293,6 +309,7 @@ int main(void) {
 
         __HAL_TIM_SET_COMPARE(&htim2, TIM_CHANNEL_2, 1999);
         __HAL_TIM_SET_COMPARE(&htim2, TIM_CHANNEL_4, 999);
+        __HAL_TIM_SET_COMPARE(&htim3, TIM_CHANNEL_4, 0);
 
         int i = -1;
         for (i = -1; i < 10000; i+=1000) {
