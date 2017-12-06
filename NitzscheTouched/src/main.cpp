@@ -6,6 +6,9 @@
 #define TV 0.005
 
 
+
+// 1000ms default read timeout (modify with "I2Cdev::readTimeout = [ms];")
+
 // DON'T TOUCH
 
 #include <math.h>
@@ -25,7 +28,7 @@
 
 
 
-typedef struct {
+typedef struct WorldPosition {
     int32_t x;
     int32_t y;
     int32_t gamma;
@@ -33,11 +36,17 @@ typedef struct {
 
 
 
-// dont use this directly, instead use the function getWorldPosition()
+// dont use this directly, instead use the function worldPosition()
 volatile WorldPosition ISR_world_position = { 0, 0, 0 };
+WorldPosition worldPosition = { 0, 0, 0 };
 
-void deadReckonWheelEncoders(int);
-WorldPosition worldPosition();
+void deadReckonWheelEncodersISR(int);
+void deadReckonWheelEncoders();
+WorldPosition getWorldPosition();
+
+int8_t encoderChangeLeft();
+int8_t encoderChangeRight();
+
 
 #define LEFT_WHEEL_FORWARDS 0
 #define LEFT_WHEEL_BACKWARDS 1
@@ -48,21 +57,24 @@ WorldPosition worldPosition();
 // #define DELTA_X 0.00016362f
 // #define DELTA_Y 0.00000014511f
 // #define DELTA_GAMMA 0.0018f
-// #define SPECIAL_TWO_PI 6.283186f
+// #define MILLI_TWO_PI 6.283186f
 // #define R_RAD 0.05f  // Radradius in m
 
 // fixed size deltas for dead reckoning world position with integer math
 #define DELTA_X 164 // in micro metern
 // #define DELTA_Y 000000145 // in nano metern
 #define DELTA_GAMMA 2 // in milli rad
-#define SPECIAL_TWO_PI 6283  // in milli pi
+#define MILLI_TWO_PI 6283  // in milli pi
+#define MILLI_PI 3141  // in milli pi
+#define NEG_MILLI_PI -3141  // in milli pi
 #define R_RAD 50  // Radradius in milli metern
 #define I_SINCOS_FACTOR 127  // because of fast sin cos functions
+#define WHEEL_SPAN_MILLI 150  // Radabstand in milli metern
 
 // Zählvariable des Encoders 1 (links in Fahrtrichtung gesehen)
-volatile long EncoderPos1 = 0;
+volatile int8_t ISR_EncoderPos1 = 0;
 // Zählvariable des Encoders 2 (rechts in Fahrtrichtung gesehen)
-volatile long EncoderPos2 = 0;
+volatile int8_t ISR_EncoderPos2 = 0;
 
 //Incremente pro Umdrehung
 #define REV2INC 960.0
@@ -88,8 +100,8 @@ volatile long EncoderPos2 = 0;
 #define PI_HALBE 1.570796
 #define PI_ 3.1415927
 
-float phiR, phi, phiP;
-int16_t ax, ay, az, px, py, pz;
+float phiR = 0.0f, phi = 0.0f, phiP = 0.0f;
+int16_t ax = 0, ay = 0, az = 0, px = 0, py = 0, pz = 0;
 
 
 MPU6050 mpu;
@@ -101,27 +113,28 @@ DualVNH5019MotorShield md;              // Zugriff auf den Motorcontroller über
 //960 Inc per rev
 void doENC1A() {
   digitalWrite(TESTPIN_ENC_1, HIGH);
-  static int a, b;
+  static uint8_t a, b, ab;
   b = digitalRead(ENC1B);//read B first, since A just changed and will change again only after B has changed
   a = digitalRead(ENC1A);
+
   if (a == HIGH) {
     if (b == HIGH){
-      EncoderPos1++;
-      deadReckonWheelEncoders(LEFT_WHEEL_FORWARDS);
+      ISR_EncoderPos1++;
+      // deadReckonWheelEncoders(LEFT_WHEEL_FORWARDS);
     }
     else {
-      EncoderPos1--;
-      deadReckonWheelEncoders(LEFT_WHEEL_BACKWARDS);
+      ISR_EncoderPos1--;
+      // deadReckonWheelEncoders(LEFT_WHEEL_BACKWARDS);
     }
   }
   else {
     if (b == HIGH) {
-      EncoderPos1--;
-      deadReckonWheelEncoders(LEFT_WHEEL_BACKWARDS);
+      ISR_EncoderPos1--;
+      // deadReckonWheelEncoders(LEFT_WHEEL_BACKWARDS);
     }
     else {
-      EncoderPos1++;
-      deadReckonWheelEncoders(LEFT_WHEEL_FORWARDS);
+      ISR_EncoderPos1++;
+      // deadReckonWheelEncoders(LEFT_WHEEL_FORWARDS);
     }
   }
   digitalWrite(TESTPIN_ENC_1, LOW);
@@ -136,22 +149,22 @@ void doENC2A() {
   a = digitalRead(ENC2A);
   if (a == HIGH) {
     if (b == HIGH) {
-      EncoderPos2--;
-      deadReckonWheelEncoders(RIGHT_WHEEL_BACKWARDS);
+      ISR_EncoderPos2--;
+      // deadReckonWheelEncoders(RIGHT_WHEEL_BACKWARDS);
     }
     else {
-      EncoderPos2++;
-      deadReckonWheelEncoders(RIGHT_WHEEL_FORWARDS);
+      ISR_EncoderPos2++;
+      // deadReckonWheelEncoders(RIGHT_WHEEL_FORWARDS);
     }
   }
   else {
     if (b == HIGH) {
-      EncoderPos2++;
-      deadReckonWheelEncoders(RIGHT_WHEEL_FORWARDS);
+      ISR_EncoderPos2++;
+      // deadReckonWheelEncoders(RIGHT_WHEEL_FORWARDS);
     }
     else {
-      EncoderPos2--;
-      deadReckonWheelEncoders(RIGHT_WHEEL_BACKWARDS);
+      ISR_EncoderPos2--;
+      // deadReckonWheelEncoders(RIGHT_WHEEL_BACKWARDS);
     }
   }
 
@@ -201,7 +214,7 @@ int icos(int x) {
 }
 
 int oldMilliPhi = 0.0f;
-void deadReckonWheelEncoders(int direction) {
+void deadReckonWheelEncodersISR(int direction) {
     int32_t milliPhi = phi*1000;
     int32_t tiltCorrection = (milliPhi - oldMilliPhi) * R_RAD;
     oldMilliPhi = milliPhi;
@@ -209,9 +222,12 @@ void deadReckonWheelEncoders(int direction) {
     int32_t gammaOld = ISR_world_position.gamma;
     int32_t gammaOldDegrees;
 
-    gammaOldDegrees = gammaOld * 360;
-    gammaOldDegrees /= SPECIAL_TWO_PI;
+    gammaOldDegrees = gammaOld * 360;    // teilen durch 17.45
+    gammaOldDegrees /= MILLI_TWO_PI;
 
+
+    // hier noch die Tiltcorrection in eine langsamere Funktion auslagern
+    // und DELTA_X / I_SINCOS_FACTOR vorher ausrechnen, spart eine Addition und eine Multiplikation
     switch (direction) {
         case LEFT_WHEEL_FORWARDS:
             ISR_world_position.x += (icos(gammaOldDegrees) * (DELTA_X - tiltCorrection)) / I_SINCOS_FACTOR;
@@ -236,15 +252,43 @@ void deadReckonWheelEncoders(int direction) {
     }
 
     // constrain gamma
-    while (ISR_world_position.gamma >= SPECIAL_TWO_PI) {
-      ISR_world_position.gamma -= SPECIAL_TWO_PI;
+    while (ISR_world_position.gamma >= MILLI_TWO_PI) {
+      ISR_world_position.gamma -= MILLI_TWO_PI;
     }
     while (ISR_world_position.gamma <= 0) {
-      ISR_world_position.gamma += SPECIAL_TWO_PI;
+      ISR_world_position.gamma += MILLI_TWO_PI;
     }
 }
 
-WorldPosition worldPosition() {
+void deadReckonWheelEncoders() {
+    static int8_t xRLeft = 0, xRRight = 0, diffX, deltaGamma, deltaForward;
+
+    xRLeft = encoderChangeLeft();
+    xRRight = encoderChangeRight();
+
+    diffX = xRLeft - xRRight;
+
+    deltaGamma = diffX / WHEEL_SPAN_MILLI;
+    deltaForward = diffX > 1;  // shift one to the right equals int division by 2
+
+    int32_t gammaOldDegrees;
+    gammaOldDegrees = worldPosition.gamma / 17;    // eigentlich mal 180 / Pi
+
+    worldPosition.x += (icos(gammaOldDegrees) * deltaForward) / I_SINCOS_FACTOR;
+    worldPosition.y += (isin(gammaOldDegrees) * deltaForward) / I_SINCOS_FACTOR;
+    worldPosition.gamma += deltaGamma;
+
+    // constrain gamma
+    while (worldPosition.gamma > MILLI_PI) {
+      worldPosition.gamma -= MILLI_PI;
+    }
+    while (worldPosition.gamma <= NEG_MILLI_PI) {
+      worldPosition.gamma += MILLI_PI;
+    }
+}
+
+
+WorldPosition getWorldPosition() {
     WorldPosition wp;
     cli();
     wp.x = ISR_world_position.x;
@@ -254,14 +298,36 @@ WorldPosition worldPosition() {
     return wp;
 }
 
+int8_t encoderChangeLeft() {
+    static int8_t tempEncLeft;
+    cli();
+    tempEncLeft = ISR_EncoderPos1;
+    ISR_EncoderPos1 = 0;
+    sei();
+    return tempEncLeft;
+}
+
+int8_t encoderChangeRight() {
+    static int8_t tempEncRight;
+    cli();
+    tempEncRight = ISR_EncoderPos2;
+    ISR_EncoderPos2 = 0;
+    sei();
+    return tempEncRight;
+}
+
 void setupENC() {
-  pinMode (ENC1A, INPUT); digitalWrite (ENC1A, HIGH);
-  pinMode (ENC1B, INPUT); digitalWrite (ENC1B, HIGH);
+  pinMode (ENC1A, INPUT);
+  digitalWrite (ENC1A, HIGH);
+  pinMode (ENC1B, INPUT);
+  digitalWrite (ENC1B, HIGH);
   //  attachInterrupt(5, doEncoder1, CHANGE);
   attachInterrupt(digitalPinToInterrupt(ENC1A), doENC1A, CHANGE);
 
-  pinMode (ENC2A, INPUT); digitalWrite (ENC2A, HIGH);
-  pinMode (ENC2B, INPUT); digitalWrite (ENC2B, HIGH);
+  pinMode (ENC2A, INPUT);
+  digitalWrite (ENC2A, HIGH);
+  pinMode (ENC2B, INPUT);
+  digitalWrite (ENC2B, HIGH);
   //  attachInterrupt(4, doEncoder2, CHANGE);
   attachInterrupt(digitalPinToInterrupt(ENC2A), doENC2A, CHANGE);
 }
@@ -287,7 +353,14 @@ void setup() {
   setupMPU();
   md.init();
 
+
+  // md.setM1Speed(100);
+  // md.setM2Speed(100);
+  // delay(5000);
+
   setupENC();
+
+
 }
 
 int read_SW() {
@@ -346,7 +419,7 @@ void getMotion(float *phi, float *a, float *phiP, int *mm) {
   phiF = ((phiF + h * phiPS) * T_MOTION + phiA * h) / (T_MOTION + h);
 
   cli();
-  *phi = phiA;
+  *phi = phiF;
   *a = phiA;
   *phiP = phiPS;
   sei();
@@ -372,8 +445,8 @@ void getVelo(float *v1, float *v2){
   }
   else {
     now=micros();
-    enc1=EncoderPos1;
-    enc2=EncoderPos2;
+    enc1=ISR_EncoderPos1;
+    enc2=ISR_EncoderPos2;
     *v1 = ((float)(enc1-enc1_last)/(float)(now-last)*1000.0 + 5.0*v1_last)/6.0;
     *v2 = ((float)(enc2-enc2_last)/(float)(now-last)*1000.0 + 5.0*v2_last)/6.0;
 
@@ -434,14 +507,14 @@ void stopMotors() {
 unsigned long loopStart = 0;
 void loop() {
   loopStart = micros();
-
+  deadReckonWheelEncoders();
   control();
 
 
   // Ausgabe der Position im Welt-KS
-  mrWorldX = (float)worldPosition().x / 1000000.0f;
-  mrWorldY = (float)worldPosition().y / 1000000.0f;
-  mrWorldGamma = (float)worldPosition().gamma * 180.0f / PI / 1000.0f;
+  mrWorldX = (float)worldPosition.x / 1000000.0f;
+  mrWorldY = (float)worldPosition.y / 1000000.0f;
+  mrWorldGamma = (float)worldPosition.gamma * 180.0f / PI / 1000.0f;
 
   // Ausgabe aller Werte des Bewegungssensors
   mrAlphaDeriv = px;
@@ -452,7 +525,7 @@ void loop() {
   mrAZ = az;
   mrBetaA = phi;
 
-  Serial.println("duda");
+  // Serial.println("duda");
 
   microRayCommunicate();
 }
