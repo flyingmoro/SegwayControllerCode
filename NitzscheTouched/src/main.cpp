@@ -29,47 +29,27 @@
 
 
 typedef struct WorldPosition {
-    int32_t x;
-    int32_t y;
-    int32_t gamma;
+    float x;
+    float y;
+    float gamma;
 } WorldPosition;
 
 
 
-// dont use this directly, instead use the function worldPosition()
-volatile WorldPosition ISR_world_position = { 0, 0, 0 };
 WorldPosition worldPosition = { 0, 0, 0 };
 
-void deadReckonWheelEncodersISR(int);
-void deadReckonWheelEncoders();
-WorldPosition getWorldPosition();
+void deadReckonWheelEncodersWithFloats();
 
-int8_t encoderChangeLeft();
-int8_t encoderChangeRight();
+int encoderChangeLeft();
+int encoderChangeRight();
 
 
-#define LEFT_WHEEL_FORWARDS 0
-#define LEFT_WHEEL_BACKWARDS 1
-#define RIGHT_WHEEL_FORWARDS 2
-#define RIGHT_WHEEL_BACKWARDS 3
 
-// fixed size deltas for dead reckoning world position
-// #define DELTA_X 0.00016362f
-// #define DELTA_Y 0.00000014511f
-// #define DELTA_GAMMA 0.0018f
-// #define MILLI_TWO_PI 6.283186f
-// #define R_RAD 0.05f  // Radradius in m
-
-// fixed size deltas for dead reckoning world position with integer math
-#define DELTA_X 164 // in micro metern
-// #define DELTA_Y 000000145 // in nano metern
-#define DELTA_GAMMA 2 // in milli rad
-#define MILLI_TWO_PI 6283  // in milli pi
-#define MILLI_PI 3141  // in milli pi
-#define NEG_MILLI_PI -3141  // in milli pi
-#define R_RAD 50  // Radradius in milli metern
-#define I_SINCOS_FACTOR 127  // because of fast sin cos functions
-#define WHEEL_SPAN_MILLI 150  // Radabstand in milli metern
+#define METERS_PER_ENCODER_STEP 0.000327f
+#define NEG_PI -3.141  // in milli pi
+#define TWO_PI 6.282  // in milli pi
+#define R_RAD 0.050  // Radradius in metern
+#define WHEEL_SPAN 0.184  // Radabstand in metern
 
 // Zählvariable des Encoders 1 (links in Fahrtrichtung gesehen)
 volatile int8_t ISR_EncoderPos1 = 0;
@@ -172,133 +152,34 @@ void doENC2A() {
 }
 
 
-uint8_t isinTable8[] = {
-  0, 4, 9, 13, 18, 22, 27, 31, 35, 40, 44,
-  49, 53, 57, 62, 66, 70, 75, 79, 83, 87,
-  91, 96, 100, 104, 108, 112, 116, 120, 124, 128,
 
-  131, 135, 139, 143, 146, 150, 153, 157, 160, 164,
-  167, 171, 174, 177, 180, 183, 186, 190, 192, 195,
-  198, 201, 204, 206, 209, 211, 214, 216, 219, 221,
+void deadReckonWheelEncodersWithFloats() {
+    static float xRLeft, xRRight, diffX, deltaForward, deltaGamma;
 
-  223, 225, 227, 229, 231, 233, 235, 236, 238, 240,
-  241, 243, 244, 245, 246, 247, 248, 249, 250, 251,
-  252, 253, 253, 254, 254, 254, 255, 255, 255, 255,
-};
+    // misleading, change functions encoderChange, because EncoderCounter will be reset inside
+    xRLeft = encoderChangeLeft() * (float)METERS_PER_ENCODER_STEP;
+    xRRight = encoderChangeRight() * (float)METERS_PER_ENCODER_STEP;
 
+    diffX = (float)(xRRight - xRLeft);
+    deltaGamma = diffX / WHEEL_SPAN;
+    deltaForward = (xRLeft + xRRight) / 2.0;
 
-int isin(int x)
-{
-  boolean pos = true;  // positive - keeps an eye on the sign.
-  uint8_t idx;
-  // remove next 6 lines for fastestl!
-   if (x < 0)
-    {
-      x = -x;
-      pos = !pos;
-    }
-   if (x >= 360) x %= 360;
-  if (x > 180)
-  {
-    idx = x - 180;
-    pos = !pos;
-  }
-  else idx = x;
-  if (idx > 90) idx = 180 - idx;
-  if (pos) return isinTable8[idx]/2 ;
-  return -(isinTable8[idx]/2);
-}
-
-int icos(int x) {
-    return isin(x + 90);
-}
-
-int oldMilliPhi = 0.0f;
-void deadReckonWheelEncodersISR(int direction) {
-    int32_t milliPhi = phi*1000;
-    int32_t tiltCorrection = (milliPhi - oldMilliPhi) * R_RAD;
-    oldMilliPhi = milliPhi;
-
-    int32_t gammaOld = ISR_world_position.gamma;
-    int32_t gammaOldDegrees;
-
-    gammaOldDegrees = gammaOld * 360;    // teilen durch 17.45
-    gammaOldDegrees /= MILLI_TWO_PI;
-
-
-    // hier noch die Tiltcorrection in eine langsamere Funktion auslagern
-    // und DELTA_X / I_SINCOS_FACTOR vorher ausrechnen, spart eine Addition und eine Multiplikation
-    switch (direction) {
-        case LEFT_WHEEL_FORWARDS:
-            ISR_world_position.x += (icos(gammaOldDegrees) * (DELTA_X - tiltCorrection)) / I_SINCOS_FACTOR;
-            ISR_world_position.y += (isin(gammaOldDegrees)  * (DELTA_X - tiltCorrection)) / I_SINCOS_FACTOR;
-            ISR_world_position.gamma -= DELTA_GAMMA;
-            break;
-        case LEFT_WHEEL_BACKWARDS:
-            ISR_world_position.x -= (icos(gammaOldDegrees) * (DELTA_X + tiltCorrection)) / I_SINCOS_FACTOR;
-            ISR_world_position.y -= (isin(gammaOldDegrees)  * (DELTA_X + tiltCorrection)) / I_SINCOS_FACTOR;
-            ISR_world_position.gamma += DELTA_GAMMA;
-            break;
-        case RIGHT_WHEEL_FORWARDS:
-            ISR_world_position.x += (icos(gammaOldDegrees) * (DELTA_X - tiltCorrection)) / I_SINCOS_FACTOR;
-            ISR_world_position.y += (isin(gammaOldDegrees)  * (DELTA_X - tiltCorrection)) / I_SINCOS_FACTOR;
-            ISR_world_position.gamma += DELTA_GAMMA;
-            break;
-        case RIGHT_WHEEL_BACKWARDS:
-            ISR_world_position.x -= (icos(gammaOldDegrees) * (DELTA_X + tiltCorrection)) / I_SINCOS_FACTOR;
-            ISR_world_position.y -= (isin(gammaOldDegrees)  * (DELTA_X + tiltCorrection)) / I_SINCOS_FACTOR;
-            ISR_world_position.gamma -= DELTA_GAMMA;
-            break;
-    }
-
-    // constrain gamma
-    while (ISR_world_position.gamma >= MILLI_TWO_PI) {
-      ISR_world_position.gamma -= MILLI_TWO_PI;
-    }
-    while (ISR_world_position.gamma <= 0) {
-      ISR_world_position.gamma += MILLI_TWO_PI;
-    }
-}
-
-void deadReckonWheelEncoders() {
-    static int8_t xRLeft = 0, xRRight = 0, diffX, deltaGamma, deltaForward;
-
-    xRLeft = encoderChangeLeft();
-    xRRight = encoderChangeRight();
-
-    diffX = xRLeft - xRRight;
-
-    deltaGamma = diffX / WHEEL_SPAN_MILLI;
-    deltaForward = diffX > 1;  // shift one to the right equals int division by 2
-
-    int32_t gammaOldDegrees;
-    gammaOldDegrees = worldPosition.gamma / 17;    // eigentlich mal 180 / Pi
-
-    worldPosition.x += (icos(gammaOldDegrees) * deltaForward) / I_SINCOS_FACTOR;
-    worldPosition.y += (isin(gammaOldDegrees) * deltaForward) / I_SINCOS_FACTOR;
+    worldPosition.x += (cos(worldPosition.gamma) * deltaForward);
+    worldPosition.y += (sin(worldPosition.gamma) * deltaForward);
     worldPosition.gamma += deltaGamma;
 
     // constrain gamma
-    while (worldPosition.gamma > MILLI_PI) {
-      worldPosition.gamma -= MILLI_PI;
+    while (worldPosition.gamma > PI) {
+      worldPosition.gamma -= TWO_PI;
     }
-    while (worldPosition.gamma <= NEG_MILLI_PI) {
-      worldPosition.gamma += MILLI_PI;
+    while (worldPosition.gamma <= NEG_PI) {
+      worldPosition.gamma += TWO_PI;
     }
 }
 
 
-WorldPosition getWorldPosition() {
-    WorldPosition wp;
-    cli();
-    wp.x = ISR_world_position.x;
-    wp.y = ISR_world_position.y;
-    wp.gamma = ISR_world_position.gamma;
-    sei();
-    return wp;
-}
 
-int8_t encoderChangeLeft() {
+int encoderChangeLeft() {
     static int8_t tempEncLeft;
     cli();
     tempEncLeft = ISR_EncoderPos1;
@@ -307,7 +188,7 @@ int8_t encoderChangeLeft() {
     return tempEncLeft;
 }
 
-int8_t encoderChangeRight() {
+int encoderChangeRight() {
     static int8_t tempEncRight;
     cli();
     tempEncRight = ISR_EncoderPos2;
@@ -507,14 +388,17 @@ void stopMotors() {
 unsigned long loopStart = 0;
 void loop() {
   loopStart = micros();
-  deadReckonWheelEncoders();
+  deadReckonWheelEncodersWithFloats();
   control();
 
 
   // Ausgabe der Position im Welt-KS
-  mrWorldX = (float)worldPosition.x / 1000000.0f;
-  mrWorldY = (float)worldPosition.y / 1000000.0f;
-  mrWorldGamma = (float)worldPosition.gamma * 180.0f / PI / 1000.0f;
+  // mrWorldX = (float)worldPosition.x / 1000000.0f;
+  // mrWorldY = (float)worldPosition.y / 1000000.0f;
+  // mrWorldGamma = (float)worldPosition.gamma * 180.0f / PI / 1000.0f;
+  mrWorldX = worldPosition.x * 1000.0f; // should give us millimeters
+  mrWorldY = worldPosition.y * 1000.0f; // should give us millimeters
+  mrWorldGamma = worldPosition.gamma * 180.0f / PI;
 
   // Ausgabe aller Werte des Bewegungssensors
   mrAlphaDeriv = px;

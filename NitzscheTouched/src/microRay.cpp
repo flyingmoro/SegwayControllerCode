@@ -9,7 +9,7 @@ void recordMessage();
 void transmitRecordings();
 
 unsigned long lastTime = 0;
-bool lastMessageSendComplete = false;
+volatile bool lastMessageSendComplete = false;
 
 int sendMode = LIVE_MODE;
 int recordingCounter = 0;

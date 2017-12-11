@@ -27,9 +27,9 @@ static void initSpaceVectorPWM(void)
     TIM_OC_InitTypeDef sConfigOC;
 
     htim2.Instance = TIM2;
-    htim2.Init.Prescaler = 199;
+    htim2.Init.Prescaler = 19;
     htim2.Init.CounterMode = TIM_COUNTERMODE_CENTERALIGNED3;
-    htim2.Init.Period = 9999;
+    htim2.Init.Period = 99;
     htim2.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
     htim2.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_ENABLE;
 
@@ -48,7 +48,7 @@ static void initSpaceVectorPWM(void)
     sConfigOC.OCMode = TIM_OCMODE_PWM2;
     sConfigOC.Pulse = 0;
     // can invert the output signal
-    sConfigOC.OCPolarity = TIM_OCPOLARITY_HIGH;
+    sConfigOC.OCPolarity = TIM_OCPOLARITY_LOW;
     sConfigOC.OCFastMode = TIM_OCFAST_ENABLE;
 
 
@@ -147,7 +147,7 @@ static void initGPIO(void) {
     GPIO_InitStruct.Pin = GPIO_PIN_3 | GPIO_PIN_10 | GPIO_PIN_11;
     GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
     GPIO_InitStruct.Pull = GPIO_NOPULL;
-    GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+    GPIO_InitStruct.Speed = GPIO_SPEED_HIGH;
     GPIO_InitStruct.Alternate = GPIO_AF1_TIM2;
     HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
 
@@ -297,6 +297,7 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim) {
 //     HAL_GPIO_TogglePin(GPIOE, GPIO_PIN_15);
 // }
 
+#define TEST_CYCLE 50
 int main(void) {
 
     initGPIO();
@@ -304,12 +305,70 @@ int main(void) {
     initEncoderCounter();
     initTimerInterrupt();
 
+    __HAL_TIM_SET_COMPARE(&htim3, TIM_CHANNEL_4, 0);
+
+    __HAL_TIM_SET_COMPARE(&htim2, TIM_CHANNEL_2, 0);
+    __HAL_TIM_SET_COMPARE(&htim2, TIM_CHANNEL_3, 0);
+    __HAL_TIM_SET_COMPARE(&htim2, TIM_CHANNEL_4, 0);
+
+    int sectorCounter = 0;
     while (1) {
 
+        __HAL_TIM_SET_COMPARE(&htim2, TIM_CHANNEL_2, TEST_CYCLE);
+        __HAL_TIM_SET_COMPARE(&htim2, TIM_CHANNEL_3, TEST_CYCLE);
+        __HAL_TIM_SET_COMPARE(&htim2, TIM_CHANNEL_4, 0);
 
-        __HAL_TIM_SET_COMPARE(&htim2, TIM_CHANNEL_2, 1999);
-        __HAL_TIM_SET_COMPARE(&htim2, TIM_CHANNEL_4, 999);
-        __HAL_TIM_SET_COMPARE(&htim3, TIM_CHANNEL_4, 0);
+        continue;
+
+        switch (sectorCounter) {
+            case 0:
+                __HAL_TIM_SET_COMPARE(&htim2, TIM_CHANNEL_2, 0);
+                __HAL_TIM_SET_COMPARE(&htim2, TIM_CHANNEL_3, 0);
+                __HAL_TIM_SET_COMPARE(&htim2, TIM_CHANNEL_4, TEST_CYCLE);
+                break;
+            case 1:
+                __HAL_TIM_SET_COMPARE(&htim2, TIM_CHANNEL_2, 0);
+                __HAL_TIM_SET_COMPARE(&htim2, TIM_CHANNEL_3, TEST_CYCLE);
+                __HAL_TIM_SET_COMPARE(&htim2, TIM_CHANNEL_4, TEST_CYCLE);
+                break;
+            case 2:
+                __HAL_TIM_SET_COMPARE(&htim2, TIM_CHANNEL_2, 0);
+                __HAL_TIM_SET_COMPARE(&htim2, TIM_CHANNEL_3, TEST_CYCLE);
+                __HAL_TIM_SET_COMPARE(&htim2, TIM_CHANNEL_4, 0);
+                break;
+            case 3:
+                __HAL_TIM_SET_COMPARE(&htim2, TIM_CHANNEL_2, TEST_CYCLE);
+                __HAL_TIM_SET_COMPARE(&htim2, TIM_CHANNEL_3, TEST_CYCLE);
+                __HAL_TIM_SET_COMPARE(&htim2, TIM_CHANNEL_4, 0);
+                break;
+            case 4:
+                __HAL_TIM_SET_COMPARE(&htim2, TIM_CHANNEL_2, TEST_CYCLE);
+                __HAL_TIM_SET_COMPARE(&htim2, TIM_CHANNEL_3, 0);
+                __HAL_TIM_SET_COMPARE(&htim2, TIM_CHANNEL_4, 0);
+                break;
+            case 5:
+                __HAL_TIM_SET_COMPARE(&htim2, TIM_CHANNEL_2, TEST_CYCLE);
+                __HAL_TIM_SET_COMPARE(&htim2, TIM_CHANNEL_3, 0);
+                __HAL_TIM_SET_COMPARE(&htim2, TIM_CHANNEL_4, TEST_CYCLE);
+                break;
+            default:
+                sectorCounter = 0;
+                break;
+
+        }
+        sectorCounter += 1;
+        if (sectorCounter > 5) {
+            sectorCounter = 0;
+        }
+
+        wait(1.0f);
+
+
+        continue;
+
+
+
+
 
         int i = -1;
         for (i = -1; i < 10000; i+=1000) {
