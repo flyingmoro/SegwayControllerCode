@@ -1,0 +1,51 @@
+{
+    "channels": [
+        {
+            "displayName": "", 
+            "name": "mr_channel_1", 
+            "show": true, 
+            "color": [
+                60, 
+                160, 
+                146
+            ], 
+            "isRequested": true, 
+            "id": 0
+        }
+    ], 
+    "commands": [
+        {
+            "initialValue": 1.0, 
+            "displayName": "", 
+            "name": "mr_Param1", 
+            "min": -100000.0, 
+            "max": 100000.0, 
+            "valueType": 2, 
+            "pendingMode": false, 
+            "inputMethod": 1, 
+            "id": 0
+        }
+    ], 
+    "miscSettings": {
+        "controllerFrameworkAndInterface": "MBED_OS_SERIAL", 
+        "tabs": [
+            {
+                "className": "TabSmallGenericView", 
+                "pathToClassFile": "gui.tabSmallGenericView", 
+                "displayName": "Generische Ansicht"
+            }
+        ], 
+        "comPortBaudRate": 115200, 
+        "recordMode": false, 
+        "comPortDescription": "STMicroelectronics STLink Virtual COM Port (COM9)", 
+        "pauseAfterRecord": false, 
+        "computerIP": "192.168.0.133", 
+        "udpPort": 10000, 
+        "recordBufferLength": 1, 
+        "debugMode": false, 
+        "pathToControllerCodeFolder": "D:\\00 eigene Daten\\000 FH\\S 6\\Segway\\SegwayControllerCode\\testSpaceVectorCenterAlignedPWM\\src", 
+        "suppressParameterConfirmation": false, 
+        "controllerLoopCycleTimeInUs": 5000, 
+        "controllerIP": "192.168.0.15"
+    }
+}

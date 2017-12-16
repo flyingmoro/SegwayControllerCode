@@ -1,0 +1,111 @@
+{
+    "channels": [
+        {
+            "displayName": "", 
+            "name": "mr_acc_x", 
+            "show": true, 
+            "color": [
+                60, 
+                160, 
+                146
+            ], 
+            "isRequested": true, 
+            "id": 0
+        }, 
+        {
+            "displayName": "", 
+            "name": "mr_acc_y", 
+            "show": true, 
+            "color": [
+                200, 
+                132, 
+                15
+            ], 
+            "isRequested": true, 
+            "id": 1
+        }, 
+        {
+            "displayName": "", 
+            "name": "mr_acc_z", 
+            "show": true, 
+            "color": [
+                0, 
+                170, 
+                255
+            ], 
+            "isRequested": true, 
+            "id": 2
+        }, 
+        {
+            "displayName": "", 
+            "name": "mr_gyro_x", 
+            "show": true, 
+            "color": [
+                243, 
+                101, 
+                220
+            ], 
+            "isRequested": true, 
+            "id": 3
+        }, 
+        {
+            "displayName": "", 
+            "name": "mr_gyro_y", 
+            "show": true, 
+            "color": [
+                0, 
+                170, 
+                0
+            ], 
+            "isRequested": true, 
+            "id": 4
+        }, 
+        {
+            "displayName": "", 
+            "name": "mr_gyro_z", 
+            "show": true, 
+            "color": [
+                255, 
+                0, 
+                0
+            ], 
+            "isRequested": true, 
+            "id": 5
+        }
+    ], 
+    "commands": [
+        {
+            "initialValue": 1.0, 
+            "displayName": "", 
+            "name": "mr_Param1", 
+            "min": -100000.0, 
+            "max": 100000.0, 
+            "valueType": 2, 
+            "pendingMode": false, 
+            "inputMethod": 1, 
+            "id": 0
+        }
+    ], 
+    "miscSettings": {
+        "controllerFrameworkAndInterface": "MBED_OS_SERIAL", 
+        "tabs": [
+            {
+                "className": "TabSmallGenericView", 
+                "pathToClassFile": "gui.tabSmallGenericView", 
+                "displayName": "Generische Ansicht"
+            }
+        ], 
+        "comPortBaudRate": 115200, 
+        "recordMode": false, 
+        "comPortDescription": "STMicroelectronics STLink Virtual COM Port (COM12)", 
+        "pauseAfterRecord": false, 
+        "computerIP": "192.168.0.133", 
+        "udpPort": 10000, 
+        "recordBufferLength": 1, 
+        "debugMode": false, 
+        "pathToControllerCodeFolder": "D:\\00 eigene Daten\\000 FH\\S 6\\Segway\\SegwayControllerCode\\testInertialSensor\\src", 
+        "suppressParameterConfirmation": false, 
+        "controllerLoopCycleTimeInUs": 5000, 
+        "controllerIP": "192.168.0.15"
+    }
+}

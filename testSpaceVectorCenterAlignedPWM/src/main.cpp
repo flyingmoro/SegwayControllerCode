@@ -1,9 +1,10 @@
 
 
 #include <mbed.h>
+#include "microRay.h"
 #include <stdint.h>
 
-Serial pc(USBTX, USBRX);
+// Serial pc(USBTX, USBRX);
 
 #define ENCODER_COUNT 4096
 #define ONE_6_ENCODER_COUNT 170
@@ -11,61 +12,92 @@ Serial pc(USBTX, USBRX);
 TIM_HandleTypeDef htim2;
 TIM_HandleTypeDef htim3;
 TIM_HandleTypeDef htim4;
+TIM_HandleTypeDef htim8;
 
 // void TIM3_IRQHandler(void);
 
 
 static void initSpaceVectorPWM(void)
 {
-    __HAL_RCC_TIM2_CLK_ENABLE();
-    __TIM2_CLK_ENABLE();
+    __HAL_RCC_TIM8_CLK_ENABLE();
+    __TIM8_CLK_ENABLE();
 
     // RCC_APB1PeriphClockCmd(RCC_APB1Periph_TIM2, ENABLE);
 
-    // TIM_ClockConfigTypeDef sClockSourceConfig;
-    // TIM_MasterConfigTypeDef sMasterConfig;
+    TIM_ClockConfigTypeDef sClockSourceConfig;
+    TIM_MasterConfigTypeDef sMasterConfig;
     TIM_OC_InitTypeDef sConfigOC;
+    TIM_BreakDeadTimeConfigTypeDef sBreakDeadTimeConfig;
 
-    htim2.Instance = TIM2;
-    htim2.Init.Prescaler = 19;
-    htim2.Init.CounterMode = TIM_COUNTERMODE_CENTERALIGNED3;
-    htim2.Init.Period = 99;
-    htim2.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
-    htim2.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_ENABLE;
+    htim8.Instance = TIM8;
+    htim8.Init.Prescaler = 199;  // vorher 19
+    htim8.Init.CounterMode = TIM_COUNTERMODE_CENTERALIGNED3;
+    htim8.Init.Period = 99;
+    htim8.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
+    htim8.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_ENABLE;
 
-    HAL_TIM_Base_Init(&htim2);
+    HAL_TIM_Base_Init(&htim8);
 
 
-    // sClockSourceConfig.ClockSource = TIM_CLOCKSOURCE_INTERNAL;
-    // HAL_TIM_ConfigClockSource(&htim2, &sClockSourceConfig);
+    sClockSourceConfig.ClockSource = TIM_CLOCKSOURCE_INTERNAL;
+    HAL_TIM_ConfigClockSource(&htim2, &sClockSourceConfig);
 
-    // HAL_TIM_PWM_Init(&htim2);
+    HAL_TIM_PWM_Init(&htim8);
+    HAL_TIM_OC_Init(&htim8);
 
-    // sMasterConfig.MasterOutputTrigger = TIM_TRGO_RESET;
-    // sMasterConfig.MasterSlaveMode = TIM_MASTERSLAVEMODE_DISABLE;
-    // HAL_TIMEx_MasterConfigSynchronization(&htim2, &sMasterConfig);
+    sMasterConfig.MasterOutputTrigger = TIM_TRGO_RESET;
+    sMasterConfig.MasterOutputTrigger2 = TIM_TRGO2_RESET;
+    sMasterConfig.MasterSlaveMode = TIM_MASTERSLAVEMODE_DISABLE;
+    HAL_TIMEx_MasterConfigSynchronization(&htim8, &sMasterConfig);
 
     sConfigOC.OCMode = TIM_OCMODE_PWM2;
     sConfigOC.Pulse = 0;
-    // can invert the output signal
     sConfigOC.OCPolarity = TIM_OCPOLARITY_LOW;
-    sConfigOC.OCFastMode = TIM_OCFAST_ENABLE;
+    sConfigOC.OCNPolarity = TIM_OCNPOLARITY_HIGH;
+    sConfigOC.OCFastMode = TIM_OCFAST_DISABLE;
+    sConfigOC.OCIdleState = TIM_OCNIDLESTATE_RESET;
+    sConfigOC.OCNIdleState = TIM_OCNIDLESTATE_RESET;
 
+    // HAL_TIM_OC_ConfigChannel(&htim8, &sConfigOC, TIM_CHANNEL_1);
+    // HAL_TIM_OC_ConfigChannel(&htim8, &sConfigOC, TIM_CHANNEL_2);
+    // HAL_TIM_OC_ConfigChannel(&htim8, &sConfigOC, TIM_CHANNEL_3);
 
-    HAL_TIM_PWM_ConfigChannel(&htim2, &sConfigOC, TIM_CHANNEL_2);
-    // HAL_TIM_PWM_ConfigChannel(&htim2, &sConfigOC, TIM_CHANNEL_2);
-    HAL_TIM_PWM_ConfigChannel(&htim2, &sConfigOC, TIM_CHANNEL_3);
-    HAL_TIM_PWM_ConfigChannel(&htim2, &sConfigOC, TIM_CHANNEL_4);
+    HAL_TIM_PWM_ConfigChannel(&htim8, &sConfigOC, TIM_CHANNEL_1);
+    HAL_TIM_PWM_ConfigChannel(&htim8, &sConfigOC, TIM_CHANNEL_2);
+    HAL_TIM_PWM_ConfigChannel(&htim8, &sConfigOC, TIM_CHANNEL_3);
+    HAL_TIM_PWM_ConfigChannel(&htim8, &sConfigOC, TIM_CHANNEL_4);
 
+    sBreakDeadTimeConfig.OffStateRunMode = TIM_OSSR_ENABLE;
+    sBreakDeadTimeConfig.OffStateIDLEMode = TIM_OSSI_DISABLE;
+    sBreakDeadTimeConfig.LockLevel = TIM_LOCKLEVEL_OFF;
+    sBreakDeadTimeConfig.DeadTime = 25;
+    sBreakDeadTimeConfig.BreakState = TIM_BREAK_DISABLE;
+    sBreakDeadTimeConfig.BreakPolarity = TIM_BREAKPOLARITY_HIGH;
+    sBreakDeadTimeConfig.BreakFilter = 0;
+    sBreakDeadTimeConfig.Break2State = TIM_BREAK2_DISABLE;
+    sBreakDeadTimeConfig.Break2Polarity = TIM_BREAK2POLARITY_HIGH;
+    sBreakDeadTimeConfig.Break2Filter = 0;
+    sBreakDeadTimeConfig.AutomaticOutput = TIM_AUTOMATICOUTPUT_ENABLE;
+    HAL_TIMEx_ConfigBreakDeadTime(&htim8, &sBreakDeadTimeConfig);
 
 
     // das hier is wichtig und kommt nicht aus dem StmCube Dings raus !!!!!!!!!!!!!!!
     // (damit wird auch das preload Verhalten angeschaltet)
-    HAL_TIM_Base_Start_IT(&htim2);
+    HAL_TIM_Base_Start_IT(&htim8);
 
-    HAL_TIM_PWM_Start(&htim2, TIM_CHANNEL_2);
-    HAL_TIM_PWM_Start(&htim2, TIM_CHANNEL_3);
-    HAL_TIM_PWM_Start(&htim2, TIM_CHANNEL_4);
+    // HAL_TIM_OC_Start(&htim8, TIM_CHANNEL_1);
+    // HAL_TIM_OC_Start(&htim8, TIM_CHANNEL_2);
+    // HAL_TIM_OC_Start(&htim8, TIM_CHANNEL_3);
+
+
+    HAL_TIM_PWM_Start(&htim8, TIM_CHANNEL_1);
+    HAL_TIMEx_PWMN_Start(&htim8, TIM_CHANNEL_1);
+
+    HAL_TIM_PWM_Start(&htim8, TIM_CHANNEL_2);
+    HAL_TIMEx_PWMN_Start(&htim8, TIM_CHANNEL_2);
+
+    HAL_TIM_PWM_Start(&htim8, TIM_CHANNEL_3);
+    HAL_TIMEx_PWMN_Start(&htim8, TIM_CHANNEL_3);
 
     // __HAL_TIM_ENABLE(&htim2);
 }
@@ -131,11 +163,15 @@ void initTimerInterrupt() {
 
 static void initGPIO(void) {
     /* GPIO Ports Clock Enable */
-    __HAL_RCC_GPIOB_CLK_ENABLE();
-    __GPIOB_CLK_ENABLE();
 
     __HAL_RCC_GPIOA_CLK_ENABLE();
     __GPIOA_CLK_ENABLE();
+
+    __HAL_RCC_GPIOB_CLK_ENABLE();
+    __GPIOB_CLK_ENABLE();
+
+    __HAL_RCC_GPIOC_CLK_ENABLE();
+    __GPIOC_CLK_ENABLE();
 
     __HAL_RCC_GPIOE_CLK_ENABLE();
     __GPIOE_CLK_ENABLE();
@@ -144,12 +180,31 @@ static void initGPIO(void) {
 
     // space vector pwm ports
     GPIO_InitTypeDef GPIO_InitStruct;
-    GPIO_InitStruct.Pin = GPIO_PIN_3 | GPIO_PIN_10 | GPIO_PIN_11;
+    GPIO_InitStruct.Pin = GPIO_PIN_6 | GPIO_PIN_7 | GPIO_PIN_8;
     GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
     GPIO_InitStruct.Pull = GPIO_NOPULL;
     GPIO_InitStruct.Speed = GPIO_SPEED_HIGH;
-    GPIO_InitStruct.Alternate = GPIO_AF1_TIM2;
+    GPIO_InitStruct.Alternate = GPIO_AF3_TIM8;
+    HAL_GPIO_Init(GPIOC, &GPIO_InitStruct);
+
+    // complementary space vector pwm ports
+    GPIO_InitStruct.Pin = GPIO_PIN_5;
+    GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
+    GPIO_InitStruct.Pull = GPIO_NOPULL;
+    GPIO_InitStruct.Speed = GPIO_SPEED_HIGH;
+    GPIO_InitStruct.Alternate = GPIO_AF3_TIM8;
+    HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
+
+    // complementary space vector pwm ports
+    GPIO_InitStruct.Pin = GPIO_PIN_0 | GPIO_PIN_1;
+    GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
+    GPIO_InitStruct.Pull = GPIO_NOPULL;
+    GPIO_InitStruct.Speed = GPIO_SPEED_HIGH;
+    GPIO_InitStruct.Alternate = GPIO_AF3_TIM8;
     HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
+
+
+
 
     // encoder ports
     GPIO_InitStruct.Pin = GPIO_PIN_5;
@@ -307,17 +362,20 @@ int main(void) {
 
     __HAL_TIM_SET_COMPARE(&htim3, TIM_CHANNEL_4, 0);
 
-    __HAL_TIM_SET_COMPARE(&htim2, TIM_CHANNEL_2, 0);
-    __HAL_TIM_SET_COMPARE(&htim2, TIM_CHANNEL_3, 0);
-    __HAL_TIM_SET_COMPARE(&htim2, TIM_CHANNEL_4, 0);
+    __HAL_TIM_SET_COMPARE(&htim8, TIM_CHANNEL_1, 0);
+    __HAL_TIM_SET_COMPARE(&htim8, TIM_CHANNEL_2, 0);
+    __HAL_TIM_SET_COMPARE(&htim8, TIM_CHANNEL_3, 0);
+
+    microRayInit();
 
     int sectorCounter = 0;
     while (1) {
 
-        __HAL_TIM_SET_COMPARE(&htim2, TIM_CHANNEL_2, TEST_CYCLE);
-        __HAL_TIM_SET_COMPARE(&htim2, TIM_CHANNEL_3, TEST_CYCLE);
-        __HAL_TIM_SET_COMPARE(&htim2, TIM_CHANNEL_4, 0);
+        __HAL_TIM_SET_COMPARE(&htim8, TIM_CHANNEL_1, 10);
+        __HAL_TIM_SET_COMPARE(&htim8, TIM_CHANNEL_2, 10);
+        __HAL_TIM_SET_COMPARE(&htim8, TIM_CHANNEL_3, 10);
 
+        microRayCommunicate();
         continue;
 
         switch (sectorCounter) {
