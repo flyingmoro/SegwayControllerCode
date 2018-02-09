@@ -1,0 +1,25 @@
+<component name="InspectionProjectProfileManager">
+  <profile version="1.0" is_locked="false">
+    <option name="myName" value="Project Default" />
+    <option name="myLocal" value="false" />
+    <inspection_tool class="PyPackageRequirementsInspection" enabled="true" level="WARNING" enabled_by_default="true">
+      <option name="ignoredPackages">
+        <value>
+          <list size="11">
+            <item index="0" class="java.lang.String" itemvalue="daytime" />
+            <item index="1" class="java.lang.String" itemvalue="ino" />
+            <item index="2" class="java.lang.String" itemvalue="smartparse" />
+            <item index="3" class="java.lang.String" itemvalue="timeparser" />
+            <item index="4" class="java.lang.String" itemvalue="pyexif" />
+            <item index="5" class="java.lang.String" itemvalue="timeparse" />
+            <item index="6" class="java.lang.String" itemvalue="python-xmp-toolkit" />
+            <item index="7" class="java.lang.String" itemvalue="ConcurrentLogHandler" />
+            <item index="8" class="java.lang.String" itemvalue="pathtools" />
+            <item index="9" class="java.lang.String" itemvalue="argparse" />
+            <item index="10" class="java.lang.String" itemvalue="Pyro4" />
+          </list>
+        </value>
+      </option>
+    </inspection_tool>
+  </profile>
+</component>

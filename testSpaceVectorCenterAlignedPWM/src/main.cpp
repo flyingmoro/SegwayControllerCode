@@ -14,6 +14,8 @@ TIM_HandleTypeDef htim3;
 TIM_HandleTypeDef htim4;
 TIM_HandleTypeDef htim8;
 
+DigitalOut activateBridge(PF_13);
+
 // void TIM3_IRQHandler(void);
 
 
@@ -30,9 +32,9 @@ static void initSpaceVectorPWM(void)
     TIM_BreakDeadTimeConfigTypeDef sBreakDeadTimeConfig;
 
     htim8.Instance = TIM8;
-    htim8.Init.Prescaler = 199;  // vorher 19
+    htim8.Init.Prescaler = 20;  // vorher 19
     htim8.Init.CounterMode = TIM_COUNTERMODE_CENTERALIGNED3;
-    htim8.Init.Period = 99;
+    htim8.Init.Period = 199;
     htim8.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
     htim8.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_ENABLE;
 
@@ -368,10 +370,12 @@ int main(void) {
 
     microRayInit();
 
+    activateBridge = 1;
+
     int sectorCounter = 0;
     while (1) {
 
-        __HAL_TIM_SET_COMPARE(&htim8, TIM_CHANNEL_1, 10);
+        __HAL_TIM_SET_COMPARE(&htim8, TIM_CHANNEL_1, 20);
         __HAL_TIM_SET_COMPARE(&htim8, TIM_CHANNEL_2, 10);
         __HAL_TIM_SET_COMPARE(&htim8, TIM_CHANNEL_3, 10);
 
@@ -437,7 +441,7 @@ int main(void) {
                 __HAL_TIM_SET_COMPARE(&htim2, TIM_CHANNEL_3, i);
             }
             uint16_t encoderPosition = (uint16_t)__HAL_TIM_GET_COUNTER(&htim3);
-            pc.printf("Encoder: %u, Sector: %i\n", encoderPosition, ISR_currentMotorSector);
+            // pc.printf("Encoder: %u, Sector: %i\n", encoderPosition, ISR_currentMotorSector);
             // HAL_GPIO_TogglePin(GPIOE, GPIO_PIN_15);
             wait(1.0f);
         }
