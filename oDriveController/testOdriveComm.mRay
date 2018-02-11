@@ -23,7 +23,8 @@
             "valueType": 2, 
             "pendingMode": false, 
             "inputMethod": 1, 
-            "id": 0
+            "id": 0, 
+            "history": []
         }, 
         {
             "initialValue": 0.0, 
@@ -34,7 +35,8 @@
             "valueType": 2, 
             "pendingMode": false, 
             "inputMethod": 1, 
-            "id": 1
+            "id": 1, 
+            "history": []
         }
     ], 
     "miscSettings": {
@@ -46,11 +48,15 @@
                 "displayName": "Generische Ansicht"
             }
         ], 
+        "messageSkipMode": false, 
         "comPortBaudRate": 921600, 
-        "comPortDescription": "STMicroelectronics STLink Virtual COM Port (COM3)", 
+        "comPortDescription": "STMicroelectronics STLink Virtual COM Port (COM11)", 
+        "pauseAfterRecord": false, 
         "computerIP": "192.168.0.133", 
         "udpPort": 10000, 
-        "pathToControllerCodeFolder": "D:\\00 eigene Daten\\000 FH\\S 6\\Segway\\SegwayControllerCode\\src", 
+        "recordBufferLength": 1, 
+        "debugMode": false, 
+        "pathToControllerCodeFolder": "D:\\00 eigene Daten\\000 FH\\S 6\\Segway\\SegwayControllerCode\\oDriveController\\src", 
         "suppressParameterConfirmation": false, 
         "controllerLoopCycleTimeInUs": 5000, 
         "controllerIP": "192.168.0.15"

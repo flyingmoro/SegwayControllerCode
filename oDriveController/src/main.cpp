@@ -8,8 +8,8 @@ DigitalOut blueLed(LED2);
 DigitalOut greenLed(LED1);
 DigitalOut togglePin(PF_13);
 
-Serial oDrive(PG_14, PG_9, 115200);
-
+// stuff for communication with the oDrive
+Serial oDrive(PG_14, PG_9, 921600);
 char torqueCmdOne[11];
 char torqueCmdTwo[11];
 
@@ -24,6 +24,8 @@ void firstTorqueWriteComplete(int event) {
 
 void secondTorqueWriteComplete(int event) {
 }
+
+
 
 int main() {
     microRayInit();

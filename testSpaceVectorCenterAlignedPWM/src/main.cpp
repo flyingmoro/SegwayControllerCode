@@ -6,7 +6,7 @@
 
 // Serial pc(USBTX, USBRX);
 
-#define ENCODER_COUNT 4096
+#define ENCODER_COUNT 2048
 #define ONE_6_ENCODER_COUNT 170
 
 TIM_HandleTypeDef htim2;

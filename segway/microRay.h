@@ -1,16 +1,16 @@
 #ifndef CONFIG_H
 #define CONFIG_H
 
-#define MBED_OS_SERIAL
+#define MBED_OS_UDP
 
 // must have parameters
-#define loopCycleTimeUs                            5000
-#define CHANNELS_AVAILABLE_COUNT                      1
-#define CHANNELS_REQUESTED_COUNT                      1
+#define loopCycleTimeUs                            1000
+#define CHANNELS_AVAILABLE_COUNT                      3
+#define CHANNELS_REQUESTED_COUNT                      3
 #define CHANNELS_UNREQUESTED_COUNT                    0
 #define PARAMETER_COUNT                               2
 #define SPECIAL_COMMANDS_COUNT                        3
-#define BAUD_RATE                                921600
+#define BAUD_RATE                                115200
 #define INT_TYPE                                      1
 #define FLOAT_TYPE                                    2
 #define RECORD_BUFFER_LENGTH                          1
@@ -18,13 +18,15 @@
 #define MESSAGE_SKIP_MODE                             0
 
 // All requested channels
-#define hallo                                    (messageOutBuffer.channels[0])
+#define encoderLeftWheel                         (messageOutBuffer.channels[0])
+#define encoderRightWheel                        (messageOutBuffer.channels[1])
+#define pulsi                                    (messageOutBuffer.channels[2])
 
 // All unrequested channels
 
 // all parameters
-#define mR_torqueMotorOne                        (parameters[0]).valueFloat
-#define mR_torqueMotorTwo                        (parameters[1]).valueFloat
+#define setCurrentMotorZero                      (parameters[0]).valueFloat
+#define setCurrentMotorOne                       (parameters[1]).valueFloat
 
 // all special parameters
 #define loopCycleTimeExceededByUs                (specialCommands[0])
