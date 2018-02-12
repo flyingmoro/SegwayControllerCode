@@ -5,8 +5,8 @@
 
 // must have parameters
 #define loopCycleTimeUs                            1000
-#define CHANNELS_AVAILABLE_COUNT                      3
-#define CHANNELS_REQUESTED_COUNT                      3
+#define CHANNELS_AVAILABLE_COUNT                      5
+#define CHANNELS_REQUESTED_COUNT                      5
 #define CHANNELS_UNREQUESTED_COUNT                    0
 #define PARAMETER_COUNT                               2
 #define SPECIAL_COMMANDS_COUNT                        3
@@ -21,6 +21,8 @@
 #define encoderLeftWheel                         (messageOutBuffer.channels[0])
 #define encoderRightWheel                        (messageOutBuffer.channels[1])
 #define pulsi                                    (messageOutBuffer.channels[2])
+#define accX                                     (messageOutBuffer.channels[3])
+#define sonic                                    (messageOutBuffer.channels[4])
 
 // All unrequested channels
 

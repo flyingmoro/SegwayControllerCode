@@ -3,6 +3,8 @@
 
 #include "oDriveCommunicator.h"
 #include "encoderHandling.h"
+#include "mpuHandler.h"
+#include "ultraSonic.h"
 
 int init();
 void loop();
@@ -18,7 +20,10 @@ DigitalOut redLed(LED3);
 
 
 Position worldPosition;
+MpuData mpuData;
+UltraSonicRanges sonicRanges;
 
+//mbed compile -t GCC_ARM -m detect -f
 int main()
 {
     pc.printf("Starting monoBot\n");
@@ -47,6 +52,7 @@ int main()
 int init() {
     initEncoder();
     microRayInit();
+    initUltraSonic(&sonicRanges);
     return 0;
 }
 
@@ -54,11 +60,14 @@ int init() {
 void loop() {
     setCurrentBothMotors(setCurrentMotorZero, setCurrentMotorOne);
     refreshPosition(&worldPosition);
+    getMPUReadings(&mpuData);
     encoderLeftWheel = worldPosition.x;
     encoderRightWheel = worldPosition.y;
     pulsi += 1;
     if (pulsi > 100) {
         pulsi = 0;
     }
+    accX = mpuData.acceleration_x;
+    sonic = sonicRanges.forwardLeftMM;
     microRayCommunicate();
 }

@@ -1,10 +1,18 @@
 [
     {
+        "module": "MPU6050.o", 
+        "size": {
+            ".data": 0, 
+            ".bss": 0, 
+            ".text": 346
+        }
+    }, 
+    {
         "module": "[fill]", 
         "size": {
             ".data": 10, 
-            ".bss": 68, 
-            ".text": 246
+            ".bss": 75, 
+            ".text": 301
         }
     }, 
     {
@@ -43,16 +51,16 @@
         "module": "main.o", 
         "size": {
             ".data": 4, 
-            ".bss": 364, 
-            ".text": 422
+            ".bss": 396, 
+            ".text": 571
         }
     }, 
     {
         "module": "mbed-os\\drivers", 
         "size": {
             ".data": 4, 
-            ".bss": 100, 
-            ".text": 2031
+            ".bss": 144, 
+            ".text": 3542
         }
     }, 
     {
@@ -60,7 +68,7 @@
         "size": {
             ".data": 161, 
             ".bss": 46964, 
-            ".text": 44286
+            ".text": 44308
         }
     }, 
     {
@@ -68,7 +76,7 @@
         "size": {
             ".data": 4, 
             ".bss": 66, 
-            ".text": 1425
+            ".text": 1641
         }
     }, 
     {
@@ -76,7 +84,7 @@
         "size": {
             ".data": 4, 
             ".bss": 354, 
-            ".text": 2981
+            ".text": 3009
         }
     }, 
     {
@@ -91,16 +99,24 @@
         "module": "mbed-os\\targets", 
         "size": {
             ".data": 4, 
-            ".bss": 1120, 
-            ".text": 15320
+            ".bss": 1676, 
+            ".text": 21464
         }
     }, 
     {
         "module": "microRay.o", 
         "size": {
             ".data": 25, 
-            ".bss": 672, 
-            ".text": 1075
+            ".bss": 688, 
+            ".text": 1067
+        }
+    }, 
+    {
+        "module": "mpuHandler.o", 
+        "size": {
+            ".data": 4, 
+            ".bss": 248, 
+            ".text": 116
         }
     }, 
     {
@@ -112,9 +128,17 @@
         }
     }, 
     {
+        "module": "ultraSonic.o", 
+        "size": {
+            ".data": 4, 
+            ".bss": 209, 
+            ".text": 488
+        }
+    }, 
+    {
         "summary": {
-            "static_ram": 59116, 
-            "total_flash": 128394
+            "static_ram": 60236, 
+            "total_flash": 137469
         }
     }
 ]

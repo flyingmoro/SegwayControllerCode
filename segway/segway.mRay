@@ -1,91 +1,115 @@
 {
     "channels": [
         {
-            "displayName": "",
-            "name": "encoderLeftWheel",
-            "show": true,
+            "displayName": "", 
+            "name": "encoderLeftWheel", 
+            "show": true, 
             "color": [
-                102,
-                252,
+                102, 
+                252, 
                 126
-            ],
-            "isRequested": true,
+            ], 
+            "isRequested": true, 
             "id": 0
-        },
+        }, 
         {
-            "displayName": "",
-            "name": "encoderRightWheel",
-            "show": true,
+            "displayName": "", 
+            "name": "encoderRightWheel", 
+            "show": true, 
             "color": [
-                227,
-                62,
+                227, 
+                62, 
                 149
-            ],
-            "isRequested": true,
+            ], 
+            "isRequested": true, 
             "id": 1
-        },
+        }, 
         {
-            "displayName": "",
-            "name": "pulsi",
-            "show": true,
+            "displayName": "", 
+            "name": "pulsi", 
+            "show": true, 
             "color": [
-                178,
-                29,
+                178, 
+                29, 
                 208
-            ],
-            "isRequested": true,
+            ], 
+            "isRequested": true, 
             "id": 2
+        }, 
+        {
+            "displayName": "", 
+            "name": "accX", 
+            "show": true, 
+            "color": [
+                180, 
+                159, 
+                89
+            ], 
+            "isRequested": true, 
+            "id": 3
+        }, 
+        {
+            "displayName": "", 
+            "name": "sonic", 
+            "show": true, 
+            "color": [
+                255, 
+                170, 
+                0
+            ], 
+            "isRequested": true, 
+            "id": 4
         }
-    ],
+    ], 
     "commands": [
         {
-            "initialValue": 0.0,
-            "displayName": "",
-            "name": "setCurrentMotorZero",
-            "min": -16.0,
-            "max": 16.0,
-            "valueType": 2,
-            "pendingMode": false,
-            "inputMethod": 1,
-            "id": 0,
+            "initialValue": 0.0, 
+            "displayName": "", 
+            "name": "setCurrentMotorZero", 
+            "min": -16.0, 
+            "max": 16.0, 
+            "valueType": 2, 
+            "pendingMode": false, 
+            "inputMethod": 1, 
+            "id": 0, 
             "history": [
-                0.0,
+                0.0, 
                 1.0
             ]
-        },
+        }, 
         {
-            "initialValue": 0.0,
-            "displayName": "",
-            "name": "setCurrentMotorOne",
-            "min": -16.0,
-            "max": 16.0,
-            "valueType": 2,
-            "pendingMode": false,
-            "inputMethod": 1,
-            "id": 1,
+            "initialValue": 0.0, 
+            "displayName": "", 
+            "name": "setCurrentMotorOne", 
+            "min": -16.0, 
+            "max": 16.0, 
+            "valueType": 2, 
+            "pendingMode": false, 
+            "inputMethod": 1, 
+            "id": 1, 
             "history": []
         }
-    ],
+    ], 
     "miscSettings": {
-        "controllerFrameworkAndInterface": "MBED_OS_UDP",
+        "controllerFrameworkAndInterface": "MBED_OS_UDP", 
         "tabs": [
             {
-                "className": "TabSmallGenericView",
-                "pathToClassFile": "gui.tabSmallGenericView",
+                "className": "TabSmallGenericView", 
+                "pathToClassFile": "gui.tabSmallGenericView", 
                 "displayName": "Generische Ansicht"
             }
-        ],
-        "messageSkipMode": false,
-        "comPortBaudRate": 115200,
-        "comPortDescription": "STMicroelectronics STLink Virtual COM Port (COM11)",
-        "pauseAfterRecord": false,
-        "computerIP": "192.168.0.133",
-        "udpPort": 10000,
-        "recordBufferLength": 1,
-        "debugMode": false,
-        "pathToControllerCodeFolder": "D:\\00 eigene Daten\\000 FH\\S 6\\Segway\\SegwayControllerCode\\segway",
-        "suppressParameterConfirmation": false,
-        "controllerLoopCycleTimeInUs": 1000,
+        ], 
+        "messageSkipMode": false, 
+        "comPortBaudRate": 115200, 
+        "comPortDescription": "STMicroelectronics STLink Virtual COM Port (COM11)", 
+        "pauseAfterRecord": false, 
+        "computerIP": "192.168.0.133", 
+        "udpPort": 10000, 
+        "recordBufferLength": 1, 
+        "debugMode": false, 
+        "pathToControllerCodeFolder": "D:\\00 eigene Daten\\000 FH\\S 6\\Segway\\SegwayControllerCode\\segway", 
+        "suppressParameterConfirmation": false, 
+        "controllerLoopCycleTimeInUs": 1000, 
         "controllerIP": "192.168.0.15"
     }
 }
