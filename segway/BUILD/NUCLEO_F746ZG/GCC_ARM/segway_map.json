@@ -10,9 +10,9 @@
     {
         "module": "[fill]", 
         "size": {
-            ".data": 10, 
-            ".bss": 75, 
-            ".text": 301
+            ".data": 9, 
+            ".bss": 87, 
+            ".text": 334
         }
     }, 
     {
@@ -32,11 +32,27 @@
         }
     }, 
     {
+        "module": "[lib]\\m.a", 
+        "size": {
+            ".data": 1, 
+            ".bss": 0, 
+            ".text": 1981
+        }
+    }, 
+    {
         "module": "[lib]\\misc", 
         "size": {
             ".data": 16, 
             ".bss": 28, 
             ".text": 252
+        }
+    }, 
+    {
+        "module": "controllers.o", 
+        "size": {
+            ".data": 0, 
+            ".bss": 8, 
+            ".text": 336
         }
     }, 
     {
@@ -51,8 +67,8 @@
         "module": "main.o", 
         "size": {
             ".data": 4, 
-            ".bss": 396, 
-            ".text": 571
+            ".bss": 464, 
+            ".text": 635
         }
     }, 
     {
@@ -106,17 +122,17 @@
     {
         "module": "microRay.o", 
         "size": {
-            ".data": 25, 
-            ".bss": 688, 
-            ".text": 1067
+            ".data": 89, 
+            ".bss": 720, 
+            ".text": 1083
         }
     }, 
     {
         "module": "mpuHandler.o", 
         "size": {
             ".data": 4, 
-            ".bss": 248, 
-            ".text": 116
+            ".bss": 472, 
+            ".text": 1406
         }
     }, 
     {
@@ -137,8 +153,8 @@
     }, 
     {
         "summary": {
-            "static_ram": 60236, 
-            "total_flash": 137469
+            "static_ram": 60644, 
+            "total_flash": 141253
         }
     }
 ]

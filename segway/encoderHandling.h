@@ -12,7 +12,7 @@ typedef struct position {
 
 
 void initEncoder();
-void refreshPosition(Position *worldPosition);
+void updatePosition(Position *worldPosition);
 
 
 

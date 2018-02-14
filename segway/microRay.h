@@ -5,10 +5,10 @@
 
 // must have parameters
 #define loopCycleTimeUs                            1000
-#define CHANNELS_AVAILABLE_COUNT                      5
-#define CHANNELS_REQUESTED_COUNT                      5
+#define CHANNELS_AVAILABLE_COUNT                      9
+#define CHANNELS_REQUESTED_COUNT                      9
 #define CHANNELS_UNREQUESTED_COUNT                    0
-#define PARAMETER_COUNT                               2
+#define PARAMETER_COUNT                              10
 #define SPECIAL_COMMANDS_COUNT                        3
 #define BAUD_RATE                                115200
 #define INT_TYPE                                      1
@@ -23,12 +23,24 @@
 #define pulsi                                    (messageOutBuffer.channels[2])
 #define accX                                     (messageOutBuffer.channels[3])
 #define sonic                                    (messageOutBuffer.channels[4])
+#define controllerOutputDebug                    (messageOutBuffer.channels[5])
+#define mr_gyroXAngle                            (messageOutBuffer.channels[6])
+#define mr_compXAngle                            (messageOutBuffer.channels[7])
+#define mr_kalXAngle                             (messageOutBuffer.channels[8])
 
 // All unrequested channels
 
 // all parameters
 #define setCurrentMotorZero                      (parameters[0]).valueFloat
 #define setCurrentMotorOne                       (parameters[1]).valueFloat
+#define speedSetPoint                            (parameters[2]).valueFloat
+#define gammaPSetPoint                           (parameters[3]).valueFloat
+#define kPidSpeed                                (parameters[4]).valueFloat
+#define tvSpeed                                  (parameters[5]).valueFloat
+#define kPidBeta                                 (parameters[6]).valueFloat
+#define tvBeta                                   (parameters[7]).valueFloat
+#define kPidGammaP                               (parameters[8]).valueFloat
+#define tvGammaP                                 (parameters[9]).valueFloat
 
 // all special parameters
 #define loopCycleTimeExceededByUs                (specialCommands[0])

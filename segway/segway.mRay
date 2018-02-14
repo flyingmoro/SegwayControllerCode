@@ -39,7 +39,7 @@
         {
             "displayName": "", 
             "name": "accX", 
-            "show": true, 
+            "show": false, 
             "color": [
                 180, 
                 159, 
@@ -51,7 +51,7 @@
         {
             "displayName": "", 
             "name": "sonic", 
-            "show": true, 
+            "show": false, 
             "color": [
                 255, 
                 170, 
@@ -59,6 +59,54 @@
             ], 
             "isRequested": true, 
             "id": 4
+        }, 
+        {
+            "displayName": "", 
+            "name": "controllerOutputDebug", 
+            "show": false, 
+            "color": [
+                0, 
+                170, 
+                0
+            ], 
+            "isRequested": true, 
+            "id": 5
+        }, 
+        {
+            "displayName": "", 
+            "name": "mr_gyroXAngle", 
+            "show": true, 
+            "color": [
+                246, 
+                130, 
+                74
+            ], 
+            "isRequested": true, 
+            "id": 6
+        }, 
+        {
+            "displayName": "", 
+            "name": "mr_compXAngle", 
+            "show": true, 
+            "color": [
+                99, 
+                193, 
+                74
+            ], 
+            "isRequested": true, 
+            "id": 7
+        }, 
+        {
+            "displayName": "", 
+            "name": "mr_kalXAngle", 
+            "show": true, 
+            "color": [
+                153, 
+                96, 
+                238
+            ], 
+            "isRequested": true, 
+            "id": 8
         }
     ], 
     "commands": [
@@ -72,10 +120,7 @@
             "pendingMode": false, 
             "inputMethod": 1, 
             "id": 0, 
-            "history": [
-                0.0, 
-                1.0
-            ]
+            "history": []
         }, 
         {
             "initialValue": 0.0, 
@@ -87,6 +132,102 @@
             "pendingMode": false, 
             "inputMethod": 1, 
             "id": 1, 
+            "history": []
+        }, 
+        {
+            "initialValue": 1.0, 
+            "displayName": "", 
+            "name": "speedSetPoint", 
+            "min": -100000.0, 
+            "max": 100000.0, 
+            "valueType": 2, 
+            "pendingMode": false, 
+            "inputMethod": 1, 
+            "id": 2, 
+            "history": []
+        }, 
+        {
+            "initialValue": 1.0, 
+            "displayName": "", 
+            "name": "gammaPSetPoint", 
+            "min": -100000.0, 
+            "max": 100000.0, 
+            "valueType": 2, 
+            "pendingMode": false, 
+            "inputMethod": 1, 
+            "id": 3, 
+            "history": []
+        }, 
+        {
+            "initialValue": 1.0, 
+            "displayName": "", 
+            "name": "kPidSpeed", 
+            "min": -100000.0, 
+            "max": 100000.0, 
+            "valueType": 2, 
+            "pendingMode": false, 
+            "inputMethod": 1, 
+            "id": 4, 
+            "history": []
+        }, 
+        {
+            "initialValue": 1.0, 
+            "displayName": "", 
+            "name": "tvSpeed", 
+            "min": -100000.0, 
+            "max": 100000.0, 
+            "valueType": 2, 
+            "pendingMode": false, 
+            "inputMethod": 1, 
+            "id": 5, 
+            "history": []
+        }, 
+        {
+            "initialValue": 1.0, 
+            "displayName": "", 
+            "name": "kPidBeta", 
+            "min": -100000.0, 
+            "max": 100000.0, 
+            "valueType": 2, 
+            "pendingMode": false, 
+            "inputMethod": 1, 
+            "id": 6, 
+            "history": []
+        }, 
+        {
+            "initialValue": 1.0, 
+            "displayName": "", 
+            "name": "tvBeta", 
+            "min": -100000.0, 
+            "max": 100000.0, 
+            "valueType": 2, 
+            "pendingMode": false, 
+            "inputMethod": 1, 
+            "id": 7, 
+            "history": []
+        }, 
+        {
+            "initialValue": 1.0, 
+            "displayName": "", 
+            "name": "kPidGammaP", 
+            "min": -100000.0, 
+            "max": 100000.0, 
+            "valueType": 2, 
+            "pendingMode": false, 
+            "inputMethod": 1, 
+            "id": 8, 
+            "history": []
+        }, 
+        {
+            "initialValue": 1.0, 
+            "displayName": "", 
+            "name": "tvGammaP", 
+            "min": -100000.0, 
+            "max": 100000.0, 
+            "valueType": 2, 
+            "pendingMode": false, 
+            "inputMethod": 1, 
+            "id": 9, 
             "history": []
         }
     ], 

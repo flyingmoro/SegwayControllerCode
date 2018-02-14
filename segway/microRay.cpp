@@ -146,7 +146,15 @@ void transmitRecordings() {
 
 Parameter parameters[] = {
     { 2, { .valueFloat = 0.0f} },
-    { 2, { .valueFloat = 0.0f} }
+    { 2, { .valueFloat = 0.0f} },
+    { 2, { .valueFloat = 1.0f} },
+    { 2, { .valueFloat = 1.0f} },
+    { 2, { .valueFloat = 1.0f} },
+    { 2, { .valueFloat = 1.0f} },
+    { 2, { .valueFloat = 1.0f} },
+    { 2, { .valueFloat = 1.0f} },
+    { 2, { .valueFloat = 1.0f} },
+    { 2, { .valueFloat = 1.0f} }
 };
 
 int specialCommands[] = {

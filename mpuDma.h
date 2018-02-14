@@ -1,10 +1,7 @@
-#ifndef MPUHANDLER_H
-#define MPUHANDLER_H
+#ifndef MPUDMA_H
+#define MPUDMA_H
 
-#include <mbed.h>
-#include <stdint.h>
-#include "MPU6050.h"
-
+#include "mbed.h"
 
 typedef struct mpuData {
     uint16_t rawAcceleration_x;
@@ -28,13 +25,10 @@ typedef struct mpuData {
 } MpuData;
 
 
+void initMPU6050(void);
+MpuData getMpuData();
 
-
-void updateMpuReadings(MpuData *mpuReadings);
-
-
-
-
-
+extern "C" void EXTI4_IRQHandler(void);
+extern "C" void DMA1_Channel7_IRQHandler(void);
 
 #endif

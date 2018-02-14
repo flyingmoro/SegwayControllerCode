@@ -1,10 +1,13 @@
 #include "mbed.h"
 #include "microRay.h"
+#include "Kalman.h"
 
 #include "oDriveCommunicator.h"
 #include "encoderHandling.h"
 #include "mpuHandler.h"
+// #include "mpuDma.h"
 #include "ultraSonic.h"
+#include "controllers.h"
 
 int init();
 void loop();
@@ -22,6 +25,8 @@ DigitalOut redLed(LED3);
 Position worldPosition;
 MpuData mpuData;
 UltraSonicRanges sonicRanges;
+SensorDataCollection sensorReadingsForControl;
+TargetValues currentTargets;
 
 //mbed compile -t GCC_ARM -m detect -f
 int main()
@@ -50,24 +55,43 @@ int main()
 }
 
 int init() {
-    initEncoder();
     microRayInit();
+    initEncoder();
+    // initMPU6050();
     initUltraSonic(&sonicRanges);
     return 0;
 }
 
 
 void loop() {
-    setCurrentBothMotors(setCurrentMotorZero, setCurrentMotorOne);
-    refreshPosition(&worldPosition);
-    getMPUReadings(&mpuData);
-    encoderLeftWheel = worldPosition.x;
-    encoderRightWheel = worldPosition.y;
+
+    // debugging, see if microcontroller is running
     pulsi += 1;
     if (pulsi > 100) {
         pulsi = 0;
     }
-    accX = mpuData.acceleration_x;
+
+    updatePosition(&worldPosition);
+    updateMpuReadings(&mpuData);
+    encoderLeftWheel = worldPosition.x;
+    encoderRightWheel = worldPosition.y;
+    accX = mpuData.rawAcceleration_x;
     sonic = sonicRanges.forwardLeftMM;
+
+    sensorReadingsForControl.speed = 1.0;
+    sensorReadingsForControl.beta = mpuData.rawAngularRate_beta;
+    sensorReadingsForControl.gammaP = 1.0;
+    updateControlTargets(&sensorReadingsForControl, &currentTargets);
+
+    setCurrentBothMotors(setCurrentMotorZero, setCurrentMotorOne);
+
+
+    // mpuData = getMpuData();
+
+
+    controllerOutputDebug = currentTargets.motorZero;
+    mr_gyroXAngle = mpuData.gyroXAngle;
+    mr_compXAngle = mpuData.compXAngle;
+    mr_kalXAngle = mpuData.kalXAngle;
     microRayCommunicate();
 }

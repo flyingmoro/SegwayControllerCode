@@ -13,7 +13,7 @@ static void initGPIO(void);
 
 
 
-void refreshPosition(Position *worldPosition) {
+void updatePosition(Position *worldPosition) {
     worldPosition->x = (uint16_t)__HAL_TIM_GET_COUNTER(&encoderTimerLeft);
     worldPosition->y = (uint16_t)__HAL_TIM_GET_COUNTER(&encoderTimerRight);
 }
