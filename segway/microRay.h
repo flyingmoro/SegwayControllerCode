@@ -5,8 +5,8 @@
 
 // must have parameters
 #define loopCycleTimeUs                            1000
-#define CHANNELS_AVAILABLE_COUNT                      9
-#define CHANNELS_REQUESTED_COUNT                      9
+#define CHANNELS_AVAILABLE_COUNT                     16
+#define CHANNELS_REQUESTED_COUNT                     16
 #define CHANNELS_UNREQUESTED_COUNT                    0
 #define PARAMETER_COUNT                              10
 #define SPECIAL_COMMANDS_COUNT                        3
@@ -21,12 +21,19 @@
 #define encoderLeftWheel                         (messageOutBuffer.channels[0])
 #define encoderRightWheel                        (messageOutBuffer.channels[1])
 #define pulsi                                    (messageOutBuffer.channels[2])
-#define accX                                     (messageOutBuffer.channels[3])
-#define sonic                                    (messageOutBuffer.channels[4])
-#define controllerOutputDebug                    (messageOutBuffer.channels[5])
-#define mr_gyroXAngle                            (messageOutBuffer.channels[6])
-#define mr_compXAngle                            (messageOutBuffer.channels[7])
-#define mr_kalXAngle                             (messageOutBuffer.channels[8])
+#define sonic                                    (messageOutBuffer.channels[3])
+#define controllerOutputDebug                    (messageOutBuffer.channels[4])
+#define mr_gyroXAngle                            (messageOutBuffer.channels[5])
+#define mr_compXAngle                            (messageOutBuffer.channels[6])
+#define mr_kalXAngle                             (messageOutBuffer.channels[7])
+#define mr_rawAccX                               (messageOutBuffer.channels[8])
+#define mr_rawAccY                               (messageOutBuffer.channels[9])
+#define mr_rawAccZ                               (messageOutBuffer.channels[10])
+#define mr_rawDegPX                              (messageOutBuffer.channels[11])
+#define mr_rawDegPY                              (messageOutBuffer.channels[12])
+#define mr_rawDegPZ                              (messageOutBuffer.channels[13])
+#define mr_roll                                  (messageOutBuffer.channels[14])
+#define dutyCycleTime                            (messageOutBuffer.channels[15])
 
 // All unrequested channels
 

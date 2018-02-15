@@ -7,12 +7,12 @@
 
 
 typedef struct mpuData {
-    uint16_t rawAcceleration_x;
-    uint16_t rawAcceleration_y;
-    uint16_t rawAcceleration_z;
-    uint16_t rawAngularRate_alpha;
-    uint16_t rawAngularRate_beta;
-    uint16_t rawAngularRate_gamma;
+    int16_t rawAcceleration_x;
+    int16_t rawAcceleration_y;
+    int16_t rawAcceleration_z;
+    int16_t rawAngularRate_alpha;
+    int16_t rawAngularRate_beta;
+    int16_t rawAngularRate_gamma;
     float roll;
     float gyroXAngle;
     float compXAngle;
@@ -21,10 +21,10 @@ typedef struct mpuData {
     float gyroYAngle;
     float compYAngle;
     float kalYAngle;
-    float yaw;
-    float gyroZAngle;
-    float compZAngle;
-    float kalZAngle;
+    // float yaw;
+    // float gyroZAngle;
+    // float compZAngle;
+    // float kalZAngle;
 } MpuData;
 
 

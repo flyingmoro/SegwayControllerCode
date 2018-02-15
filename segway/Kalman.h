@@ -35,7 +35,7 @@ public:
         P[1][1] = 0;
     };
     // The angle should be in degrees and the rate should be in degrees per second and the delta time in seconds
-    double getAngle(double newAngle, double newRate, double dt) {
+    double getAngle(float newAngle, float newRate, float dt) {
         // KasBot V2  -  Kalman filter module - http://www.x-firm.com/?page_id=145
         // Modified by Kristian Lauszus
         // See my blog post for more information: http://blog.tkjelectronics.dk/2012/09/a-practical-approach-to-kalman-filter-and-how-to-implement-it
@@ -77,32 +77,32 @@ public:
 
         return angle;
     };
-    void setAngle(double newAngle) { angle = newAngle; }; // Used to set angle, this should be set as the starting angle
-    double getRate() { return rate; }; // Return the unbiased rate
+    void setAngle(float newAngle) { angle = newAngle; }; // Used to set angle, this should be set as the starting angle
+    float getRate() { return rate; }; // Return the unbiased rate
 
     /* These are used to tune the Kalman filter */
-    void setQangle(double newQ_angle) { Q_angle = newQ_angle; };
-    void setQbias(double newQ_bias) { Q_bias = newQ_bias; };
-    void setRmeasure(double newR_measure) { R_measure = newR_measure; };
+    void setQangle(float newQ_angle) { Q_angle = newQ_angle; };
+    void setQbias(float newQ_bias) { Q_bias = newQ_bias; };
+    void setRmeasure(float newR_measure) { R_measure = newR_measure; };
 
-    double getQangle() { return Q_angle; };
-    double getQbias() { return Q_bias; };
-    double getRmeasure() { return R_measure; };
+    float getQangle() { return Q_angle; };
+    float getQbias() { return Q_bias; };
+    float getRmeasure() { return R_measure; };
 
 private:
     /* Kalman filter variables */
-    double Q_angle; // Process noise variance for the accelerometer
-    double Q_bias; // Process noise variance for the gyro bias
-    double R_measure; // Measurement noise variance - this is actually the variance of the measurement noise
+    float Q_angle; // Process noise variance for the accelerometer
+    float Q_bias; // Process noise variance for the gyro bias
+    float R_measure; // Measurement noise variance - this is actually the variance of the measurement noise
 
-    double angle; // The angle calculated by the Kalman filter - part of the 2x1 state vector
-    double bias; // The gyro bias calculated by the Kalman filter - part of the 2x1 state vector
-    double rate; // Unbiased rate calculated from the rate and the calculated bias - you have to call getAngle to update the rate
+    float angle; // The angle calculated by the Kalman filter - part of the 2x1 state vector
+    float bias; // The gyro bias calculated by the Kalman filter - part of the 2x1 state vector
+    float rate; // Unbiased rate calculated from the rate and the calculated bias - you have to call getAngle to update the rate
 
-    double P[2][2]; // Error covariance matrix - This is a 2x2 matrix
-    double K[2]; // Kalman gain - This is a 2x1 vector
-    double y; // Angle difference
-    double S; // Estimate error
+    float P[2][2]; // Error covariance matrix - This is a 2x2 matrix
+    float K[2]; // Kalman gain - This is a 2x1 vector
+    float y; // Angle difference
+    float S; // Estimate error
 };
 
 #endif

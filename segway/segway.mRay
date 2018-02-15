@@ -38,39 +38,27 @@
         }, 
         {
             "displayName": "", 
-            "name": "accX", 
-            "show": false, 
-            "color": [
-                180, 
-                159, 
-                89
-            ], 
-            "isRequested": true, 
-            "id": 3
-        }, 
-        {
-            "displayName": "", 
             "name": "sonic", 
-            "show": false, 
+            "show": true, 
             "color": [
                 255, 
                 170, 
                 0
             ], 
             "isRequested": true, 
-            "id": 4
+            "id": 3
         }, 
         {
             "displayName": "", 
             "name": "controllerOutputDebug", 
-            "show": false, 
+            "show": true, 
             "color": [
                 0, 
                 170, 
                 0
             ], 
             "isRequested": true, 
-            "id": 5
+            "id": 4
         }, 
         {
             "displayName": "", 
@@ -82,7 +70,7 @@
                 74
             ], 
             "isRequested": true, 
-            "id": 6
+            "id": 5
         }, 
         {
             "displayName": "", 
@@ -94,7 +82,7 @@
                 74
             ], 
             "isRequested": true, 
-            "id": 7
+            "id": 6
         }, 
         {
             "displayName": "", 
@@ -106,7 +94,103 @@
                 238
             ], 
             "isRequested": true, 
+            "id": 7
+        }, 
+        {
+            "displayName": "", 
+            "name": "mr_rawAccX", 
+            "show": true, 
+            "color": [
+                232, 
+                188, 
+                158
+            ], 
+            "isRequested": true, 
             "id": 8
+        }, 
+        {
+            "displayName": "", 
+            "name": "mr_rawAccY", 
+            "show": true, 
+            "color": [
+                82, 
+                159, 
+                106
+            ], 
+            "isRequested": true, 
+            "id": 9
+        }, 
+        {
+            "displayName": "", 
+            "name": "mr_rawAccZ", 
+            "show": true, 
+            "color": [
+                158, 
+                190, 
+                20
+            ], 
+            "isRequested": true, 
+            "id": 10
+        }, 
+        {
+            "displayName": "", 
+            "name": "mr_rawDegPX", 
+            "show": true, 
+            "color": [
+                235, 
+                13, 
+                8
+            ], 
+            "isRequested": true, 
+            "id": 11
+        }, 
+        {
+            "displayName": "", 
+            "name": "mr_rawDegPY", 
+            "show": true, 
+            "color": [
+                218, 
+                235, 
+                140
+            ], 
+            "isRequested": true, 
+            "id": 12
+        }, 
+        {
+            "displayName": "", 
+            "name": "mr_rawDegPZ", 
+            "show": true, 
+            "color": [
+                225, 
+                237, 
+                11
+            ], 
+            "isRequested": true, 
+            "id": 13
+        }, 
+        {
+            "displayName": "", 
+            "name": "mr_roll", 
+            "show": true, 
+            "color": [
+                129, 
+                147, 
+                78
+            ], 
+            "isRequested": true, 
+            "id": 14
+        }, 
+        {
+            "displayName": "", 
+            "name": "dutyCycleTime", 
+            "show": true, 
+            "color": [
+                203, 
+                123, 
+                81
+            ], 
+            "isRequested": true, 
+            "id": 15
         }
     ], 
     "commands": [

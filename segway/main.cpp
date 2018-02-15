@@ -14,7 +14,7 @@ void loop();
 void firstTorqueWriteComplete(int event);
 void secondTorqueWriteComplete(int event);
 
-Serial pc(USBTX, USBRX);
+Serial pc(USBTX, USBRX, 115200);
 Timer loopTimer;
 
 DigitalOut greenLed(LED1);
@@ -46,6 +46,7 @@ int main()
     {
         loopTimer.start();
         loop();
+        dutyCycleTime = loopTimer.read_us();
         while(loopTimer.read_us() < loopCycleTimeUs)
         {
             // wait for loop cycle period to decay
@@ -75,8 +76,6 @@ void loop() {
     updateMpuReadings(&mpuData);
     encoderLeftWheel = worldPosition.x;
     encoderRightWheel = worldPosition.y;
-    accX = mpuData.rawAcceleration_x;
-    sonic = sonicRanges.forwardLeftMM;
 
     sensorReadingsForControl.speed = 1.0;
     sensorReadingsForControl.beta = mpuData.rawAngularRate_beta;
@@ -88,10 +87,27 @@ void loop() {
 
     // mpuData = getMpuData();
 
+    // pc.printf("%f\r\n", mpuData.gyroXAngle);
 
+
+
+    // microRay output stuff
     controllerOutputDebug = currentTargets.motorZero;
+
+    sonic = sonicRanges.forwardLeftMM;
+
+
+    mr_rawAccX = mpuData.rawAcceleration_x;
+    mr_rawAccY = mpuData.rawAcceleration_y;
+    mr_rawAccZ = mpuData.rawAcceleration_z;
+    mr_rawDegPX = mpuData.rawAngularRate_alpha / 131.0 + 18;
+    mr_rawDegPY = mpuData.rawAngularRate_beta / 131.0;
+    mr_rawDegPZ = mpuData.rawAngularRate_gamma / 131.0;
+
+    mr_roll = mpuData.roll;
     mr_gyroXAngle = mpuData.gyroXAngle;
     mr_compXAngle = mpuData.compXAngle;
     mr_kalXAngle = mpuData.kalXAngle;
     microRayCommunicate();
+
 }

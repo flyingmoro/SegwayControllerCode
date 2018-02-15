@@ -6,7 +6,8 @@ MPU6050 mpu(PB_11, PB_10);
 #define DELTA_T 0.001
 #define RAD_TO_DEG 57.3
 
-Kalman kalmanX; // Create the Kalman instances
+// Create the Kalman instances
+Kalman kalmanX;
 Kalman kalmanY;
 
 void updateMpuReadings(MpuData *mpuReadings) {
@@ -48,7 +49,8 @@ void updateMpuReadings(MpuData *mpuReadings) {
     //gyroXangle += kalmanX.getRate() * DELTA_T; // Calculate gyro angle using the unbiased rate
     //gyroYangle += kalmanY.getRate() * DELTA_T;
 
-    mpuReadings->compXAngle = 0.93 * (mpuReadings->compXAngle + gyroXrate * DELTA_T) + 0.07 * mpuReadings->roll; // Calculate the angle using a Complimentary filter
+    // Calculate the angle using a Complimentary filter
+    mpuReadings->compXAngle = 0.93 * (mpuReadings->compXAngle + gyroXrate * DELTA_T) + 0.07 * mpuReadings->roll;
     mpuReadings->compYAngle = 0.93 * (mpuReadings->compYAngle + gyroYrate * DELTA_T) + 0.07 * mpuReadings->pitch;
 
     // Reset the gyro angle when it has drifted too much

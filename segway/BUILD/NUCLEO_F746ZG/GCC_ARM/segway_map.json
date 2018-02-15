@@ -11,8 +11,8 @@
         "module": "[fill]", 
         "size": {
             ".data": 9, 
-            ".bss": 87, 
-            ".text": 334
+            ".bss": 79, 
+            ".text": 340
         }
     }, 
     {
@@ -67,8 +67,8 @@
         "module": "main.o", 
         "size": {
             ".data": 4, 
-            ".bss": 464, 
-            ".text": 635
+            ".bss": 448, 
+            ".text": 787
         }
     }, 
     {
@@ -123,16 +123,16 @@
         "module": "microRay.o", 
         "size": {
             ".data": 89, 
-            ".bss": 720, 
-            ".text": 1083
+            ".bss": 776, 
+            ".text": 1051
         }
     }, 
     {
         "module": "mpuHandler.o", 
         "size": {
             ".data": 4, 
-            ".bss": 472, 
-            ".text": 1406
+            ".bss": 360, 
+            ".text": 1024
         }
     }, 
     {
@@ -153,8 +153,8 @@
     }, 
     {
         "summary": {
-            "static_ram": 60644, 
-            "total_flash": 141253
+            "static_ram": 60564, 
+            "total_flash": 140997
         }
     }
 ]
