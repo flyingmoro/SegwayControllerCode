@@ -19,6 +19,23 @@ void initUltraSonic(UltraSonicRanges *ranges);
 // void getUltraSonsicRanges(UltraSonicRanges *ranges);
 
 
+class SonicRangeFinder {
+    public:
+        SonicRangeFinder(PinName, PinName);
+        float getRangeInMM();
+        volatile float ITRangeInMM;
+        void startMeasurement();
+        void startMeasurementFinished();
+        void measurementTimedOut();
+        void startClock();
+        void finished();
+
+        DigitalOut triggerPin;
+        InterruptIn echoPin;
+        Timeout timeout;
+        Timer timer;
+        DigitalOut testPin;
+};
 
 
 

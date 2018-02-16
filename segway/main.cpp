@@ -24,7 +24,8 @@ DigitalOut redLed(LED3);
 
 Position worldPosition;
 MpuData mpuData;
-UltraSonicRanges sonicRanges;
+// UltraSonicRanges sonicRanges;
+SonicRangeFinder rangeFinder(PE_12, PE_14);
 SensorDataCollection sensorReadingsForControl;
 TargetValues currentTargets;
 
@@ -59,7 +60,7 @@ int init() {
     microRayInit();
     initEncoder();
     // initMPU6050();
-    initUltraSonic(&sonicRanges);
+    // initUltraSonic(&sonicRanges);
     return 0;
 }
 
@@ -85,16 +86,25 @@ void loop() {
     setCurrentBothMotors(setCurrentMotorZero, setCurrentMotorOne);
 
 
+
+
+
+    // rangeFinder.startMeasurement();
+    // sonicRanges = rangeFinder.getRanges();
+    // sonic = sonicRanges.forwardLeftMM;
+    sonic = rangeFinder.getRangeInMM();
+
+
+
+
     // mpuData = getMpuData();
 
-    // pc.printf("%f\r\n", mpuData.gyroXAngle);
 
 
 
     // microRay output stuff
     controllerOutputDebug = currentTargets.motorZero;
 
-    sonic = sonicRanges.forwardLeftMM;
 
 
     mr_rawAccX = mpuData.rawAcceleration_x;

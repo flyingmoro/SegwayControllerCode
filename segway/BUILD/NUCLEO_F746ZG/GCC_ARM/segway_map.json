@@ -11,8 +11,8 @@
         "module": "[fill]", 
         "size": {
             ".data": 9, 
-            ".bss": 79, 
-            ".text": 340
+            ".bss": 80, 
+            ".text": 291
         }
     }, 
     {
@@ -28,7 +28,7 @@
         "size": {
             ".data": 0, 
             ".bss": 0, 
-            ".text": 3368
+            ".text": 3444
         }
     }, 
     {
@@ -67,8 +67,8 @@
         "module": "main.o", 
         "size": {
             ".data": 4, 
-            ".bss": 448, 
-            ".text": 787
+            ".bss": 668, 
+            ".text": 812
         }
     }, 
     {
@@ -76,7 +76,7 @@
         "size": {
             ".data": 4, 
             ".bss": 144, 
-            ".text": 3542
+            ".text": 3599
         }
     }, 
     {
@@ -100,7 +100,7 @@
         "size": {
             ".data": 4, 
             ".bss": 354, 
-            ".text": 3009
+            ".text": 2981
         }
     }, 
     {
@@ -147,14 +147,14 @@
         "module": "ultraSonic.o", 
         "size": {
             ".data": 4, 
-            ".bss": 209, 
-            ".text": 488
+            ".bss": 204, 
+            ".text": 938
         }
     }, 
     {
         "summary": {
-            "static_ram": 60564, 
-            "total_flash": 140997
+            "static_ram": 60780, 
+            "total_flash": 141528
         }
     }
 ]
