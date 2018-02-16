@@ -62,36 +62,38 @@ SonicRangeFinder::SonicRangeFinder(PinName _triggerPinName,
 
     // delay first measurement
     timeout.attach(Callback<void()>(this, &SonicRangeFinder::startMeasurement), 0.00001);
+
+    // echoPin.mode(PullUp);
 };
 
 void SonicRangeFinder::startMeasurement() {
     timeout.detach();
 
     // send start condition (10us high on trigger pin, 0.000002 results in around 10us)
-    triggerPin = 1;
+    triggerPin.write(1);
     timeout.attach(Callback<void()>(this, &SonicRangeFinder::startMeasurementFinished), 0.000002);
-    testPin = 1;
+    testPin.write(1);
 }
 
 void SonicRangeFinder::startMeasurementFinished() {
-    testPin = 0;
-    triggerPin = 0;
-    // echoPin.rise(Callback<void()>(this, &SonicRangeFinder::startClock));
-    echoPin.rise(this, &SonicRangeFinder::startClock);
+    testPin.write(0);
+    triggerPin.write(0);
+    echoPin.rise(Callback<void()>(this, &SonicRangeFinder::startClock));
+    // echoPin.rise(this, &SonicRangeFinder::startClock);
 
     timeout.detach();
     timeout.attach(Callback<void()>(this, &SonicRangeFinder::measurementTimedOut), 1.0);
 }
 
 void SonicRangeFinder::startClock() {
-    testPin = 1;
+    testPin.write(1);
     timer.start();
-    // echoPin.fall(Callback<void()>(this, &SonicRangeFinder::finished));
-    echoPin.fall(this, &SonicRangeFinder::finished);
+    echoPin.fall(Callback<void()>(this, &SonicRangeFinder::finished));
+    // echoPin.fall(this, &SonicRangeFinder::finished);
 }
 
 void SonicRangeFinder::finished() {
-    testPin = 0;
+    testPin.write(0);
     timer.stop();
     ITRangeInMM = (uint32_t)timer.read_us() / 5.82;
     timer.reset();
