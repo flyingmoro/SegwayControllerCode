@@ -4,15 +4,15 @@
         "size": {
             ".data": 0, 
             ".bss": 0, 
-            ".text": 346
+            ".text": 170
         }
     }, 
     {
         "module": "[fill]", 
         "size": {
-            ".data": 9, 
-            ".bss": 80, 
-            ".text": 307
+            ".data": 10, 
+            ".bss": 76, 
+            ".text": 314
         }
     }, 
     {
@@ -29,14 +29,6 @@
             ".data": 0, 
             ".bss": 0, 
             ".text": 3444
-        }
-    }, 
-    {
-        "module": "[lib]\\m.a", 
-        "size": {
-            ".data": 1, 
-            ".bss": 0, 
-            ".text": 1981
         }
     }, 
     {
@@ -68,7 +60,7 @@
         "size": {
             ".data": 4, 
             ".bss": 668, 
-            ".text": 812
+            ".text": 804
         }
     }, 
     {
@@ -122,7 +114,7 @@
     {
         "module": "microRay.o", 
         "size": {
-            ".data": 89, 
+            ".data": 81, 
             ".bss": 776, 
             ".text": 1051
         }
@@ -131,8 +123,8 @@
         "module": "mpuHandler.o", 
         "size": {
             ".data": 4, 
-            ".bss": 360, 
-            ".text": 1024
+            ".bss": 336, 
+            ".text": 120
         }
     }, 
     {
@@ -146,15 +138,15 @@
     {
         "module": "ultraSonic.o", 
         "size": {
-            ".data": 4, 
-            ".bss": 204, 
-            ".text": 922
+            ".data": 0, 
+            ".bss": 0, 
+            ".text": 776
         }
     }, 
     {
         "summary": {
-            "static_ram": 60780, 
-            "total_flash": 141528
+            "static_ram": 60536, 
+            "total_flash": 138308
         }
     }
 ]

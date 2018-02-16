@@ -24,8 +24,7 @@ DigitalOut redLed(LED3);
 
 Position worldPosition;
 MpuData mpuData;
-// UltraSonicRanges sonicRanges;
-SonicRangeFinder rangeFinder(PE_12, PE_14);
+SonicRangeFinder rangeFinder(PE_12, PF_12);
 SensorDataCollection sensorReadingsForControl;
 TargetValues currentTargets;
 
@@ -60,52 +59,43 @@ int init() {
     microRayInit();
     initEncoder();
     // initMPU6050();
-    // initUltraSonic(&sonicRanges);
     return 0;
 }
 
 
 void loop() {
 
-    // debugging, see if microcontroller is running
+    // for debugging, see if microcontroller is running
     pulsi += 1;
     if (pulsi > 100) {
         pulsi = 0;
     }
 
+    // read encoders and calculate world position and derivatives
     updatePosition(&worldPosition);
-    updateMpuReadings(&mpuData);
-    encoderLeftWheel = worldPosition.x;
-    encoderRightWheel = worldPosition.y;
 
+    // get latest ultra sonic readings
+    sonic = rangeFinder.getRangeInMM();
+
+    // read the gyro and acceleration sensor (MPU6050)
+    // duration approx 600us
+    updateMpuReadings(&mpuData);
+
+    // collect data for control algorythm and calculate target motor current
     sensorReadingsForControl.speed = 1.0;
     sensorReadingsForControl.beta = mpuData.rawAngularRate_beta;
     sensorReadingsForControl.gammaP = 1.0;
     updateControlTargets(&sensorReadingsForControl, &currentTargets);
 
+    // apply current to motors
     setCurrentBothMotors(setCurrentMotorZero, setCurrentMotorOne);
-
-
-
-
-
-    // rangeFinder.startMeasurement();
-    // sonicRanges = rangeFinder.getRanges();
-    // sonic = sonicRanges.forwardLeftMM;
-    sonic = rangeFinder.getRangeInMM();
-
-
-
-
-    // mpuData = getMpuData();
-
-
 
 
     // microRay output stuff
     controllerOutputDebug = currentTargets.motorZero;
 
-
+    encoderLeftWheel = worldPosition.x;
+    encoderRightWheel = worldPosition.y;
 
     mr_rawAccX = mpuData.rawAcceleration_x;
     mr_rawAccY = mpuData.rawAcceleration_y;

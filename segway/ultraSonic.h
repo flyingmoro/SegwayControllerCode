@@ -14,11 +14,6 @@ typedef struct ultraSonicRanges {
 } UltraSonicRanges;
 
 
-
-void initUltraSonic(UltraSonicRanges *ranges);
-// void getUltraSonsicRanges(UltraSonicRanges *ranges);
-
-
 class SonicRangeFinder {
     public:
         SonicRangeFinder(PinName, PinName);

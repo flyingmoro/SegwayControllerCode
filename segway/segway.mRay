@@ -3,7 +3,7 @@
         {
             "displayName": "", 
             "name": "encoderLeftWheel", 
-            "show": true, 
+            "show": false, 
             "color": [
                 102, 
                 252, 
@@ -15,7 +15,7 @@
         {
             "displayName": "", 
             "name": "encoderRightWheel", 
-            "show": true, 
+            "show": false, 
             "color": [
                 227, 
                 62, 
@@ -27,7 +27,7 @@
         {
             "displayName": "", 
             "name": "pulsi", 
-            "show": true, 
+            "show": false, 
             "color": [
                 178, 
                 29, 
@@ -51,7 +51,7 @@
         {
             "displayName": "", 
             "name": "controllerOutputDebug", 
-            "show": true, 
+            "show": false, 
             "color": [
                 0, 
                 170, 
@@ -63,7 +63,7 @@
         {
             "displayName": "", 
             "name": "mr_gyroXAngle", 
-            "show": true, 
+            "show": false, 
             "color": [
                 246, 
                 130, 
@@ -75,7 +75,7 @@
         {
             "displayName": "", 
             "name": "mr_compXAngle", 
-            "show": true, 
+            "show": false, 
             "color": [
                 99, 
                 193, 
@@ -87,7 +87,7 @@
         {
             "displayName": "", 
             "name": "mr_kalXAngle", 
-            "show": true, 
+            "show": false, 
             "color": [
                 153, 
                 96, 
@@ -99,7 +99,7 @@
         {
             "displayName": "", 
             "name": "mr_rawAccX", 
-            "show": true, 
+            "show": false, 
             "color": [
                 232, 
                 188, 
@@ -111,7 +111,7 @@
         {
             "displayName": "", 
             "name": "mr_rawAccY", 
-            "show": true, 
+            "show": false, 
             "color": [
                 82, 
                 159, 
@@ -123,7 +123,7 @@
         {
             "displayName": "", 
             "name": "mr_rawAccZ", 
-            "show": true, 
+            "show": false, 
             "color": [
                 158, 
                 190, 
@@ -135,7 +135,7 @@
         {
             "displayName": "", 
             "name": "mr_rawDegPX", 
-            "show": true, 
+            "show": false, 
             "color": [
                 235, 
                 13, 
@@ -147,7 +147,7 @@
         {
             "displayName": "", 
             "name": "mr_rawDegPY", 
-            "show": true, 
+            "show": false, 
             "color": [
                 218, 
                 235, 
@@ -159,7 +159,7 @@
         {
             "displayName": "", 
             "name": "mr_rawDegPZ", 
-            "show": true, 
+            "show": false, 
             "color": [
                 225, 
                 237, 
@@ -171,7 +171,7 @@
         {
             "displayName": "", 
             "name": "mr_roll", 
-            "show": true, 
+            "show": false, 
             "color": [
                 129, 
                 147, 
@@ -243,7 +243,7 @@
             "history": []
         }, 
         {
-            "initialValue": 1.0, 
+            "initialValue": 0.1184, 
             "displayName": "", 
             "name": "kPidSpeed", 
             "min": -100000.0, 
@@ -255,7 +255,7 @@
             "history": []
         }, 
         {
-            "initialValue": 1.0, 
+            "initialValue": 0.074, 
             "displayName": "", 
             "name": "tvSpeed", 
             "min": -100000.0, 
@@ -267,7 +267,7 @@
             "history": []
         }, 
         {
-            "initialValue": 1.0, 
+            "initialValue": -2.96, 
             "displayName": "", 
             "name": "kPidBeta", 
             "min": -100000.0, 
@@ -279,7 +279,7 @@
             "history": []
         }, 
         {
-            "initialValue": 1.0, 
+            "initialValue": 0.0712, 
             "displayName": "", 
             "name": "tvBeta", 
             "min": -100000.0, 
@@ -300,18 +300,6 @@
             "pendingMode": false, 
             "inputMethod": 1, 
             "id": 8, 
-            "history": []
-        }, 
-        {
-            "initialValue": 1.0, 
-            "displayName": "", 
-            "name": "tvGammaP", 
-            "min": -100000.0, 
-            "max": 100000.0, 
-            "valueType": 2, 
-            "pendingMode": false, 
-            "inputMethod": 1, 
-            "id": 9, 
             "history": []
         }
     ], 

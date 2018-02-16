@@ -8,7 +8,7 @@
 #define CHANNELS_AVAILABLE_COUNT                     16
 #define CHANNELS_REQUESTED_COUNT                     16
 #define CHANNELS_UNREQUESTED_COUNT                    0
-#define PARAMETER_COUNT                              10
+#define PARAMETER_COUNT                               9
 #define SPECIAL_COMMANDS_COUNT                        3
 #define BAUD_RATE                                115200
 #define INT_TYPE                                      1
@@ -47,7 +47,6 @@
 #define kPidBeta                                 (parameters[6]).valueFloat
 #define tvBeta                                   (parameters[7]).valueFloat
 #define kPidGammaP                               (parameters[8]).valueFloat
-#define tvGammaP                                 (parameters[9]).valueFloat
 
 // all special parameters
 #define loopCycleTimeExceededByUs                (specialCommands[0])
