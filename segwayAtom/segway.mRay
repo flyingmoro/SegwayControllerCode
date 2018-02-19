@@ -2,7 +2,31 @@
     "channels": [
         {
             "displayName": "", 
-            "name": "mr_pulsi", 
+            "name": "encoderLeftWheel", 
+            "show": false, 
+            "color": [
+                102, 
+                252, 
+                126
+            ], 
+            "isRequested": true, 
+            "id": 0
+        }, 
+        {
+            "displayName": "", 
+            "name": "encoderRightWheel", 
+            "show": false, 
+            "color": [
+                227, 
+                62, 
+                149
+            ], 
+            "isRequested": true, 
+            "id": 1
+        }, 
+        {
+            "displayName": "", 
+            "name": "pulsi", 
             "show": false, 
             "color": [
                 178, 
@@ -10,19 +34,67 @@
                 208
             ], 
             "isRequested": true, 
-            "id": 0
+            "id": 2
         }, 
         {
             "displayName": "", 
-            "name": "mr_sonic", 
-            "show": false, 
+            "name": "sonic", 
+            "show": true, 
             "color": [
                 255, 
                 170, 
                 0
             ], 
             "isRequested": true, 
-            "id": 1
+            "id": 3
+        }, 
+        {
+            "displayName": "", 
+            "name": "controllerOutputDebug", 
+            "show": false, 
+            "color": [
+                0, 
+                170, 
+                0
+            ], 
+            "isRequested": true, 
+            "id": 4
+        }, 
+        {
+            "displayName": "", 
+            "name": "mr_gyroXAngle", 
+            "show": false, 
+            "color": [
+                246, 
+                130, 
+                74
+            ], 
+            "isRequested": true, 
+            "id": 5
+        }, 
+        {
+            "displayName": "", 
+            "name": "mr_compXAngle", 
+            "show": false, 
+            "color": [
+                99, 
+                193, 
+                74
+            ], 
+            "isRequested": true, 
+            "id": 6
+        }, 
+        {
+            "displayName": "", 
+            "name": "mr_kalXAngle", 
+            "show": false, 
+            "color": [
+                153, 
+                96, 
+                238
+            ], 
+            "isRequested": true, 
+            "id": 7
         }, 
         {
             "displayName": "", 
@@ -34,7 +106,7 @@
                 158
             ], 
             "isRequested": true, 
-            "id": 2
+            "id": 8
         }, 
         {
             "displayName": "", 
@@ -46,7 +118,7 @@
                 106
             ], 
             "isRequested": true, 
-            "id": 3
+            "id": 9
         }, 
         {
             "displayName": "", 
@@ -58,7 +130,7 @@
                 20
             ], 
             "isRequested": true, 
-            "id": 4
+            "id": 10
         }, 
         {
             "displayName": "", 
@@ -70,7 +142,7 @@
                 8
             ], 
             "isRequested": true, 
-            "id": 5
+            "id": 11
         }, 
         {
             "displayName": "", 
@@ -82,7 +154,7 @@
                 140
             ], 
             "isRequested": true, 
-            "id": 6
+            "id": 12
         }, 
         {
             "displayName": "", 
@@ -94,11 +166,11 @@
                 11
             ], 
             "isRequested": true, 
-            "id": 7
+            "id": 13
         }, 
         {
             "displayName": "", 
-            "name": "mr_betaRaw", 
+            "name": "mr_roll", 
             "show": false, 
             "color": [
                 129, 
@@ -106,158 +178,26 @@
                 78
             ], 
             "isRequested": true, 
-            "id": 8
-        }, 
-        {
-            "displayName": "", 
-            "name": "mr_betaTangens", 
-            "show": false, 
-            "color": [
-                162, 
-                92, 
-                45
-            ], 
-            "isRequested": true, 
-            "id": 9
-        }, 
-        {
-            "displayName": "", 
-            "name": "mr_betaRawIntegral", 
-            "show": false, 
-            "color": [
-                202, 
-                16, 
-                107
-            ], 
-            "isRequested": true, 
-            "id": 10
-        }, 
-        {
-            "displayName": "", 
-            "name": "mr_betaComplementary", 
-            "show": false, 
-            "color": [
-                136, 
-                228, 
-                2
-            ], 
-            "isRequested": true, 
-            "id": 11
-        }, 
-        {
-            "displayName": "", 
-            "name": "mr_betaKalman", 
-            "show": true, 
-            "color": [
-                83, 
-                33, 
-                245
-            ], 
-            "isRequested": true, 
-            "id": 12
-        }, 
-        {
-            "displayName": "", 
-            "name": "mr_dutyCycleTime", 
-            "show": false, 
-            "color": [
-                139, 
-                232, 
-                185
-            ], 
-            "isRequested": true, 
-            "id": 13
-        }, 
-        {
-            "displayName": "", 
-            "name": "mr_worldX", 
-            "show": false, 
-            "color": [
-                196, 
-                80, 
-                103
-            ], 
-            "isRequested": true, 
             "id": 14
         }, 
         {
             "displayName": "", 
-            "name": "mr_worldY", 
-            "show": false, 
+            "name": "dutyCycleTime", 
+            "show": true, 
             "color": [
-                162, 
-                184, 
-                77
+                203, 
+                123, 
+                81
             ], 
             "isRequested": true, 
             "id": 15
-        }, 
-        {
-            "displayName": "", 
-            "name": "mr_worldGamma", 
-            "show": false, 
-            "color": [
-                228, 
-                25, 
-                68
-            ], 
-            "isRequested": true, 
-            "id": 16
-        }, 
-        {
-            "displayName": "", 
-            "name": "mr_encoderLeftWheel", 
-            "show": false, 
-            "color": [
-                208, 
-                26, 
-                55
-            ], 
-            "isRequested": true, 
-            "id": 17
-        }, 
-        {
-            "displayName": "", 
-            "name": "mr_encoderRightWheel", 
-            "show": false, 
-            "color": [
-                122, 
-                172, 
-                86
-            ], 
-            "isRequested": true, 
-            "id": 18
-        }, 
-        {
-            "displayName": "", 
-            "name": "mr_controllerOutputMotorZero", 
-            "show": true, 
-            "color": [
-                196, 
-                149, 
-                141
-            ], 
-            "isRequested": true, 
-            "id": 19
-        }, 
-        {
-            "displayName": "", 
-            "name": "mr_controllerOutputMotorOne", 
-            "show": false, 
-            "color": [
-                85, 
-                131, 
-                9
-            ], 
-            "isRequested": true, 
-            "id": 20
         }
     ], 
     "commands": [
         {
             "initialValue": 0.0, 
             "displayName": "", 
-            "name": "mr_currentMotorZero", 
+            "name": "setCurrentMotorZero", 
             "min": -16.0, 
             "max": 16.0, 
             "valueType": 2, 
@@ -269,7 +209,7 @@
         {
             "initialValue": 0.0, 
             "displayName": "", 
-            "name": "mr_currentMotorOne", 
+            "name": "setCurrentMotorOne", 
             "min": -16.0, 
             "max": 16.0, 
             "valueType": 2, 
@@ -279,7 +219,7 @@
             "history": []
         }, 
         {
-            "initialValue": 0.0, 
+            "initialValue": 1.0, 
             "displayName": "", 
             "name": "speedSetPoint", 
             "min": -100000.0, 
@@ -291,7 +231,7 @@
             "history": []
         }, 
         {
-            "initialValue": 0.0, 
+            "initialValue": 1.0, 
             "displayName": "", 
             "name": "gammaPSetPoint", 
             "min": -100000.0, 
@@ -303,7 +243,7 @@
             "history": []
         }, 
         {
-            "initialValue": -0.5, 
+            "initialValue": 0.1184, 
             "displayName": "", 
             "name": "kPidSpeed", 
             "min": -100000.0, 
@@ -315,9 +255,9 @@
             "history": []
         }, 
         {
-            "initialValue": 1.0, 
+            "initialValue": 0.074, 
             "displayName": "", 
-            "name": "tgSpeed", 
+            "name": "tvSpeed", 
             "min": -100000.0, 
             "max": 100000.0, 
             "valueType": 2, 
@@ -327,7 +267,7 @@
             "history": []
         }, 
         {
-            "initialValue": -0.11, 
+            "initialValue": -2.96, 
             "displayName": "", 
             "name": "kPidBeta", 
             "min": -100000.0, 
@@ -339,7 +279,7 @@
             "history": []
         }, 
         {
-            "initialValue": 14.2, 
+            "initialValue": 0.0712, 
             "displayName": "", 
             "name": "tvBeta", 
             "min": -100000.0, 
@@ -360,18 +300,6 @@
             "pendingMode": false, 
             "inputMethod": 1, 
             "id": 8, 
-            "history": []
-        }, 
-        {
-            "initialValue": 0.0, 
-            "displayName": "", 
-            "name": "mr_letTheControllerControl", 
-            "min": -100000.0, 
-            "max": 100000.0, 
-            "valueType": 1, 
-            "pendingMode": false, 
-            "inputMethod": 1, 
-            "id": 9, 
             "history": []
         }
     ], 

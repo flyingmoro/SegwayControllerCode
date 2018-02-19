@@ -5,10 +5,10 @@
 
 // must have parameters
 #define loopCycleTimeUs                            1000
-#define CHANNELS_AVAILABLE_COUNT                     21
-#define CHANNELS_REQUESTED_COUNT                     21
+#define CHANNELS_AVAILABLE_COUNT                     16
+#define CHANNELS_REQUESTED_COUNT                     16
 #define CHANNELS_UNREQUESTED_COUNT                    0
-#define PARAMETER_COUNT                              10
+#define PARAMETER_COUNT                               9
 #define SPECIAL_COMMANDS_COUNT                        3
 #define BAUD_RATE                                115200
 #define INT_TYPE                                      1
@@ -18,41 +18,35 @@
 #define MESSAGE_SKIP_MODE                             0
 
 // All requested channels
-#define mr_pulsi                                 (messageOutBuffer.channels[0])
-#define mr_sonic                                 (messageOutBuffer.channels[1])
-#define mr_rawAccX                               (messageOutBuffer.channels[2])
-#define mr_rawAccY                               (messageOutBuffer.channels[3])
-#define mr_rawAccZ                               (messageOutBuffer.channels[4])
-#define mr_rawDegPX                              (messageOutBuffer.channels[5])
-#define mr_rawDegPY                              (messageOutBuffer.channels[6])
-#define mr_rawDegPZ                              (messageOutBuffer.channels[7])
-#define mr_betaRaw                               (messageOutBuffer.channels[8])
-#define mr_betaTangens                           (messageOutBuffer.channels[9])
-#define mr_betaRawIntegral                       (messageOutBuffer.channels[10])
-#define mr_betaComplementary                     (messageOutBuffer.channels[11])
-#define mr_betaKalman                            (messageOutBuffer.channels[12])
-#define mr_dutyCycleTime                         (messageOutBuffer.channels[13])
-#define mr_worldX                                (messageOutBuffer.channels[14])
-#define mr_worldY                                (messageOutBuffer.channels[15])
-#define mr_worldGamma                            (messageOutBuffer.channels[16])
-#define mr_encoderLeftWheel                      (messageOutBuffer.channels[17])
-#define mr_encoderRightWheel                     (messageOutBuffer.channels[18])
-#define mr_controllerOutputMotorZero             (messageOutBuffer.channels[19])
-#define mr_controllerOutputMotorOne              (messageOutBuffer.channels[20])
+#define encoderLeftWheel                         (messageOutBuffer.channels[0])
+#define encoderRightWheel                        (messageOutBuffer.channels[1])
+#define pulsi                                    (messageOutBuffer.channels[2])
+#define sonic                                    (messageOutBuffer.channels[3])
+#define controllerOutputDebug                    (messageOutBuffer.channels[4])
+#define mr_gyroXAngle                            (messageOutBuffer.channels[5])
+#define mr_compXAngle                            (messageOutBuffer.channels[6])
+#define mr_kalXAngle                             (messageOutBuffer.channels[7])
+#define mr_rawAccX                               (messageOutBuffer.channels[8])
+#define mr_rawAccY                               (messageOutBuffer.channels[9])
+#define mr_rawAccZ                               (messageOutBuffer.channels[10])
+#define mr_rawDegPX                              (messageOutBuffer.channels[11])
+#define mr_rawDegPY                              (messageOutBuffer.channels[12])
+#define mr_rawDegPZ                              (messageOutBuffer.channels[13])
+#define mr_roll                                  (messageOutBuffer.channels[14])
+#define dutyCycleTime                            (messageOutBuffer.channels[15])
 
 // All unrequested channels
 
 // all parameters
-#define mr_currentMotorZero                      (parameters[0]).valueFloat
-#define mr_currentMotorOne                       (parameters[1]).valueFloat
+#define setCurrentMotorZero                      (parameters[0]).valueFloat
+#define setCurrentMotorOne                       (parameters[1]).valueFloat
 #define speedSetPoint                            (parameters[2]).valueFloat
 #define gammaPSetPoint                           (parameters[3]).valueFloat
 #define kPidSpeed                                (parameters[4]).valueFloat
-#define tgSpeed                                  (parameters[5]).valueFloat
+#define tvSpeed                                  (parameters[5]).valueFloat
 #define kPidBeta                                 (parameters[6]).valueFloat
 #define tvBeta                                   (parameters[7]).valueFloat
 #define kPidGammaP                               (parameters[8]).valueFloat
-#define mr_letTheControllerControl               (parameters[9]).valueInt
 
 // all special parameters
 #define loopCycleTimeExceededByUs                (specialCommands[0])

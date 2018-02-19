@@ -8,61 +8,14 @@
 TIM_HandleTypeDef encoderTimerLeft;
 TIM_HandleTypeDef encoderTimerRight;
 
-
-int32_t encoderChange(int32_t oldEncValue, int32_t newEncValue);
 void initEncoderCounter();
 static void initGPIO(void);
 
 
-int32_t oldEncLeft = 0;
-int32_t oldEncRight = 0;
+
 void updatePosition(Position *worldPosition) {
-    static float xRLeft, xRRight, diffX, deltaForward, deltaGamma;
-
-    // read the hardware counter
-    worldPosition->encLeft = (int32_t)__HAL_TIM_GET_COUNTER(&encoderTimerLeft);
-    worldPosition->encRight = (int32_t)__HAL_TIM_GET_COUNTER(&encoderTimerRight);
-
-    // calculate the deltas
-    xRLeft = (float)encoderChange(oldEncLeft, worldPosition->encLeft) * METERS_PER_ENCODER_STEP;
-    xRRight = (float)encoderChange(oldEncRight, worldPosition->encRight) * METERS_PER_ENCODER_STEP;
-
-    // see documentation concerning the following formulas
-    diffX = (float)(xRRight - xRLeft);
-    deltaGamma = diffX / WHEEL_SPAN;
-    deltaForward = (xRLeft + xRRight) / 2.0;
-
-    worldPosition->x += (cos(worldPosition->gamma) * deltaForward);
-    worldPosition->y += (sin(worldPosition->gamma) * deltaForward);
-    worldPosition->gamma += deltaGamma;
-
-    // constrain gamma
-    while (worldPosition->gamma > PI) {
-      worldPosition->gamma -= TWO_PI;
-    }
-    while (worldPosition->gamma <= NEG_PI) {
-      worldPosition->gamma += TWO_PI;
-    }
-
-    oldEncLeft = worldPosition->encLeft;
-    oldEncRight = worldPosition->encRight;
-}
-
-int32_t encoderChange(int32_t oldEncValue, int32_t newEncValue) {
-    // encoder counter has a resolution of approx 8 full turns
-    // assuming that within 1ms the motor never turns 8 times
-
-    // check if counter has passed its limit
-    if (oldEncValue > 50000 && newEncValue < 10000) {
-        return newEncValue + 65536 - oldEncValue;
-    } else if (newEncValue > 50000 && oldEncValue < 10000) {
-        return oldEncValue + 65536 - newEncValue;
-    } else {
-        return newEncValue - oldEncValue;
-    }
-
-
-
+    worldPosition->x = (uint16_t)__HAL_TIM_GET_COUNTER(&encoderTimerLeft);
+    worldPosition->y = (uint16_t)__HAL_TIM_GET_COUNTER(&encoderTimerRight);
 }
 
 void initEncoder() {
@@ -123,7 +76,8 @@ void initEncoderCounter(){
     HAL_TIM_IC_ConfigChannel(&encoderTimerRight, &sConfigIC, TIM_CHANNEL_1);
     HAL_TIM_IC_ConfigChannel(&encoderTimerRight, &sConfigIC, TIM_CHANNEL_2);
 
-    // // activate channel 4 capture/compare mode for interrupt on encoder index
+    // // activate channel 4 capture/compare mode
+    // //TIM3->DIER |= TIM_DIER_CC4IE;
     // sConfigOC.OCMode = TIM_OCMODE_ACTIVE;
     // // sConfigOC.Pulse = 0;
     // // sConfigOC.OCPolarity = TIM_OCPOLARITY_HIGH;
@@ -131,19 +85,16 @@ void initEncoderCounter(){
     // HAL_TIM_OC_ConfigChannel(&encoderTimerLeft, &sConfigOC, TIM_CHANNEL_4);
 
     // manuell hinzugefügt
-    HAL_TIM_Encoder_Start(&encoderTimerLeft, TIM_CHANNEL_ALL);
-    HAL_TIM_Base_Start(&encoderTimerLeft);
-    HAL_TIM_Encoder_Start(&encoderTimerRight, TIM_CHANNEL_ALL);
-    HAL_TIM_Base_Start(&encoderTimerRight);
-    // HAL_TIM_Encoder_Start_IT(&encoderTimerLeft, TIM_CHANNEL_ALL);
-    // HAL_TIM_Base_Start_IT(&encoderTimerLeft);
-    // HAL_TIM_Encoder_Start_IT(&encoderTimerRight, TIM_CHANNEL_ALL);
-    // HAL_TIM_Base_Start_IT(&encoderTimerRight);
+    HAL_TIM_Encoder_Start_IT(&encoderTimerLeft, TIM_CHANNEL_ALL);
+    HAL_TIM_Base_Start_IT(&encoderTimerLeft);
+    HAL_TIM_Encoder_Start_IT(&encoderTimerRight, TIM_CHANNEL_ALL);
+    HAL_TIM_Base_Start_IT(&encoderTimerRight);
 }
 
 
 static void initGPIO(void) {
     /* GPIO Ports Clock Enable */
+
     __HAL_RCC_GPIOA_CLK_ENABLE();
     __GPIOA_CLK_ENABLE();
 
@@ -159,8 +110,6 @@ static void initGPIO(void) {
     __HAL_RCC_GPIOE_CLK_ENABLE();
     __GPIOE_CLK_ENABLE();
 
-
-    // timer clock enable
     __HAL_RCC_TIM3_CLK_ENABLE();
     __HAL_RCC_TIM4_CLK_ENABLE();
 

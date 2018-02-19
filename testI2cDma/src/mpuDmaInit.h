@@ -11,6 +11,6 @@ void MPU_GPIO_Init();
 void MPU_DMA_Init();
 void MPU_I2C_Init();
 void MPU_NVIC_Init();
-void MPU_POST_Init();
+void MPU_POST_Init(uint8_t *mpu_rx_buffer);
 
 #endif

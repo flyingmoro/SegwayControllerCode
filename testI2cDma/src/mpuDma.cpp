@@ -6,11 +6,12 @@
 // I2C i2c(PB_11, PB_10);
 
 void I2C_DMA_Read(uint8_t slaveAddr, uint8_t readAddr, uint8_t sensor);
+void MPU_Initialize();
 
 MpuData IT_mpuData;
 uint8_t mpu_rx_buffer[14];
 
-I2C_HandleTypeDef MPU6050_I2C
+I2C_HandleTypeDef MPU6050_I2C;
 
 void initMPU6050() {
 
@@ -32,6 +33,7 @@ void initMPU6050() {
 MpuData getMpuData() {
     __disable_irq();
     MpuData tempData = IT_mpuData;
+    tempData.rawAngularRate_alpha = IT_mpuData.rawAngularRate_alpha;
     __enable_irq();
     return tempData;
 }

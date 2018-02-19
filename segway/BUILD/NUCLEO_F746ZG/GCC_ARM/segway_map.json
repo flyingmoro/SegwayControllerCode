@@ -4,15 +4,15 @@
         "size": {
             ".data": 0, 
             ".bss": 0, 
-            ".text": 170
+            ".text": 346
         }
     }, 
     {
         "module": "[fill]", 
         "size": {
-            ".data": 10, 
-            ".bss": 76, 
-            ".text": 314
+            ".data": 9, 
+            ".bss": 72, 
+            ".text": 335
         }
     }, 
     {
@@ -32,6 +32,14 @@
         }
     }, 
     {
+        "module": "[lib]\\m.a", 
+        "size": {
+            ".data": 1, 
+            ".bss": 0, 
+            ".text": 6525
+        }
+    }, 
+    {
         "module": "[lib]\\misc", 
         "size": {
             ".data": 16, 
@@ -43,24 +51,24 @@
         "module": "controllers.o", 
         "size": {
             ".data": 0, 
-            ".bss": 8, 
-            ".text": 336
+            ".bss": 12, 
+            ".text": 292
         }
     }, 
     {
         "module": "encoderHandling.o", 
         "size": {
             ".data": 0, 
-            ".bss": 128, 
-            ".text": 572
+            ".bss": 136, 
+            ".text": 972
         }
     }, 
     {
         "module": "main.o", 
         "size": {
             ".data": 4, 
-            ".bss": 668, 
-            ".text": 804
+            ".bss": 676, 
+            ".text": 820
         }
     }, 
     {
@@ -108,14 +116,14 @@
         "size": {
             ".data": 4, 
             ".bss": 1676, 
-            ".text": 21464
+            ".text": 21426
         }
     }, 
     {
         "module": "microRay.o", 
         "size": {
-            ".data": 81, 
-            ".bss": 776, 
+            ".data": 89, 
+            ".bss": 816, 
             ".text": 1051
         }
     }, 
@@ -123,8 +131,8 @@
         "module": "mpuHandler.o", 
         "size": {
             ".data": 4, 
-            ".bss": 336, 
-            ".text": 120
+            ".bss": 360, 
+            ".text": 1024
         }
     }, 
     {
@@ -145,8 +153,8 @@
     }, 
     {
         "summary": {
-            "static_ram": 60536, 
-            "total_flash": 138308
+            "static_ram": 60624, 
+            "total_flash": 146276
         }
     }
 ]

@@ -7,7 +7,6 @@
 TargetValues currentTargetPoints;
 
 float eOldSpeed = 0.0;
-float speedIntegral = 0.0;
 float eOldBeta = 0.0;
 float eOldGammaP = 0.0;
 
@@ -16,9 +15,8 @@ void updateControlTargets(SensorDataCollection * sensorData, TargetValues * targ
 
     // velocity control
     float eSpeed = speedSetPoint - sensorData->speed;
-    float speedTarget = kPidSpeed * (eSpeed + (eSpeed - eOldSpeed) + tgSpeed * speedIntegral);
+    float speedTarget = kPidSpeed * (eSpeed + (eSpeed - eOldSpeed) * tvSpeed / DELTA_T);
     eOldSpeed = eSpeed;
-    speedIntegral += eSpeed;
 
     // beta control
     float eBeta = speedTarget - sensorData->beta;

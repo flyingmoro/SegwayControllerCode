@@ -44,7 +44,7 @@ int main() {
     while(1) {
         loopTimer.start();
         loop();
-        mr_dutyCycleTime = loopTimer.read_us();
+        dutyCycleTime = loopTimer.read_us();
         while(loopTimer.read_us() < loopCycleTimeUs)
         {
             // wait for loop cycle period to decay
@@ -64,16 +64,16 @@ int init() {
 void loop() {
 
     // for debugging, see if microcontroller is running
-    mr_pulsi += 1;
-    if (mr_pulsi > 100) {
-        mr_pulsi = 0;
+    pulsi += 1;
+    if (pulsi > 100) {
+        pulsi = 0;
     }
 
     // read encoders and calculate world position and derivatives
     updatePosition(&worldPosition);
 
-    // get latest ultra sonic reading
-    mr_sonic = rangeFinder.getRangeInMM();
+    // get latest ultra sonic readings
+    sonic = rangeFinder.getRangeInMM();
 
     // read the gyro and acceleration sensor (MPU6050)
     // duration approx 600us
@@ -81,28 +81,19 @@ void loop() {
 
     // collect data for control algorythm and calculate target motor current
     sensorReadingsForControl.speed = 1.0;
-    sensorReadingsForControl.beta = mpuData.kalYAngle;
+    sensorReadingsForControl.beta = mpuData.rawAngularRate_beta;
     sensorReadingsForControl.gammaP = 1.0;
     updateControlTargets(&sensorReadingsForControl, &currentTargets);
 
     // apply current to motors
-    if (mr_letTheControllerControl == 1) {
-        setCurrentBothMotors(currentTargets.motorZero, currentTargets.motorOne);
-    } else {
-        setCurrentBothMotors(mr_currentMotorZero, mr_currentMotorOne);
-    }
-
+    setCurrentBothMotors(setCurrentMotorZero, setCurrentMotorOne);
 
 
     // microRay output stuff
-    mr_controllerOutputMotorZero = currentTargets.motorZero;
-    mr_controllerOutputMotorOne = currentTargets.motorOne;
+    controllerOutputDebug = currentTargets.motorZero;
 
-    mr_encoderLeftWheel = worldPosition.encLeft;
-    mr_encoderRightWheel = worldPosition.encRight;
-    mr_worldX = worldPosition.x;
-    mr_worldY = worldPosition.y;
-    mr_worldGamma = worldPosition.gamma;
+    encoderLeftWheel = worldPosition.x;
+    encoderRightWheel = worldPosition.y;
 
     mr_rawAccX = mpuData.rawAcceleration_x;
     mr_rawAccY = mpuData.rawAcceleration_y;
@@ -111,10 +102,10 @@ void loop() {
     mr_rawDegPY = mpuData.rawAngularRate_beta / 131.0;
     mr_rawDegPZ = mpuData.rawAngularRate_gamma / 131.0;
 
-    mr_betaTangens = mpuData.pitch;
-    mr_betaRawIntegral = mpuData.gyroYAngle;
-    mr_betaComplementary = mpuData.compYAngle;
-    mr_betaKalman = mpuData.kalYAngle;
+    mr_roll = mpuData.roll;
+    mr_gyroXAngle = mpuData.gyroXAngle;
+    mr_compXAngle = mpuData.compXAngle;
+    mr_kalXAngle = mpuData.kalXAngle;
     microRayCommunicate();
 
 }

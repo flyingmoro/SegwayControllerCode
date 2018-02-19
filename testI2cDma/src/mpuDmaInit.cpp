@@ -66,8 +66,8 @@ void MPU_NVIC_Init() {
 
 }
 
-void MPU_POST_Init(uint32_t hdmarx) {
-    __HAL_LINKDMA(hi2c, hdmarx, hdma_i2c2_rx);
+void MPU_POST_Init(uint8_t *hdmarx) {
+    __HAL_LINKDMA(i2cHandle, hdmarx, hdma_i2c2_rx);
 }
 
 

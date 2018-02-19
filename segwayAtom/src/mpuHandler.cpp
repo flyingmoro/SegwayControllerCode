@@ -15,12 +15,12 @@ void updateMpuReadings(MpuData *mpuReadings) {
     mpu.getAcceleroRaw(accRaw);
     mpu.getGyroRaw(gyroRaw);
 
-    mpuReadings->rawAcceleration_x = accRaw[1];
-    mpuReadings->rawAcceleration_y = accRaw[2];
-    mpuReadings->rawAcceleration_z = accRaw[0];
-    mpuReadings->rawAngularRate_alpha = gyroRaw[1];
-    mpuReadings->rawAngularRate_beta = gyroRaw[2];
-    mpuReadings->rawAngularRate_gamma = gyroRaw[0];
+    mpuReadings->rawAcceleration_x = accRaw[0];
+    mpuReadings->rawAcceleration_y = accRaw[1];
+    mpuReadings->rawAcceleration_z = accRaw[2];
+    mpuReadings->rawAngularRate_alpha = gyroRaw[0];
+    mpuReadings->rawAngularRate_beta = gyroRaw[1];
+    mpuReadings->rawAngularRate_gamma = gyroRaw[2];
 
 
     mpuReadings->roll  = atan(mpuReadings->rawAcceleration_y / sqrt(mpuReadings->rawAcceleration_x * mpuReadings->rawAcceleration_x + mpuReadings->rawAcceleration_z * mpuReadings->rawAcceleration_z)) * RAD_TO_DEG;

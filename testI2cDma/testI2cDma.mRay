@@ -1,0 +1,51 @@
+{
+    "channels": [
+        {
+            "displayName": "", 
+            "name": "pulsi", 
+            "show": true, 
+            "color": [
+                184, 
+                86, 
+                247
+            ], 
+            "isRequested": true, 
+            "id": 0
+        }, 
+        {
+            "displayName": "", 
+            "name": "debugChannel", 
+            "show": true, 
+            "color": [
+                0, 
+                170, 
+                0
+            ], 
+            "isRequested": true, 
+            "id": 1
+        }
+    ], 
+    "commands": [], 
+    "miscSettings": {
+        "controllerFrameworkAndInterface": "MBED_OS_SERIAL", 
+        "tabs": [
+            {
+                "className": "TabSmallGenericView", 
+                "pathToClassFile": "gui.tabSmallGenericView", 
+                "displayName": "Generische Ansicht"
+            }
+        ], 
+        "messageSkipMode": false, 
+        "comPortBaudRate": 921600, 
+        "comPortDescription": "STMicroelectronics STLink Virtual COM Port (COM11)", 
+        "pauseAfterRecord": false, 
+        "computerIP": "192.168.0.133", 
+        "udpPort": 10000, 
+        "recordBufferLength": 1, 
+        "debugMode": false, 
+        "pathToControllerCodeFolder": "D:\\00 eigene Daten\\000 FH\\S 6\\Segway\\SegwayControllerCode\\testI2cDma\\src", 
+        "suppressParameterConfirmation": false, 
+        "controllerLoopCycleTimeInUs": 5000, 
+        "controllerIP": "192.168.0.15"
+    }
+}
