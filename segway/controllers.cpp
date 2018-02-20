@@ -9,7 +9,6 @@ TargetValues currentTargetPoints;
 float eOldSpeed = 0.0;
 float speedIntegral = 0.0;
 float eOldBeta = 0.0;
-float eOldGammaP = 0.0;
 
 
 void updateControlTargets(SensorDataCollection * sensorData, TargetValues * targets) {
@@ -28,10 +27,12 @@ void updateControlTargets(SensorDataCollection * sensorData, TargetValues * targ
     // gammaP control
     float eGammaP = gammaPSetPoint - sensorData->gammaP;
     float gammaPTarget = kPidGammaP * eGammaP;
-    // eOldGammaP = eGammaP;
 
     // noninteracting control calculation
+    // add output of velocity control and beta controllers
+    float sumOfBetaTarget = speedTarget + betaTarget;
+
     // make two current targets out of a beta target and a gamma target
-    targets->motorZero = 0.5 * betaTarget - gammaPTarget;
-    targets->motorOne = 0.5 * betaTarget + gammaPTarget;
+    targets->motorZero = 0.5 * sumOfBetaTarget - gammaPTarget;
+    targets->motorOne = 0.5 * sumOfBetaTarget + gammaPTarget;
 }
