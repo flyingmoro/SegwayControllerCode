@@ -3,12 +3,16 @@
 
 #include <stdint.h>
 
+
+
 typedef struct position {
     uint16_t encLeft;
     uint16_t encRight;
     float x;
     float y;
+    float forwardSpeed;
     float gamma;
+    float gammaP;
 } Position;
 
 #define METERS_PER_ENCODER_STEP (0.000327*0.125)

@@ -1,7 +1,8 @@
 #include "mpuHandler.h"
 #include "Kalman.h"
 
-MPU6050 mpu(PB_11, PB_10);
+// MPU6050 mpu(PB_11, PB_10);
+MPU6050 mpu(PF_15, PF_14);
 
 #define DELTA_T 0.001
 #define RAD_TO_DEG 57.3

@@ -16,6 +16,7 @@ void secondTorqueWriteComplete(int event);
 
 Serial pc(USBTX, USBRX, 115200);
 Timer loopTimer;
+Timer segwayDebugTimer;
 
 DigitalOut greenLed(LED1);
 DigitalOut blueLed(LED2);
@@ -69,20 +70,45 @@ void loop() {
         mr_pulsi = 0;
     }
 
+
+
+
     // read encoders and calculate world position and derivatives
     updatePosition(&worldPosition);
 
+
+
+
+
     // get latest ultra sonic reading
     mr_sonic = rangeFinder.getRangeInMM();
+
+
+
+    segwayDebugTimer.start();
 
     // read the gyro and acceleration sensor (MPU6050)
     // duration approx 600us
     updateMpuReadings(&mpuData);
 
+    mr_debugTimer = segwayDebugTimer.read_us();
+    segwayDebugTimer.stop();
+    segwayDebugTimer.reset();
+
+
+
+
+
+
+
+
+
+
+
     // collect data for control algorythm and calculate target motor current
-    sensorReadingsForControl.speed = 1.0;
-    sensorReadingsForControl.beta = mpuData.kalYAngle;
-    sensorReadingsForControl.gammaP = 1.0;
+    sensorReadingsForControl.speed = worldPosition.forwardSpeed;
+    sensorReadingsForControl.beta = mpuData.kalYAngle * 0.0174;
+    sensorReadingsForControl.gammaP = worldPosition.gammaP * 0.0174;
     updateControlTargets(&sensorReadingsForControl, &currentTargets);
 
     // apply current to motors

@@ -17,15 +17,19 @@ print("Bus voltage is " + str(my_drive.vbus_voltage) + "V")
 # print("Position setpoint is " + str(my_drive.motor0.pos_setpoint))
 
 
-print("encoder offset " + str(my_drive.motor0.encoder.encoder_offset))
-print("encoder pos " + str(my_drive.motor0.encoder.pll_pos))
-print("error " + str(my_drive.motor0.error))
+print("encoder offset0 " + str(my_drive.motor0.encoder.encoder_offset))
+print("encoder offset1 " + str(my_drive.motor1.encoder.encoder_offset))
+print("encoder pos0 " + str(my_drive.motor0.encoder.pll_pos))
+print("encoder pos1 " + str(my_drive.motor1.encoder.pll_pos))
+print("phase resistance0 " + str(my_drive.motor0.phase_resistance))
+print("phase resistance1 " + str(my_drive.motor1.phase_resistance))
+print("error0 " + str(my_drive.motor0.error))
+print("error1 " + str(my_drive.motor1.error))
 
-print("phase resistance " + str(my_drive.motor0.phase_resistance))
 
 
-my_drive.motor0.vel_gain = 2 / 10000.0
-print("vel_gain", my_drive.motor0.vel_gain)
+# my_drive.motor0.vel_gain = 2 / 10000.0
+# print("vel_gain", my_drive.motor0.vel_gain)
 
 # my_drive.motor0.pos_gain = 10.0
 
@@ -40,8 +44,11 @@ print("vel_gain", my_drive.motor0.vel_gain)
 # my_drive.motor0.pos_setpoint = 0.0
 
 
-my_drive.motor0.set_current_setpoint(2.5)
+my_drive.motor0.set_current_setpoint(1.0)
 print("current setpoint is " + str(my_drive.motor0.current_setpoint))
-time.sleep(2)
+time.sleep(3)
 my_drive.motor0.set_current_setpoint(0.0)
 print("current setpoint is " + str(my_drive.motor0.current_setpoint))
+
+print("error0 " + str(my_drive.motor0.error))
+print("error1 " + str(my_drive.motor1.error))
