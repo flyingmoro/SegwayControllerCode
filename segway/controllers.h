@@ -4,9 +4,12 @@
 #include "mbed.h"
 
 typedef struct sensorDataCollection {
+    float x;
+    float y;
+    float gamma;
     float speed;
-    float beta;
     float gammaP;
+    float beta;
 } SensorDataCollection;
 
 

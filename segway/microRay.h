@@ -5,10 +5,10 @@
 
 // must have parameters
 #define loopCycleTimeUs                            1000
-#define CHANNELS_AVAILABLE_COUNT                     21
-#define CHANNELS_REQUESTED_COUNT                     21
+#define CHANNELS_AVAILABLE_COUNT                     22
+#define CHANNELS_REQUESTED_COUNT                     22
 #define CHANNELS_UNREQUESTED_COUNT                    0
-#define PARAMETER_COUNT                              10
+#define PARAMETER_COUNT                              17
 #define SPECIAL_COMMANDS_COUNT                        3
 #define BAUD_RATE                                115200
 #define INT_TYPE                                      1
@@ -39,6 +39,7 @@
 #define mr_encoderRightWheel                     (messageOutBuffer.channels[18])
 #define mr_controllerOutputMotorZero             (messageOutBuffer.channels[19])
 #define mr_controllerOutputMotorOne              (messageOutBuffer.channels[20])
+#define mr_debugTimer                            (messageOutBuffer.channels[21])
 
 // All unrequested channels
 
@@ -53,6 +54,13 @@
 #define tvBeta                                   (parameters[7]).valueFloat
 #define kPidGammaP                               (parameters[8]).valueFloat
 #define mr_letTheControllerControl               (parameters[9]).valueInt
+#define xSetPoint                                (parameters[10]).valueFloat
+#define ySetPoint                                (parameters[11]).valueFloat
+#define kPidDistance                             (parameters[12]).valueFloat
+#define kPidGamma                                (parameters[13]).valueFloat
+#define deathZoneRadius                          (parameters[14]).valueFloat
+#define limitAdditionalSpeedDueDistance          (parameters[15]).valueFloat
+#define limitAdditionalSpeedDueGamma             (parameters[16]).valueFloat
 
 // all special parameters
 #define loopCycleTimeExceededByUs                (specialCommands[0])

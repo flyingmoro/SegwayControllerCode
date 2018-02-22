@@ -63,7 +63,7 @@
         {
             "displayName": "", 
             "name": "mr_rawDegPX", 
-            "show": false, 
+            "show": true, 
             "color": [
                 235, 
                 13, 
@@ -147,7 +147,7 @@
         {
             "displayName": "", 
             "name": "mr_betaKalman", 
-            "show": true, 
+            "show": false, 
             "color": [
                 83, 
                 33, 
@@ -219,7 +219,7 @@
         {
             "displayName": "", 
             "name": "mr_encoderRightWheel", 
-            "show": false, 
+            "show": true, 
             "color": [
                 122, 
                 172, 
@@ -231,7 +231,7 @@
         {
             "displayName": "", 
             "name": "mr_controllerOutputMotorZero", 
-            "show": true, 
+            "show": false, 
             "color": [
                 196, 
                 149, 
@@ -251,6 +251,18 @@
             ], 
             "isRequested": true, 
             "id": 20
+        }, 
+        {
+            "displayName": "", 
+            "name": "mr_debugTimer", 
+            "show": false, 
+            "color": [
+                70, 
+                197, 
+                119
+            ], 
+            "isRequested": true, 
+            "id": 21
         }
     ], 
     "commands": [
@@ -282,8 +294,8 @@
             "initialValue": 0.0, 
             "displayName": "", 
             "name": "speedSetPoint", 
-            "min": -100000.0, 
-            "max": 100000.0, 
+            "min": -0.3, 
+            "max": 0.3, 
             "valueType": 2, 
             "pendingMode": false, 
             "inputMethod": 1, 
@@ -294,8 +306,8 @@
             "initialValue": 0.0, 
             "displayName": "", 
             "name": "gammaPSetPoint", 
-            "min": -100000.0, 
-            "max": 100000.0, 
+            "min": -6.0, 
+            "max": 6.0, 
             "valueType": 2, 
             "pendingMode": false, 
             "inputMethod": 1, 
@@ -366,12 +378,96 @@
             "initialValue": 0.0, 
             "displayName": "", 
             "name": "mr_letTheControllerControl", 
-            "min": -100000.0, 
-            "max": 100000.0, 
+            "min": 0.0, 
+            "max": 1.0, 
             "valueType": 1, 
             "pendingMode": false, 
-            "inputMethod": 1, 
+            "inputMethod": 2, 
             "id": 9, 
+            "history": []
+        }, 
+        {
+            "initialValue": 0.0, 
+            "displayName": "", 
+            "name": "xSetPoint", 
+            "min": -100000.0, 
+            "max": 100000.0, 
+            "valueType": 2, 
+            "pendingMode": false, 
+            "inputMethod": 1, 
+            "id": 10, 
+            "history": []
+        }, 
+        {
+            "initialValue": 0.0, 
+            "displayName": "", 
+            "name": "ySetPoint", 
+            "min": -100000.0, 
+            "max": 100000.0, 
+            "valueType": 2, 
+            "pendingMode": false, 
+            "inputMethod": 1, 
+            "id": 11, 
+            "history": []
+        }, 
+        {
+            "initialValue": 0.0, 
+            "displayName": "", 
+            "name": "kPidDistance", 
+            "min": -100000.0, 
+            "max": 100000.0, 
+            "valueType": 2, 
+            "pendingMode": false, 
+            "inputMethod": 1, 
+            "id": 12, 
+            "history": []
+        }, 
+        {
+            "initialValue": 0.0, 
+            "displayName": "", 
+            "name": "kPidGamma", 
+            "min": -100000.0, 
+            "max": 100000.0, 
+            "valueType": 2, 
+            "pendingMode": false, 
+            "inputMethod": 1, 
+            "id": 13, 
+            "history": []
+        }, 
+        {
+            "initialValue": 0.0, 
+            "displayName": "", 
+            "name": "deathZoneRadius", 
+            "min": -100000.0, 
+            "max": 100000.0, 
+            "valueType": 2, 
+            "pendingMode": false, 
+            "inputMethod": 1, 
+            "id": 14, 
+            "history": []
+        }, 
+        {
+            "initialValue": 0.0, 
+            "displayName": "", 
+            "name": "limitAdditionalSpeedDueDistance", 
+            "min": -100000.0, 
+            "max": 100000.0, 
+            "valueType": 2, 
+            "pendingMode": false, 
+            "inputMethod": 1, 
+            "id": 15, 
+            "history": []
+        }, 
+        {
+            "initialValue": 0.0, 
+            "displayName": "", 
+            "name": "limitAdditionalSpeedDueGamma", 
+            "min": -100000.0, 
+            "max": 100000.0, 
+            "valueType": 2, 
+            "pendingMode": false, 
+            "inputMethod": 1, 
+            "id": 16, 
             "history": []
         }
     ], 
