@@ -156,6 +156,11 @@ Parameter parameters[] = {
     { 2, { .valueFloat = 1.0f} },
     { 1, { .valueInt = 0} },
     { 2, { .valueFloat = 0.0f} },
+    { 2, { .valueFloat = 0.0f} },
+    { 2, { .valueFloat = 0.0f} },
+    { 2, { .valueFloat = 0.0f} },
+    { 2, { .valueFloat = 0.0f} },
+    { 2, { .valueFloat = 0.0f} },
     { 2, { .valueFloat = 0.0f} }
 };
 

@@ -8,7 +8,7 @@
 #define CHANNELS_AVAILABLE_COUNT                     22
 #define CHANNELS_REQUESTED_COUNT                     22
 #define CHANNELS_UNREQUESTED_COUNT                    0
-#define PARAMETER_COUNT                              12
+#define PARAMETER_COUNT                              17
 #define SPECIAL_COMMANDS_COUNT                        3
 #define BAUD_RATE                                115200
 #define INT_TYPE                                      1
@@ -56,6 +56,11 @@
 #define mr_letTheControllerControl               (parameters[9]).valueInt
 #define xSetPoint                                (parameters[10]).valueFloat
 #define ySetPoint                                (parameters[11]).valueFloat
+#define kPidDistance                             (parameters[12]).valueFloat
+#define kPidGamma                                (parameters[13]).valueFloat
+#define deathZoneRadius                          (parameters[14]).valueFloat
+#define limitAdditionalSpeedDueDistance          (parameters[15]).valueFloat
+#define limitAdditionalSpeedDueGamma             (parameters[16]).valueFloat
 
 // all special parameters
 #define loopCycleTimeExceededByUs                (specialCommands[0])
