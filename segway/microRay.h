@@ -5,8 +5,8 @@
 
 // must have parameters
 #define loopCycleTimeUs                            1000
-#define CHANNELS_AVAILABLE_COUNT                     21
-#define CHANNELS_REQUESTED_COUNT                     21
+#define CHANNELS_AVAILABLE_COUNT                     22
+#define CHANNELS_REQUESTED_COUNT                     22
 #define CHANNELS_UNREQUESTED_COUNT                    0
 #define PARAMETER_COUNT                              10
 #define SPECIAL_COMMANDS_COUNT                        3
@@ -39,6 +39,7 @@
 #define mr_encoderRightWheel                     (messageOutBuffer.channels[18])
 #define mr_controllerOutputMotorZero             (messageOutBuffer.channels[19])
 #define mr_controllerOutputMotorOne              (messageOutBuffer.channels[20])
+#define mr_debugTimer                            (messageOutBuffer.channels[21])
 
 // All unrequested channels
 
