@@ -8,7 +8,7 @@
 #define CHANNELS_AVAILABLE_COUNT                     22
 #define CHANNELS_REQUESTED_COUNT                     22
 #define CHANNELS_UNREQUESTED_COUNT                    0
-#define PARAMETER_COUNT                              10
+#define PARAMETER_COUNT                              12
 #define SPECIAL_COMMANDS_COUNT                        3
 #define BAUD_RATE                                115200
 #define INT_TYPE                                      1
@@ -54,6 +54,8 @@
 #define tvBeta                                   (parameters[7]).valueFloat
 #define kPidGammaP                               (parameters[8]).valueFloat
 #define mr_letTheControllerControl               (parameters[9]).valueInt
+#define xSetPoint                                (parameters[10]).valueFloat
+#define ySetPoint                                (parameters[11]).valueFloat
 
 // all special parameters
 #define loopCycleTimeExceededByUs                (specialCommands[0])

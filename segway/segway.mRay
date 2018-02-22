@@ -207,7 +207,7 @@
         {
             "displayName": "", 
             "name": "mr_encoderLeftWheel", 
-            "show": true, 
+            "show": false, 
             "color": [
                 208, 
                 26, 
@@ -276,28 +276,7 @@
             "pendingMode": false, 
             "inputMethod": 1, 
             "id": 0, 
-            "history": [
-                0.0, 
-                1.0, 
-                0.0, 
-                2.0, 
-                0.0, 
-                1.0, 
-                0.0, 
-                1.0, 
-                0.0, 
-                1.0, 
-                0.0, 
-                -1.0, 
-                0.0, 
-                1.0, 
-                1.0, 
-                0.0, 
-                1.0, 
-                0.0, 
-                1.0, 
-                0.0
-            ]
+            "history": []
         }, 
         {
             "initialValue": 0.0, 
@@ -309,14 +288,7 @@
             "pendingMode": false, 
             "inputMethod": 1, 
             "id": 1, 
-            "history": [
-                0.0, 
-                1.0, 
-                0.0, 
-                -1.0, 
-                0.0, 
-                1.0
-            ]
+            "history": []
         }, 
         {
             "initialValue": 0.0, 
@@ -412,15 +384,31 @@
             "pendingMode": false, 
             "inputMethod": 2, 
             "id": 9, 
-            "history": [
-                100000.0, 
-                1.0, 
-                0.0, 
-                1.0, 
-                0.0, 
-                1.0, 
-                0.0
-            ]
+            "history": []
+        }, 
+        {
+            "initialValue": 0.0, 
+            "displayName": "", 
+            "name": "xSetPoint", 
+            "min": -100000.0, 
+            "max": 100000.0, 
+            "valueType": 2, 
+            "pendingMode": false, 
+            "inputMethod": 1, 
+            "id": 10, 
+            "history": []
+        }, 
+        {
+            "initialValue": 0.0, 
+            "displayName": "", 
+            "name": "ySetPoint", 
+            "min": -100000.0, 
+            "max": 100000.0, 
+            "valueType": 2, 
+            "pendingMode": false, 
+            "inputMethod": 1, 
+            "id": 11, 
+            "history": []
         }
     ], 
     "miscSettings": {

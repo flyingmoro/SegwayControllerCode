@@ -106,9 +106,12 @@ void loop() {
 
 
     // collect data for control algorythm and calculate target motor current
+    sensorReadingsForControl.x = worldPosition.x * 1000;
+    sensorReadingsForControl.y = worldPosition.y * 1000;
     sensorReadingsForControl.speed = worldPosition.forwardSpeed;
-    sensorReadingsForControl.beta = mpuData.kalYAngle * 0.0174;
+    sensorReadingsForControl.gamma = worldPosition.gamma;
     sensorReadingsForControl.gammaP = worldPosition.gammaP * 0.0174;
+    sensorReadingsForControl.beta = mpuData.kalYAngle * 0.0174;
     updateControlTargets(&sensorReadingsForControl, &currentTargets);
 
     // apply current to motors
