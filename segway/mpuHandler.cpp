@@ -7,7 +7,6 @@ MPU6050 mpu(PF_15, PF_14);
 #define DELTA_T 0.001
 #define RAD_TO_DEG 57.3
 
-// Create the Kalman instances
 Kalman kalmanX;
 Kalman kalmanY;
 
@@ -25,12 +24,11 @@ void updateMpuReadings(MpuData *mpuReadings) {
 
     mpuReadings->roll = atan2(mpuReadings->rawAcceleration_y, mpuReadings->rawAcceleration_x) * RAD_TO_DEG;
     mpuReadings->pitch  = atan(-mpuReadings->rawAcceleration_z / sqrt(mpuReadings->rawAcceleration_z * mpuReadings->rawAcceleration_z + mpuReadings->rawAcceleration_x * mpuReadings->rawAcceleration_x)) * RAD_TO_DEG;
-  
 
-    float gyroXrate = mpuReadings->rawAngularRate_gamma / 131.0; // Convert to deg/s
-    float gyroYrate = mpuReadings->rawAngularRate_beta / 131.0; // Convert to deg/s
 
-    //Code Severin neu
+    float gyroXrate = mpuReadings->rawAngularRate_gamma / 131.0;
+    float gyroYrate = mpuReadings->rawAngularRate_beta / 131.0;
+
     // This fixes the transition problem when the accelerometer angle jumps between -180 and 180 degrees
     if (mpuReadings->roll< -90 && mpuReadings->kalXAngle > 90)  || (mpuReadings->roll > 90 && mpuReadings-> kalXAngle < -90 )
     {
@@ -41,30 +39,18 @@ void updateMpuReadings(MpuData *mpuReadings) {
     }
     else
     {
-        mpuReadings->kalXAngle = kalmanX.getAngle(mpuReadings->roll, gyroXrate, DELTA_T); // Calculate the angle using a Kalman filter
+        // Calculate the angle using a Kalman filter
+        mpuReadings->kalXAngle = kalmanX.getAngle(mpuReadings->roll, gyroXrate, DELTA_T);
     }
     if (abs(mpuReadings->kalXAngle) > 90)
     {
-        gyroYrate = -gyroYrate; // Invert rate, so it fits the restriced accelerometer reading
+        // Invert rate, so it fits the restriced accelerometer reading
+        gyroYrate = -gyroYrate;
     }
     mpuReadings->kalYAngle = kalmanY.getAngle(mpuReadings->pitch, gyroYrate, DELTA_T);
-/* Code Stephan
-    if ((mpuReadings->pitch < -90 && mpuReadings->kalYAngle > 90) || (mpuReadings->pitch > 90 && mpuReadings->kalYAngle < -90)) {
-        kalmanY.setAngle(mpuReadings->pitch);
-        mpuReadings->compYAngle = mpuReadings->pitch;
-        mpuReadings->kalYAngle = mpuReadings->pitch;
-        mpuReadings->gyroYAngle = mpuReadings->pitch;
-    } else {
-        mpuReadings->kalYAngle = kalmanY.getAngle(mpuReadings->pitch, gyroYrate, DELTA_T); // Calculate the angle using a Kalman filter
-    }
 
-    if (abs(mpuReadings->kalYAngle) > 90) {
-        gyroXrate = -gyroXrate; // Invert rate, so it fits the restriced accelerometer reading
-    }
-
-    mpuReadings->kalXAngle = kalmanX.getAngle(mpuReadings->roll, gyroXrate, DELTA_T); // Calculate the angle using a Kalman filter
-*/
-    mpuReadings->gyroXAngle += gyroXrate * DELTA_T; // Calculate gyro angle without any filter
+    // Calculate gyro angle without any filter
+    mpuReadings->gyroXAngle += gyroXrate * DELTA_T;
     mpuReadings->gyroYAngle += gyroYrate * DELTA_T;
     //gyroXangle += kalmanX.getRate() * DELTA_T; // Calculate gyro angle using the unbiased rate
     //gyroYangle += kalmanY.getRate() * DELTA_T;
