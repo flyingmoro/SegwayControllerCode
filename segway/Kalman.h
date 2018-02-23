@@ -18,6 +18,8 @@
 #ifndef _Kalman_h
 #define _Kalman_h
 
+#include "microRay.h"
+
 class Kalman {
 public:
     Kalman() {

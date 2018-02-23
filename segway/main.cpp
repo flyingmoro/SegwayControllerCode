@@ -111,12 +111,15 @@ void loop() {
     sensorReadingsForControl.speed = worldPosition.forwardSpeed;
     sensorReadingsForControl.gamma = worldPosition.gamma;
     sensorReadingsForControl.gammaP = worldPosition.gammaP * 0.0174;
-    sensorReadingsForControl.beta = mpuData.kalYAngle * 0.0174;
+    // sensorReadingsForControl.beta = mpuData.kalYAngle * 0.0174;
+    sensorReadingsForControl.beta = mpuData.compYAngle * 0.0174;
     updateControlTargets(&sensorReadingsForControl, &currentTargets);
 
     // apply current to motors
     if (mr_letTheControllerControl == 1) {
-        setCurrentBothMotors(currentTargets.motorZero, currentTargets.motorOne);
+        setCurrentBothMotors(currentTargets.motorZero, -1 * currentTargets.motorOne);
+        // setCurrentBothMotors(currentTargets.motorZero, currentTargets.motorOne);
+        // setCurrentBothMotors(currentTargets.motorZero, 0.0);
     } else {
         setCurrentBothMotors(mr_currentMotorZero, mr_currentMotorOne);
     }
@@ -144,6 +147,7 @@ void loop() {
     mr_betaRawIntegral = mpuData.gyroYAngle;
     mr_betaComplementary = mpuData.compYAngle;
     mr_betaKalman = mpuData.kalYAngle;
+    mr_speed = worldPosition.forwardSpeed;
     microRayCommunicate();
 
 }

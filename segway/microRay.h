@@ -5,10 +5,10 @@
 
 // must have parameters
 #define loopCycleTimeUs                            1000
-#define CHANNELS_AVAILABLE_COUNT                     22
-#define CHANNELS_REQUESTED_COUNT                     22
+#define CHANNELS_AVAILABLE_COUNT                     23
+#define CHANNELS_REQUESTED_COUNT                     23
 #define CHANNELS_UNREQUESTED_COUNT                    0
-#define PARAMETER_COUNT                              17
+#define PARAMETER_COUNT                              20
 #define SPECIAL_COMMANDS_COUNT                        3
 #define BAUD_RATE                                115200
 #define INT_TYPE                                      1
@@ -40,6 +40,7 @@
 #define mr_controllerOutputMotorZero             (messageOutBuffer.channels[19])
 #define mr_controllerOutputMotorOne              (messageOutBuffer.channels[20])
 #define mr_debugTimer                            (messageOutBuffer.channels[21])
+#define mr_speed                                 (messageOutBuffer.channels[22])
 
 // All unrequested channels
 
@@ -60,7 +61,10 @@
 #define kPidGamma                                (parameters[13]).valueFloat
 #define deathZoneRadius                          (parameters[14]).valueFloat
 #define limitAdditionalSpeedDueDistance          (parameters[15]).valueFloat
-#define limitAdditionalSpeedDueGamma             (parameters[16]).valueFloat
+#define limitAdditionalGammaPDueGamma            (parameters[16]).valueFloat
+#define controlMode                              (parameters[17]).valueInt
+#define complementaryRatioRawData                (parameters[18]).valueFloat
+#define kalmannQ                                 (parameters[19]).valueFloat
 
 // all special parameters
 #define loopCycleTimeExceededByUs                (specialCommands[0])

@@ -1,5 +1,6 @@
 #include "mpuHandler.h"
 #include "Kalman.h"
+#include "microRay.h"
 
 // MPU6050 mpu(PB_11, PB_10);
 MPU6050 mpu(PF_15, PF_14);
@@ -15,6 +16,10 @@ void updateMpuReadings(MpuData *mpuReadings) {
     mpu.getAcceleroRaw(accRaw);
     mpu.getGyroRaw(gyroRaw);
 
+    if ((sqrt(accRaw[0]*accRaw[0]) < 0.1) || (sqrt(accRaw[1]*accRaw[1]) < 0.1) || (sqrt(accRaw[2]*accRaw[2]) < 0.1)) {
+        return;
+    }
+
     mpuReadings->rawAcceleration_x = accRaw[1];
     mpuReadings->rawAcceleration_y = accRaw[2];
     mpuReadings->rawAcceleration_z = accRaw[0];
@@ -22,15 +27,18 @@ void updateMpuReadings(MpuData *mpuReadings) {
     mpuReadings->rawAngularRate_beta = gyroRaw[2];
     mpuReadings->rawAngularRate_gamma = gyroRaw[0];
 
-    mpuReadings->roll = atan2(mpuReadings->rawAcceleration_y, mpuReadings->rawAcceleration_x) * RAD_TO_DEG;
-    mpuReadings->pitch  = atan(-mpuReadings->rawAcceleration_z / sqrt(mpuReadings->rawAcceleration_z * mpuReadings->rawAcceleration_z + mpuReadings->rawAcceleration_x * mpuReadings->rawAcceleration_x)) * RAD_TO_DEG;
+    // mpuReadings->roll = atan2(mpuReadings->rawAcceleration_y, mpuReadings->rawAcceleration_x) * RAD_TO_DEG;
+    // mpuReadings->pitch  = atan(-mpuReadings->rawAcceleration_z / sqrt(mpuReadings->rawAcceleration_z * mpuReadings->rawAcceleration_z + mpuReadings->rawAcceleration_x * mpuReadings->rawAcceleration_x)) * RAD_TO_DEG;
 
+    mpuReadings->roll  = atan(mpuReadings->rawAcceleration_y / sqrt(mpuReadings->rawAcceleration_x * mpuReadings->rawAcceleration_x + mpuReadings->rawAcceleration_z * mpuReadings->rawAcceleration_z)) * RAD_TO_DEG;
+    mpuReadings->pitch = atan2(-mpuReadings->rawAcceleration_x, mpuReadings->rawAcceleration_z) * RAD_TO_DEG;
 
-    float gyroXrate = mpuReadings->rawAngularRate_gamma / 131.0;
+    float gyroXrate = mpuReadings->rawAngularRate_alpha / 131.0; // Convert to deg/s
+    // float gyroXrate = mpuReadings->rawAngularRate_gamma / 131.0; // Convert to deg/s
     float gyroYrate = mpuReadings->rawAngularRate_beta / 131.0;
 
     // This fixes the transition problem when the accelerometer angle jumps between -180 and 180 degrees
-    if (mpuReadings->roll< -90 && mpuReadings->kalXAngle > 90)  || (mpuReadings->roll > 90 && mpuReadings-> kalXAngle < -90 )
+    if ((mpuReadings->roll< -90 && mpuReadings->kalXAngle > 90)  || (mpuReadings->roll > 90 && mpuReadings-> kalXAngle < -90 ))
     {
         kalmanX.setAngle(mpuReadings->roll);
         mpuReadings->compXAngle = mpuReadings->roll;
@@ -57,7 +65,7 @@ void updateMpuReadings(MpuData *mpuReadings) {
 
     // Calculate the angle using a Complimentary filter
     mpuReadings->compXAngle = 0.93 * (mpuReadings->compXAngle + gyroXrate * DELTA_T) + 0.07 * mpuReadings->roll;
-    mpuReadings->compYAngle = 0.93 * (mpuReadings->compYAngle + gyroYrate * DELTA_T) + 0.07 * mpuReadings->pitch;
+    mpuReadings->compYAngle = (1.0-complementaryRatioRawData) * (mpuReadings->compYAngle + gyroYrate * DELTA_T) + complementaryRatioRawData * mpuReadings->pitch;
 
     // Reset the gyro angle when it has drifted too much
     if (mpuReadings->gyroXAngle < -180 || mpuReadings->gyroXAngle > 180) {

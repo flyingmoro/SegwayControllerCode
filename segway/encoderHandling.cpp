@@ -2,13 +2,12 @@
 
 #include "mbed.h"
 
-// #define ENCODER_COUNT 8192
-#define ENCODER_COUNT 65535
+
 
 TIM_HandleTypeDef encoderTimerLeft;
 TIM_HandleTypeDef encoderTimerRight;
 
-#define DELTA_T 0.001
+
 
 int32_t encoderChange(int32_t oldEncValue, int32_t newEncValue);
 void initEncoderCounter();
@@ -34,7 +33,7 @@ void updatePosition(Position *worldPosition) {
     deltaForward = (xRLeft + xRRight) / 2.0;
 
     worldPosition->x += (cos(worldPosition->gamma) * deltaForward);
-    worldPosition->y += (sin(worldPosition->gamma) * deltaForward);
+    worldPosition->y -= (sin(worldPosition->gamma) * deltaForward);
     worldPosition->forwardSpeed = deltaForward / DELTA_T;
     worldPosition->gamma += deltaGamma;
     worldPosition->gammaP = deltaGamma / DELTA_T;

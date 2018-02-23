@@ -63,7 +63,7 @@
         {
             "displayName": "", 
             "name": "mr_rawDegPX", 
-            "show": true, 
+            "show": false, 
             "color": [
                 235, 
                 13, 
@@ -135,7 +135,7 @@
         {
             "displayName": "", 
             "name": "mr_betaComplementary", 
-            "show": false, 
+            "show": true, 
             "color": [
                 136, 
                 228, 
@@ -219,7 +219,7 @@
         {
             "displayName": "", 
             "name": "mr_encoderRightWheel", 
-            "show": true, 
+            "show": false, 
             "color": [
                 122, 
                 172, 
@@ -243,7 +243,7 @@
         {
             "displayName": "", 
             "name": "mr_controllerOutputMotorOne", 
-            "show": false, 
+            "show": true, 
             "color": [
                 85, 
                 131, 
@@ -263,6 +263,18 @@
             ], 
             "isRequested": true, 
             "id": 21
+        }, 
+        {
+            "displayName": "", 
+            "name": "mr_speed", 
+            "show": true, 
+            "color": [
+                198, 
+                129, 
+                30
+            ], 
+            "isRequested": true, 
+            "id": 22
         }
     ], 
     "commands": [
@@ -315,7 +327,7 @@
             "history": []
         }, 
         {
-            "initialValue": -0.5, 
+            "initialValue": 6.0, 
             "displayName": "", 
             "name": "kPidSpeed", 
             "min": -100000.0, 
@@ -327,7 +339,7 @@
             "history": []
         }, 
         {
-            "initialValue": 1.0, 
+            "initialValue": 0.001, 
             "displayName": "", 
             "name": "tgSpeed", 
             "min": -100000.0, 
@@ -339,7 +351,7 @@
             "history": []
         }, 
         {
-            "initialValue": -0.11, 
+            "initialValue": 180.0, 
             "displayName": "", 
             "name": "kPidBeta", 
             "min": -100000.0, 
@@ -351,7 +363,7 @@
             "history": []
         }, 
         {
-            "initialValue": 14.2, 
+            "initialValue": 0.00999999977648, 
             "displayName": "", 
             "name": "tvBeta", 
             "min": -100000.0, 
@@ -461,13 +473,49 @@
         {
             "initialValue": 0.0, 
             "displayName": "", 
-            "name": "limitAdditionalSpeedDueGamma", 
+            "name": "limitAdditionalGammaPDueGamma", 
             "min": -100000.0, 
             "max": 100000.0, 
             "valueType": 2, 
             "pendingMode": false, 
             "inputMethod": 1, 
             "id": 16, 
+            "history": []
+        }, 
+        {
+            "initialValue": 3.0, 
+            "displayName": "", 
+            "name": "controlMode", 
+            "min": -100000.0, 
+            "max": 100000.0, 
+            "valueType": 1, 
+            "pendingMode": false, 
+            "inputMethod": 1, 
+            "id": 17, 
+            "history": []
+        }, 
+        {
+            "initialValue": 0.0010000000475, 
+            "displayName": "", 
+            "name": "complementaryRatioRawData", 
+            "min": -100000.0, 
+            "max": 100000.0, 
+            "valueType": 2, 
+            "pendingMode": false, 
+            "inputMethod": 1, 
+            "id": 18, 
+            "history": []
+        }, 
+        {
+            "initialValue": 0.0, 
+            "displayName": "", 
+            "name": "kalmannQ", 
+            "min": -100000.0, 
+            "max": 100000.0, 
+            "valueType": 2, 
+            "pendingMode": false, 
+            "inputMethod": 1, 
+            "id": 19, 
             "history": []
         }
     ], 

@@ -15,6 +15,15 @@ float eOldBeta = 0.0;
 #define VELOCITY_MODE 3
 #define TILT_MODE 4
 
+int setPOSITION_MODE_FORWARD = 0;
+int setPOSITION_MODE_FORWARD_BACKWARD = 0;
+int setVELOCITY_MODE = 0;
+int setROTATING_VELOCITY_MODE = 0;
+float additionalSpeedDueDistance = 0.0;
+float additionalGammaPDueGamma = 0.0;
+float gammaPTarget = 0.0;
+float speedTarget = 0.0;
+
 void updateControlTargets(SensorDataCollection * sensorData, TargetValues * targets) {
 
     switch(controlMode)
@@ -33,7 +42,7 @@ void updateControlTargets(SensorDataCollection * sensorData, TargetValues * targ
             break;
         case VELOCITY_MODE:
             setPOSITION_MODE_FORWARD = 0;
-            setPOSITION_MODE_FORWARD_BACKWARD = ;
+            setPOSITION_MODE_FORWARD_BACKWARD = 0;
             setVELOCITY_MODE = 1;
             setROTATING_VELOCITY_MODE = 1;
             break;
@@ -46,8 +55,8 @@ void updateControlTargets(SensorDataCollection * sensorData, TargetValues * targ
     }
 
     //position control
-    float dx1 = cos(sensorData->gamma)*(xSetPoint -sensorData->x) + sin(sensorData->gamma)*(xSetPoint - sensorData->y);
-    float dy1 = -sin(sensorData->gamma)*(xSetPoint -sensorData->x) + cos(sensorData->gamma)*(xSetPoint - sensorData->y);
+    float dx1 = cos(sensorData->gamma)*(xSetPoint -sensorData->x) + sin(sensorData->gamma)*(ySetPoint - sensorData->y);
+    float dy1 = -sin(sensorData->gamma)*(xSetPoint -sensorData->x) + cos(sensorData->gamma)*(ySetPoint - sensorData->y);
     float dgamma1 = atan2(dy1, dx1);
     float distance = dx1*dx1+dy1*dy1;
 
@@ -83,7 +92,7 @@ void updateControlTargets(SensorDataCollection * sensorData, TargetValues * targ
     }
     else if(setPOSITION_MODE_FORWARD_BACKWARD) // moving forward and backward
     {
-        if((dgamm1> -M_PI/2) && (dgamma1 < M_PI/2)) //forward
+        if((dgamma1> -M_PI/2) && (dgamma1 < M_PI/2)) //forward
         {
             if( distance > deathZoneRadius)
             {
@@ -154,12 +163,12 @@ void updateControlTargets(SensorDataCollection * sensorData, TargetValues * targ
     if(setVELOCITY_MODE)
     {
         float eSpeed = speedSetPoint + additionalSpeedDueDistance - sensorData->speed;
-        float speedTarget = kPidSpeed * (eSpeed + tgSpeed * speedIntegral);
+        speedTarget = kPidSpeed * (eSpeed + tgSpeed * speedIntegral);
         eOldSpeed = eSpeed;
         speedIntegral += eSpeed;
     }
-    else{
-        speedTarget = 0;
+    else {
+        float speedTarget = 0;
     }
 
     // tilt control
@@ -170,8 +179,8 @@ void updateControlTargets(SensorDataCollection * sensorData, TargetValues * targ
     // rotating velocity control
     if(setROTATING_VELOCITY_MODE)
     {
-        float eGammaP = gammaPSetPoint + addionalGammaPDueGamma - sensorData->gammaP;
-        float gammaPTarget = kPidGammaP * eGammaP;
+        float eGammaP = gammaPSetPoint + additionalGammaPDueGamma - sensorData->gammaP;
+        gammaPTarget = kPidGammaP * eGammaP;
     }
     else{
         gammaPTarget = 0;
@@ -184,4 +193,9 @@ void updateControlTargets(SensorDataCollection * sensorData, TargetValues * targ
     // make two current targets out of a beta target and a gamma target
     targets->motorZero = 0.5 * sumOfBetaTarget - gammaPTarget;
     targets->motorOne = 0.5 * sumOfBetaTarget + gammaPTarget;
+
+    if ((sensorData->beta > 1.3) || (sensorData->beta < -1.3)) {
+        targets->motorZero = 0.0;
+        targets->motorOne = 0.0;
+    }
 }

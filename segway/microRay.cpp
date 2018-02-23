@@ -149,10 +149,10 @@ Parameter parameters[] = {
     { 2, { .valueFloat = 0.0f} },
     { 2, { .valueFloat = 0.0f} },
     { 2, { .valueFloat = 0.0f} },
-    { 2, { .valueFloat = -0.5f} },
+    { 2, { .valueFloat = 6.0f} },
     { 2, { .valueFloat = 1.0f} },
-    { 2, { .valueFloat = -0.11f} },
-    { 2, { .valueFloat = 14.2f} },
+    { 2, { .valueFloat = 180.0f} },
+    { 2, { .valueFloat = 0.01f} },
     { 2, { .valueFloat = 1.0f} },
     { 1, { .valueInt = 0} },
     { 2, { .valueFloat = 0.0f} },
@@ -161,6 +161,9 @@ Parameter parameters[] = {
     { 2, { .valueFloat = 0.0f} },
     { 2, { .valueFloat = 0.0f} },
     { 2, { .valueFloat = 0.0f} },
+    { 2, { .valueFloat = 0.0f} },
+    { 1, { .valueInt = 4} },
+    { 2, { .valueFloat = 0.0010000000475f} },
     { 2, { .valueFloat = 0.0f} }
 };
 
