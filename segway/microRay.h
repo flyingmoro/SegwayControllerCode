@@ -5,10 +5,10 @@
 
 // must have parameters
 #define loopCycleTimeUs                            1000
-#define CHANNELS_AVAILABLE_COUNT                     23
-#define CHANNELS_REQUESTED_COUNT                     23
+#define CHANNELS_AVAILABLE_COUNT                     25
+#define CHANNELS_REQUESTED_COUNT                     25
 #define CHANNELS_UNREQUESTED_COUNT                    0
-#define PARAMETER_COUNT                              20
+#define PARAMETER_COUNT                              21
 #define SPECIAL_COMMANDS_COUNT                        3
 #define BAUD_RATE                                115200
 #define INT_TYPE                                      1
@@ -41,6 +41,8 @@
 #define mr_controllerOutputMotorOne              (messageOutBuffer.channels[20])
 #define mr_debugTimer                            (messageOutBuffer.channels[21])
 #define mr_speed                                 (messageOutBuffer.channels[22])
+#define mr_controllerSpeedTarget                 (messageOutBuffer.channels[23])
+#define mr_controllerBetaTarget                  (messageOutBuffer.channels[24])
 
 // All unrequested channels
 
@@ -54,7 +56,7 @@
 #define kPidBeta                                 (parameters[6]).valueFloat
 #define tvBeta                                   (parameters[7]).valueFloat
 #define kPidGammaP                               (parameters[8]).valueFloat
-#define mr_letTheControllerControl               (parameters[9]).valueInt
+#define mr_controllerMasterSwitch                (parameters[9]).valueInt
 #define xSetPoint                                (parameters[10]).valueFloat
 #define ySetPoint                                (parameters[11]).valueFloat
 #define kPidDistance                             (parameters[12]).valueFloat
@@ -62,9 +64,10 @@
 #define deathZoneRadius                          (parameters[14]).valueFloat
 #define limitAdditionalSpeedDueDistance          (parameters[15]).valueFloat
 #define limitAdditionalGammaPDueGamma            (parameters[16]).valueFloat
-#define controlMode                              (parameters[17]).valueInt
-#define complementaryRatioRawData                (parameters[18]).valueFloat
-#define kalmannQ                                 (parameters[19]).valueFloat
+#define complementaryRatioRawData                (parameters[17]).valueFloat
+#define kalmannQ                                 (parameters[18]).valueFloat
+#define mr_controlModeTurning                    (parameters[19]).valueInt
+#define mr_controlModeStraight                   (parameters[20]).valueInt
 
 // all special parameters
 #define loopCycleTimeExceededByUs                (specialCommands[0])

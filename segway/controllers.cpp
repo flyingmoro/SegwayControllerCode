@@ -10,15 +10,18 @@ float eOldSpeed = 0.0;
 float speedIntegral = 0.0;
 float eOldBeta = 0.0;
 
-#define POSITION_MODE_FORWARD 1
-#define POSITION_MODE_FORWARD_BACKWARD 2
-#define VELOCITY_MODE 3
-#define TILT_MODE 4
+#define OFF_MODE 0
+#define TILT_MODE 1
+#define VELOCITY_MODE 2
+#define POSITION_MODE_FORWARD 3
+#define POSITION_MODE_FORWARD_AND_BACKWARD 4
 
-int setPOSITION_MODE_FORWARD = 0;
-int setPOSITION_MODE_FORWARD_BACKWARD = 0;
-int setVELOCITY_MODE = 0;
-int setROTATING_VELOCITY_MODE = 0;
+#define TURNING_MODE 1
+
+
+#define VELOCITY_CONTROL_INTEGRATOR_LIMIT 100.0
+
+float betaTarget = 0.0f;
 float additionalSpeedDueDistance = 0.0;
 float additionalGammaPDueGamma = 0.0;
 float gammaPTarget = 0.0;
@@ -26,33 +29,23 @@ float speedTarget = 0.0;
 
 void updateControlTargets(SensorDataCollection * sensorData, TargetValues * targets) {
 
-    switch(controlMode)
-    {
-        case POSITION_MODE_FORWARD:
-            setPOSITION_MODE_FORWARD = 1;
-            setPOSITION_MODE_FORWARD_BACKWARD = 0;
-            setVELOCITY_MODE = 1;
-            setROTATING_VELOCITY_MODE = 1;
-            break;
-        case POSITION_MODE_FORWARD_BACKWARD:
-            setPOSITION_MODE_FORWARD = 0;
-            setPOSITION_MODE_FORWARD_BACKWARD = 1;
-            setVELOCITY_MODE = 1;
-            setROTATING_VELOCITY_MODE = 1;
-            break;
-        case VELOCITY_MODE:
-            setPOSITION_MODE_FORWARD = 0;
-            setPOSITION_MODE_FORWARD_BACKWARD = 0;
-            setVELOCITY_MODE = 1;
-            setROTATING_VELOCITY_MODE = 1;
-            break;
-        case TILT_MODE:
-            setPOSITION_MODE_FORWARD = 0;
-            setPOSITION_MODE_FORWARD_BACKWARD = 0;
-            setVELOCITY_MODE = 0;
-            setROTATING_VELOCITY_MODE = 0;
-            break;
+    // clear all controller outputs
+    betaTarget = 0.0f;
+    speedTarget = 0.0f;
+    additionalSpeedDueDistance = 0.0f;
+    additionalGammaPDueGamma = 0.0f;
+    gammaPTarget = 0.0f;
+
+
+    // tilt control
+    if(mr_controlModeStraight > 0) {
+        float eBeta = 0.0 - sensorData->beta;
+        betaTarget = kPidBeta * (eBeta + (eBeta - eOldBeta) * tvBeta / DELTA_T);
+        eOldBeta = eBeta;
     }
+
+
+
 
     //position control
     float dx1 = cos(sensorData->gamma)*(xSetPoint -sensorData->x) + sin(sensorData->gamma)*(ySetPoint - sensorData->y);
@@ -60,131 +53,81 @@ void updateControlTargets(SensorDataCollection * sensorData, TargetValues * targ
     float dgamma1 = atan2(dy1, dx1);
     float distance = dx1*dx1+dy1*dy1;
 
-    if(setPOSITION_MODE_FORWARD) // moving forward only
-    {
-        if( distance > deathZoneRadius)
-        {
-            if(abs(dgamma1)< 2.96) // ~170°
-            {
+    // moving forward only
+    if(mr_controlModeStraight >= POSITION_MODE_FORWARD) {
+        if( distance > deathZoneRadius) {
+            if(abs(dgamma1)< 2.96) {
+                // ~170°
                 additionalSpeedDueDistance = distance*kPidDistance;
-                if(additionalSpeedDueDistance > limitAdditionalSpeedDueDistance)
-                {
-                    additionalSpeedDueDistance = 0.5;
-                }
-            }
-            else{
-                additionalSpeedDueDistance = 0;
             }
             additionalGammaPDueGamma = dgamma1*kPidGamma;
-            if(additionalGammaPDueGamma > limitAdditionalGammaPDueGamma)
-            {
-                additionalGammaPDueGamma = limitAdditionalGammaPDueGamma;
-            }
-            if(additionalGammaPDueGamma < (-limitAdditionalGammaPDueGamma))
-            {
-                additionalGammaPDueGamma = -limitAdditionalGammaPDueGamma;
-            }
-        }
-        else{
-            additionalSpeedDueDistance = 0;
-            additionalGammaPDueGamma = 0;
         }
     }
-    else if(setPOSITION_MODE_FORWARD_BACKWARD) // moving forward and backward
-    {
-        if((dgamma1> -M_PI/2) && (dgamma1 < M_PI/2)) //forward
-        {
-            if( distance > deathZoneRadius)
-            {
-                if(abs(dgamma1)< 1.48) // ~85°
-                {
+
+    // moving forward and backward
+    if (mr_controlModeStraight >= POSITION_MODE_FORWARD_AND_BACKWARD) {
+
+        //forward (overwrites values from POSITION_MODE_FORWARD)
+        if ((dgamma1> -M_PI/2) && (dgamma1 < M_PI/2)) {
+            if (distance > deathZoneRadius) {
+                if (abs(dgamma1)< 1.48) {
+                    // ~85°
                     additionalSpeedDueDistance = distance*kPidDistance;
-                    if(additionalSpeedDueDistance > limitAdditionalSpeedDueDistance)
-                    {
-                        additionalSpeedDueDistance = 0.5;
-                    }
                 }
-                else{
-                    additionalSpeedDueDistance = 0;
-                }
-                additionalGammaPDueGamma = dgamma1*kPidGamma;
-                if(additionalGammaPDueGamma > limitAdditionalGammaPDueGamma)
-                {
-                    additionalGammaPDueGamma = limitAdditionalGammaPDueGamma;
-                }
-                if(additionalGammaPDueGamma < (-limitAdditionalGammaPDueGamma))
-                {
-                    additionalGammaPDueGamma = -limitAdditionalGammaPDueGamma;
-                }
-            }
-            else{
-                additionalSpeedDueDistance = 0;
-                additionalGammaPDueGamma = 0;
+                additionalGammaPDueGamma = dgamma1 * kPidGamma;
             }
         }
-        else{                                        //backward
+
+        //backward (overwrites values from POSITION_MODE_FORWARD)
+        else {
             float dgamma1 = atan2(-dy1, -dx1);
-            if( distance > deathZoneRadius)
-            {
-                if(abs(dgamma1)< 1.48) // ~85°
-                {
+            if (distance > deathZoneRadius) {
+                // ~85°
+                if(abs(dgamma1)< 1.48) {
                     additionalSpeedDueDistance = -distance*kPidDistance;
-                    if(additionalSpeedDueDistance > limitAdditionalSpeedDueDistance)
-                    {
-                        additionalSpeedDueDistance = -0.5;
-                    }
-                }
-                else{
-                    additionalSpeedDueDistance = 0;
                 }
                 additionalGammaPDueGamma = dgamma1*kPidGamma;
-                if(additionalGammaPDueGamma > limitAdditionalGammaPDueGamma)
-                {
-                    additionalGammaPDueGamma = limitAdditionalGammaPDueGamma;
-                }
-                if(additionalGammaPDueGamma < (-limitAdditionalGammaPDueGamma))
-                {
-                    additionalGammaPDueGamma = -limitAdditionalGammaPDueGamma;
-                }
-            }
-            else{
-                additionalSpeedDueDistance = 0;
-                additionalGammaPDueGamma = 0;
             }
         }
     }
-    else{
-        additionalSpeedDueDistance = 0;
-        additionalGammaPDueGamma = 0;
+
+    // limit turn rate addition from position control
+    if (additionalGammaPDueGamma > limitAdditionalGammaPDueGamma) {
+        additionalGammaPDueGamma = limitAdditionalGammaPDueGamma;
+    }
+    if (additionalGammaPDueGamma < (-limitAdditionalGammaPDueGamma)) {
+        additionalGammaPDueGamma = -limitAdditionalGammaPDueGamma;
+    }
+
+    // limit speed addition from position control
+    if(abs(dgamma1)< 1.48) {
+        // ~85°
+        additionalSpeedDueDistance = -distance*kPidDistance;
+        if(additionalSpeedDueDistance > limitAdditionalSpeedDueDistance) {
+            additionalSpeedDueDistance = -0.5;
+        }
     }
 
 
     // velocity control
-    if(setVELOCITY_MODE)
-    {
+    if(mr_controlModeStraight >= VELOCITY_MODE) {
         float eSpeed = speedSetPoint + additionalSpeedDueDistance - sensorData->speed;
-        speedTarget = kPidSpeed * (eSpeed + tgSpeed * speedIntegral);
+        if (abs(speedIntegral + eSpeed) < VELOCITY_CONTROL_INTEGRATOR_LIMIT) {
+            speedIntegral += eSpeed * DELTA_T;
+        }
+        // speedTarget = kPidSpeed * (eSpeed + tgSpeed * speedIntegral);
+        speedTarget = kPidSpeed * eSpeed + eSpeed * tgSpeed * speedIntegral;
         eOldSpeed = eSpeed;
-        speedIntegral += eSpeed;
-    }
-    else {
-        float speedTarget = 0;
     }
 
-    // tilt control
-    float eBeta = speedTarget - sensorData->beta;
-    float betaTarget = kPidBeta * (eBeta + (eBeta - eOldBeta) * tvBeta / DELTA_T);
-    eOldBeta = eBeta;
 
-    // rotating velocity control
-    if(setROTATING_VELOCITY_MODE)
-    {
+    // turn rate control
+    if(mr_controlModeTurning >= TURNING_MODE) {
         float eGammaP = gammaPSetPoint + additionalGammaPDueGamma - sensorData->gammaP;
         gammaPTarget = kPidGammaP * eGammaP;
     }
-    else{
-        gammaPTarget = 0;
-    }
+
+
 
     // noninteracting control calculation
     // add output of velocity control and tilt controllers
@@ -194,8 +137,7 @@ void updateControlTargets(SensorDataCollection * sensorData, TargetValues * targ
     targets->motorZero = 0.5 * sumOfBetaTarget - gammaPTarget;
     targets->motorOne = 0.5 * sumOfBetaTarget + gammaPTarget;
 
-    if ((sensorData->beta > 1.3) || (sensorData->beta < -1.3)) {
-        targets->motorZero = 0.0;
-        targets->motorOne = 0.0;
-    }
+    // for debugging
+    mr_controllerBetaTarget = betaTarget;
+    mr_controllerSpeedTarget = speedTarget;
 }

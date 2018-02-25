@@ -135,7 +135,7 @@
         {
             "displayName": "", 
             "name": "mr_betaComplementary", 
-            "show": true, 
+            "show": false, 
             "color": [
                 136, 
                 228, 
@@ -207,7 +207,7 @@
         {
             "displayName": "", 
             "name": "mr_encoderLeftWheel", 
-            "show": false, 
+            "show": true, 
             "color": [
                 208, 
                 26, 
@@ -219,7 +219,7 @@
         {
             "displayName": "", 
             "name": "mr_encoderRightWheel", 
-            "show": false, 
+            "show": true, 
             "color": [
                 122, 
                 172, 
@@ -243,7 +243,7 @@
         {
             "displayName": "", 
             "name": "mr_controllerOutputMotorOne", 
-            "show": true, 
+            "show": false, 
             "color": [
                 85, 
                 131, 
@@ -267,7 +267,7 @@
         {
             "displayName": "", 
             "name": "mr_speed", 
-            "show": true, 
+            "show": false, 
             "color": [
                 198, 
                 129, 
@@ -275,6 +275,30 @@
             ], 
             "isRequested": true, 
             "id": 22
+        }, 
+        {
+            "displayName": "", 
+            "name": "mr_controllerSpeedTarget", 
+            "show": false, 
+            "color": [
+                56, 
+                178, 
+                243
+            ], 
+            "isRequested": true, 
+            "id": 23
+        }, 
+        {
+            "displayName": "", 
+            "name": "mr_controllerBetaTarget", 
+            "show": false, 
+            "color": [
+                54, 
+                254, 
+                70
+            ], 
+            "isRequested": true, 
+            "id": 24
         }
     ], 
     "commands": [
@@ -312,7 +336,21 @@
             "pendingMode": false, 
             "inputMethod": 1, 
             "id": 2, 
-            "history": []
+            "history": [
+                0.05, 
+                -0.05, 
+                0.0, 
+                0.05, 
+                -0.05, 
+                0.05, 
+                -0.05, 
+                0.05, 
+                0.05, 
+                0.1, 
+                -0.2, 
+                -0.3, 
+                0.3
+            ]
         }, 
         {
             "initialValue": 0.0, 
@@ -324,10 +362,20 @@
             "pendingMode": false, 
             "inputMethod": 1, 
             "id": 3, 
-            "history": []
+            "history": [
+                0.01, 
+                0.1, 
+                1.0, 
+                0.01, 
+                0.1, 
+                1.0, 
+                0.5, 
+                0.2, 
+                0.3
+            ]
         }, 
         {
-            "initialValue": 6.0, 
+            "initialValue": -0.03, 
             "displayName": "", 
             "name": "kPidSpeed", 
             "min": -100000.0, 
@@ -336,10 +384,31 @@
             "pendingMode": false, 
             "inputMethod": 1, 
             "id": 4, 
-            "history": []
+            "history": [
+                20.0, 
+                20.0, 
+                -1.0, 
+                -6.0, 
+                -1.0, 
+                -6.0, 
+                -1.0, 
+                -5.0, 
+                -10.0, 
+                -20.0, 
+                -30.0, 
+                -50.0, 
+                -100.0, 
+                -1.0, 
+                -5.0, 
+                -10.0, 
+                -20.0, 
+                -10.0, 
+                -1.0, 
+                -5.0
+            ]
         }, 
         {
-            "initialValue": 0.001, 
+            "initialValue": -1.0, 
             "displayName": "", 
             "name": "tgSpeed", 
             "min": -100000.0, 
@@ -348,10 +417,19 @@
             "pendingMode": false, 
             "inputMethod": 1, 
             "id": 5, 
-            "history": []
+            "history": [
+                1.0, 
+                1.0, 
+                0.01, 
+                0.001, 
+                -0.001, 
+                -0.001, 
+                -0.01, 
+                -0.1
+            ]
         }, 
         {
-            "initialValue": 180.0, 
+            "initialValue": 140.0, 
             "displayName": "", 
             "name": "kPidBeta", 
             "min": -100000.0, 
@@ -375,7 +453,7 @@
             "history": []
         }, 
         {
-            "initialValue": 1.0, 
+            "initialValue": 0.0, 
             "displayName": "", 
             "name": "kPidGammaP", 
             "min": -100000.0, 
@@ -384,19 +462,24 @@
             "pendingMode": false, 
             "inputMethod": 1, 
             "id": 8, 
-            "history": []
+            "history": [
+                1.0
+            ]
         }, 
         {
-            "initialValue": 0.0, 
+            "initialValue": 1.0, 
             "displayName": "", 
-            "name": "mr_letTheControllerControl", 
+            "name": "mr_controllerMasterSwitch", 
             "min": 0.0, 
             "max": 1.0, 
             "valueType": 1, 
             "pendingMode": false, 
             "inputMethod": 2, 
             "id": 9, 
-            "history": []
+            "history": [
+                1.0, 
+                0.0
+            ]
         }, 
         {
             "initialValue": 0.0, 
@@ -447,7 +530,7 @@
             "history": []
         }, 
         {
-            "initialValue": 0.0, 
+            "initialValue": 0.1, 
             "displayName": "", 
             "name": "deathZoneRadius", 
             "min": -100000.0, 
@@ -459,7 +542,7 @@
             "history": []
         }, 
         {
-            "initialValue": 0.0, 
+            "initialValue": 0.5, 
             "displayName": "", 
             "name": "limitAdditionalSpeedDueDistance", 
             "min": -100000.0, 
@@ -471,7 +554,7 @@
             "history": []
         }, 
         {
-            "initialValue": 0.0, 
+            "initialValue": 0.1, 
             "displayName": "", 
             "name": "limitAdditionalGammaPDueGamma", 
             "min": -100000.0, 
@@ -483,18 +566,6 @@
             "history": []
         }, 
         {
-            "initialValue": 3.0, 
-            "displayName": "", 
-            "name": "controlMode", 
-            "min": -100000.0, 
-            "max": 100000.0, 
-            "valueType": 1, 
-            "pendingMode": false, 
-            "inputMethod": 1, 
-            "id": 17, 
-            "history": []
-        }, 
-        {
             "initialValue": 0.0010000000475, 
             "displayName": "", 
             "name": "complementaryRatioRawData", 
@@ -503,7 +574,7 @@
             "valueType": 2, 
             "pendingMode": false, 
             "inputMethod": 1, 
-            "id": 18, 
+            "id": 17, 
             "history": []
         }, 
         {
@@ -515,8 +586,49 @@
             "valueType": 2, 
             "pendingMode": false, 
             "inputMethod": 1, 
-            "id": 19, 
+            "id": 18, 
             "history": []
+        }, 
+        {
+            "initialValue": 0.0, 
+            "displayName": "", 
+            "name": "mr_controlModeTurning", 
+            "min": 0.0, 
+            "max": 1.0, 
+            "valueType": 1, 
+            "pendingMode": false, 
+            "inputMethod": 2, 
+            "id": 19, 
+            "history": [
+                1.0, 
+                0.0, 
+                1.0, 
+                0.0, 
+                1.0
+            ]
+        }, 
+        {
+            "initialValue": 1.0, 
+            "displayName": "", 
+            "name": "mr_controlModeStraight", 
+            "min": 0.0, 
+            "max": 10.0, 
+            "valueType": 1, 
+            "pendingMode": false, 
+            "inputMethod": 1, 
+            "id": 20, 
+            "history": [
+                2.0, 
+                1.0, 
+                2.0, 
+                1.0, 
+                1.0, 
+                2.0, 
+                1.0, 
+                2.0, 
+                2.0, 
+                1.0
+            ]
         }
     ], 
     "miscSettings": {

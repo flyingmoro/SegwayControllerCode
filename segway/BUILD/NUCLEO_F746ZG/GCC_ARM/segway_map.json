@@ -11,8 +11,8 @@
         "module": "[fill]", 
         "size": {
             ".data": 9, 
-            ".bss": 76, 
-            ".text": 333
+            ".bss": 75, 
+            ".text": 318
         }
     }, 
     {
@@ -51,8 +51,8 @@
         "module": "controllers.o", 
         "size": {
             ".data": 0, 
-            ".bss": 44, 
-            ".text": 1032
+            ".bss": 32, 
+            ".text": 1024
         }
     }, 
     {
@@ -67,8 +67,8 @@
         "module": "main.o", 
         "size": {
             ".data": 4, 
-            ".bss": 728, 
-            ".text": 988
+            ".bss": 744, 
+            ".text": 1167
         }
     }, 
     {
@@ -100,7 +100,7 @@
         "size": {
             ".data": 4, 
             ".bss": 354, 
-            ".text": 2981
+            ".text": 3009
         }
     }, 
     {
@@ -122,8 +122,8 @@
     {
         "module": "microRay.o", 
         "size": {
-            ".data": 169, 
-            ".bss": 832, 
+            ".data": 177, 
+            ".bss": 848, 
             ".text": 1051
         }
     }, 
@@ -139,8 +139,8 @@
         "module": "oDriceCommunicator.o", 
         "size": {
             ".data": 8, 
-            ".bss": 294, 
-            ".text": 308
+            ".bss": 283, 
+            ".text": 236
         }
     }, 
     {
@@ -148,13 +148,13 @@
         "size": {
             ".data": 0, 
             ".bss": 0, 
-            ".text": 776
+            ".text": 768
         }
     }, 
     {
         "summary": {
-            "static_ram": 60808, 
-            "total_flash": 148308
+            "static_ram": 60824, 
+            "total_flash": 148420
         }
     }
 ]

@@ -21,6 +21,11 @@ typedef struct CurrentCommand {
 } CurrentCommand;
 
 
+int initODrive() {
+    oDrive.printf("$t!");
+    return 0;
+}
+
 void firstTorqueWriteComplete(int event) {
     // sprintf(torqueCmdTwo, "$c %i %.2f!", 1, motorOneTarget);
     oDrive.write((uint8_t *)torqueCmdTwo, sizeof(torqueCmdTwo), secondWriteEventComplete, SERIAL_EVENT_TX_COMPLETE);

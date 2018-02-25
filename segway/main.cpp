@@ -21,7 +21,7 @@ Timer segwayDebugTimer;
 DigitalOut greenLed(LED1);
 DigitalOut blueLed(LED2);
 DigitalOut redLed(LED3);
-
+float mpuAngleBuffer[4];
 
 Position worldPosition;
 MpuData mpuData;
@@ -29,7 +29,9 @@ SonicRangeFinder rangeFinder(PE_12, PF_12);
 SensorDataCollection sensorReadingsForControl;
 TargetValues currentTargets;
 
-//mbed compile -t GCC_ARM -m detect -f
+
+
+//mbed compile -t GCC_ARM -m NUCLEO_F746ZG -f
 int main() {
     pc.printf("Starting monoBot\n");
     int initReturnCode = init();
@@ -58,6 +60,8 @@ int init() {
     microRayInit();
     initEncoder();
     // initMPU6050();
+    initODrive();
+    // while (1){}
     return 0;
 }
 
@@ -80,8 +84,8 @@ void loop() {
 
 
 
-    // get latest ultra sonic reading
-    mr_sonic = rangeFinder.getRangeInMM();
+    // // get latest ultra sonic reading
+    // mr_sonic = rangeFinder.getRangeInMM();
 
 
 
@@ -115,14 +119,47 @@ void loop() {
     sensorReadingsForControl.beta = mpuData.compYAngle * 0.0174;
     updateControlTargets(&sensorReadingsForControl, &currentTargets);
 
-    // apply current to motors
-    if (mr_letTheControllerControl == 1) {
-        setCurrentBothMotors(currentTargets.motorZero, -1 * currentTargets.motorOne);
-        // setCurrentBothMotors(currentTargets.motorZero, currentTargets.motorOne);
-        // setCurrentBothMotors(currentTargets.motorZero, 0.0);
-    } else {
-        setCurrentBothMotors(mr_currentMotorZero, mr_currentMotorOne);
+    // disable motors in case of tilt exeedance
+    if (abs(mpuData.compYAngle) > 45.0) {
+        currentTargets.motorZero = 0.0;
+        currentTargets.motorOne = 0.0;
     }
+
+    // disable motors in case of bad mpu data
+    // check, if mpuData is refreshing over time, else motors off
+    int i = 0;
+    for (i = 1; i < 4; i++) {
+        mpuAngleBuffer[i-1] = mpuAngleBuffer[i];
+    }
+    mpuAngleBuffer[3] = mpuData.rawAcceleration_x;
+    int mpuDataOk = 0;
+    for (i = 1; i < 4; i++) {
+        if(mpuAngleBuffer[i] != mpuAngleBuffer[i-1]) {
+            mpuDataOk = 1;
+        }
+    }
+    if (mpuDataOk == 0) {
+        currentTargets.motorZero = 0.0;
+        currentTargets.motorOne = 0.0;
+    }
+
+    // // apply current to motors
+    // if (mr_controllerMasterSwitch == 1) {
+    //     setCurrentBothMotors(currentTargets.motorZero, -1 * currentTargets.motorOne);
+    // } else {
+    //     // set current manually from microRay
+    //     setCurrentBothMotors(mr_currentMotorZero, mr_currentMotorOne);
+    // }
+
+
+
+
+
+
+
+
+
+
 
 
 
