@@ -114,7 +114,7 @@ void updateControlTargets(SensorDataCollection * sensorData, TargetValues * targ
             speedIntegral += eSpeed * DELTA_T;
         }
         // speedTarget = kPidSpeed * (eSpeed + tgSpeed * speedIntegral);
-        speedTarget = kPidSpeed * eSpeed + eSpeed * tgSpeed * speedIntegral;
+        speedTarget = kPidSpeed * eSpeed + kPidSpeed * tgSpeed * speedIntegral;
         eOldSpeed = eSpeed;
     }
 
