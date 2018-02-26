@@ -51,7 +51,7 @@ void updateControlTargets(SensorDataCollection * sensorData, TargetValues * targ
     float dx1 = cos(sensorData->gamma)*(xSetPoint -sensorData->x) + sin(sensorData->gamma)*(ySetPoint - sensorData->y);
     float dy1 = -sin(sensorData->gamma)*(xSetPoint -sensorData->x) + cos(sensorData->gamma)*(ySetPoint - sensorData->y);
     float dgamma1 = atan2(dy1, dx1);
-    float distance = dx1*dx1+dy1*dy1;
+    float distance = sqrt(dx1*dx1+dy1*dy1);
 
     // moving forward only
     if(mr_controlModeStraight >= POSITION_MODE_FORWARD) {
@@ -95,7 +95,7 @@ void updateControlTargets(SensorDataCollection * sensorData, TargetValues * targ
     if (additionalGammaPDueGamma > limitAdditionalGammaPDueGamma) {
         additionalGammaPDueGamma = limitAdditionalGammaPDueGamma;
     }
-    if (additionalGammaPDueGamma < (-limitAdditionalGammaPDueGamma)) {
+    else if(additionalGammaPDueGamma < (-limitAdditionalGammaPDueGamma)) {
         additionalGammaPDueGamma = -limitAdditionalGammaPDueGamma;
     }
 
@@ -103,7 +103,7 @@ void updateControlTargets(SensorDataCollection * sensorData, TargetValues * targ
     if(additionalSpeedDueDistance > limitAdditionalSpeedDueDistance) {
             additionalSpeedDueDistance = limitAdditionalSpeedDueDistance;
     }
-    if(additionalSpeedDueDistance < (-limitAdditionalSpeedDueDistance)) {
+    else if(additionalSpeedDueDistance < (-limitAdditionalSpeedDueDistance)) {
             additionalSpeedDueDistance = -limitAdditionalSpeedDueDistance;
     }
 
