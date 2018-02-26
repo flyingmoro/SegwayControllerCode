@@ -128,7 +128,7 @@ void updateControlTargets(SensorDataCollection * sensorData, TargetValues * targ
 
 
     // noninteracting control calculation
-    // add output of velocity control and tilt controllers
+    // sum up output of velocity control and tilt controllers
     float sumOfBetaTarget = speedTarget + betaTarget;
 
     // make two current targets out of a beta target and a gamma target

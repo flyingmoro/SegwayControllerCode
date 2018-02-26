@@ -85,6 +85,8 @@ void loop() {
 
 
     // // get latest ultra sonic reading
+    // for the time this feature is accomplished with an external modul
+    // todo -> implement code for communication with this modul
     // mr_sonic = rangeFinder.getRangeInMM();
 
 
@@ -93,19 +95,12 @@ void loop() {
 
     // read the gyro and acceleration sensor (MPU6050)
     // duration approx 600us
+    // todo -> implement DMA support
     updateMpuReadings(&mpuData);
 
     mr_debugTimer = segwayDebugTimer.read_us();
     segwayDebugTimer.stop();
     segwayDebugTimer.reset();
-
-
-
-
-
-
-
-
 
 
 
@@ -115,7 +110,6 @@ void loop() {
     sensorReadingsForControl.speed = worldPosition.forwardSpeed;
     sensorReadingsForControl.gamma = worldPosition.gamma;
     sensorReadingsForControl.gammaP = worldPosition.gammaP * 0.0174;
-    // sensorReadingsForControl.beta = mpuData.kalYAngle * 0.0174;
     sensorReadingsForControl.beta = mpuData.compYAngle * 0.0174;
     updateControlTargets(&sensorReadingsForControl, &currentTargets);
 
@@ -127,17 +121,23 @@ void loop() {
 
     // disable motors in case of bad mpu data
     // check, if mpuData is refreshing over time, else motors off
+    // the idea is that the acceleration values are so noisy that
+    // it is nearly impossible to get two equal values after one another.
+    // todo -> implement efficient circular buffer
     int i = 0;
+    // store newest value and shift old values one to the past
     for (i = 1; i < 4; i++) {
         mpuAngleBuffer[i-1] = mpuAngleBuffer[i];
     }
     mpuAngleBuffer[3] = mpuData.rawAcceleration_x;
+    // iterate through old values and mark as good if two side by side values are not equal
     int mpuDataOk = 0;
     for (i = 1; i < 4; i++) {
         if(mpuAngleBuffer[i] != mpuAngleBuffer[i-1]) {
             mpuDataOk = 1;
         }
     }
+    // set current command to zero in case of bad mpu data
     if (mpuDataOk == 0) {
         currentTargets.motorZero = 0.0;
         currentTargets.motorOne = 0.0;
@@ -150,16 +150,6 @@ void loop() {
         // set current manually from microRay
         setCurrentBothMotors(mr_currentMotorZero, mr_currentMotorOne);
     }
-
-
-
-
-
-
-
-
-
-
 
 
 
