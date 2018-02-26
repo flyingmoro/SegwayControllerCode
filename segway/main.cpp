@@ -60,7 +60,7 @@ int init() {
     microRayInit();
     initEncoder();
     // initMPU6050();
-    initODrive();
+    // initODrive();
     // while (1){}
     return 0;
 }
@@ -143,13 +143,13 @@ void loop() {
         currentTargets.motorOne = 0.0;
     }
 
-    // // apply current to motors
-    // if (mr_controllerMasterSwitch == 1) {
-    //     setCurrentBothMotors(currentTargets.motorZero, -1 * currentTargets.motorOne);
-    // } else {
-    //     // set current manually from microRay
-    //     setCurrentBothMotors(mr_currentMotorZero, mr_currentMotorOne);
-    // }
+    // apply current to motors
+    if (mr_controllerMasterSwitch == 1) {
+        setCurrentBothMotors(currentTargets.motorZero, -1 * currentTargets.motorOne);
+    } else {
+        // set current manually from microRay
+        setCurrentBothMotors(mr_currentMotorZero, mr_currentMotorOne);
+    }
 
 
 
@@ -176,7 +176,7 @@ void loop() {
     mr_rawAccX = mpuData.rawAcceleration_x;
     mr_rawAccY = mpuData.rawAcceleration_y;
     mr_rawAccZ = mpuData.rawAcceleration_z;
-    mr_rawDegPX = mpuData.rawAngularRate_alpha / 131.0 + 18;
+    mr_rawDegPX = mpuData.rawAngularRate_alpha / 131.0;
     mr_rawDegPY = mpuData.rawAngularRate_beta / 131.0;
     mr_rawDegPZ = mpuData.rawAngularRate_gamma / 131.0;
 

@@ -11,8 +11,8 @@
         "module": "[fill]", 
         "size": {
             ".data": 9, 
-            ".bss": 75, 
-            ".text": 318
+            ".bss": 80, 
+            ".text": 309
         }
     }, 
     {
@@ -68,7 +68,7 @@
         "size": {
             ".data": 4, 
             ".bss": 744, 
-            ".text": 1167
+            ".text": 1092
         }
     }, 
     {
@@ -100,7 +100,7 @@
         "size": {
             ".data": 4, 
             ".bss": 354, 
-            ".text": 3009
+            ".text": 2981
         }
     }, 
     {
@@ -139,8 +139,8 @@
         "module": "oDriceCommunicator.o", 
         "size": {
             ".data": 8, 
-            ".bss": 283, 
-            ".text": 236
+            ".bss": 294, 
+            ".text": 308
         }
     }, 
     {
@@ -153,8 +153,8 @@
     }, 
     {
         "summary": {
-            "static_ram": 60824, 
-            "total_flash": 148420
+            "static_ram": 60840, 
+            "total_flash": 148380
         }
     }
 ]
