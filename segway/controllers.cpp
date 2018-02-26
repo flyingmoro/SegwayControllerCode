@@ -100,14 +100,12 @@ void updateControlTargets(SensorDataCollection * sensorData, TargetValues * targ
     }
 
     // limit speed addition from position control
-    if(abs(dgamma1)< 1.48) {
-        // ~85°
-        additionalSpeedDueDistance = -distance*kPidDistance;
-        if(additionalSpeedDueDistance > limitAdditionalSpeedDueDistance) {
-            additionalSpeedDueDistance = -0.5;
-        }
+    if(additionalSpeedDueDistance > limitAdditionalSpeedDueDistance) {
+            additionalSpeedDueDistance = limitAdditionalSpeedDueDistance;
     }
-
+    if(additionalSpeedDueDistance < (-limitAdditionalSpeedDueDistance)) {
+            additionalSpeedDueDistance = -limitAdditionalSpeedDueDistance;
+    }
 
     // velocity control
     if(mr_controlModeStraight >= VELOCITY_MODE) {
