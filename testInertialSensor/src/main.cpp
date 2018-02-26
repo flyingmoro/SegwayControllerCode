@@ -4,7 +4,7 @@
 #include "microRay.h"
 
 // Serial pc(USBTX, USBRX, 38400);
-MPU6050 mpu(PB_11, PB_10);
+MPU6050 mpu(PF_15, PF_14);
 DigitalOut testPin(PE_15);
 
 int main(void) {
