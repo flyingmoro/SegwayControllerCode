@@ -68,6 +68,9 @@
 #define kalmannQ                                 (parameters[18]).valueFloat
 #define mr_controlModeTurning                    (parameters[19]).valueInt
 #define mr_controlModeStraight                   (parameters[20]).valueInt
+#define size_beta_buffer                         (parameters[21]).valueInt
+#define size_speed_buffer                        (parameters[22]).valueInt
+#define size_gammap_buffer                       (parameters[23]).valueInt
 
 // all special parameters
 #define loopCycleTimeExceededByUs                (specialCommands[0])
