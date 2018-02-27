@@ -58,3 +58,4 @@ dkms.conf
 .piolibdeps
 .clang_complete
 .gcc-flags.json
+segway/BUILD/NUCLEO_F746ZG/GCC_ARM/segway_map.json
