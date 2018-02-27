@@ -1,3 +1,7 @@
+mbed-os
+BUILD
+.temp
+.mbed
 # Prerequisites
 *.d
 
