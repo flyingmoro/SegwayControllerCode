@@ -9,7 +9,7 @@
                 29, 
                 208
             ], 
-            "isRequested": true, 
+            "isRequested": false, 
             "id": 0
         }, 
         {
@@ -21,7 +21,7 @@
                 170, 
                 0
             ], 
-            "isRequested": true, 
+            "isRequested": false, 
             "id": 1
         }, 
         {
@@ -33,7 +33,7 @@
                 188, 
                 158
             ], 
-            "isRequested": true, 
+            "isRequested": false, 
             "id": 2
         }, 
         {
@@ -45,7 +45,7 @@
                 159, 
                 106
             ], 
-            "isRequested": true, 
+            "isRequested": false, 
             "id": 3
         }, 
         {
@@ -57,7 +57,7 @@
                 190, 
                 20
             ], 
-            "isRequested": true, 
+            "isRequested": false, 
             "id": 4
         }, 
         {
@@ -69,7 +69,7 @@
                 13, 
                 8
             ], 
-            "isRequested": true, 
+            "isRequested": false, 
             "id": 5
         }, 
         {
@@ -81,7 +81,7 @@
                 235, 
                 140
             ], 
-            "isRequested": true, 
+            "isRequested": false, 
             "id": 6
         }, 
         {
@@ -93,7 +93,7 @@
                 237, 
                 11
             ], 
-            "isRequested": true, 
+            "isRequested": false, 
             "id": 7
         }, 
         {
@@ -105,7 +105,7 @@
                 147, 
                 78
             ], 
-            "isRequested": true, 
+            "isRequested": false, 
             "id": 8
         }, 
         {
@@ -117,7 +117,7 @@
                 92, 
                 45
             ], 
-            "isRequested": true, 
+            "isRequested": false, 
             "id": 9
         }, 
         {
@@ -129,13 +129,13 @@
                 16, 
                 107
             ], 
-            "isRequested": true, 
+            "isRequested": false, 
             "id": 10
         }, 
         {
             "displayName": "", 
             "name": "mr_betaComplementary", 
-            "show": false, 
+            "show": true, 
             "color": [
                 136, 
                 228, 
@@ -153,7 +153,7 @@
                 33, 
                 245
             ], 
-            "isRequested": true, 
+            "isRequested": false, 
             "id": 12
         }, 
         {
@@ -165,7 +165,7 @@
                 232, 
                 185
             ], 
-            "isRequested": true, 
+            "isRequested": false, 
             "id": 13
         }, 
         {
@@ -177,7 +177,7 @@
                 80, 
                 103
             ], 
-            "isRequested": true, 
+            "isRequested": false, 
             "id": 14
         }, 
         {
@@ -189,7 +189,7 @@
                 184, 
                 77
             ], 
-            "isRequested": true, 
+            "isRequested": false, 
             "id": 15
         }, 
         {
@@ -201,37 +201,37 @@
                 25, 
                 68
             ], 
-            "isRequested": true, 
+            "isRequested": false, 
             "id": 16
         }, 
         {
             "displayName": "", 
             "name": "mr_encoderLeftWheel", 
-            "show": true, 
+            "show": false, 
             "color": [
                 208, 
                 26, 
                 55
             ], 
-            "isRequested": true, 
+            "isRequested": false, 
             "id": 17
         }, 
         {
             "displayName": "", 
             "name": "mr_encoderRightWheel", 
-            "show": true, 
+            "show": false, 
             "color": [
                 122, 
                 172, 
                 86
             ], 
-            "isRequested": true, 
+            "isRequested": false, 
             "id": 18
         }, 
         {
             "displayName": "", 
             "name": "mr_controllerOutputMotorZero", 
-            "show": false, 
+            "show": true, 
             "color": [
                 196, 
                 149, 
@@ -243,7 +243,7 @@
         {
             "displayName": "", 
             "name": "mr_controllerOutputMotorOne", 
-            "show": false, 
+            "show": true, 
             "color": [
                 85, 
                 131, 
@@ -261,13 +261,13 @@
                 197, 
                 119
             ], 
-            "isRequested": true, 
+            "isRequested": false, 
             "id": 21
         }, 
         {
             "displayName": "", 
             "name": "mr_speed", 
-            "show": false, 
+            "show": true, 
             "color": [
                 198, 
                 129, 
@@ -279,7 +279,7 @@
         {
             "displayName": "", 
             "name": "mr_controllerSpeedTarget", 
-            "show": false, 
+            "show": true, 
             "color": [
                 56, 
                 178, 
@@ -291,7 +291,7 @@
         {
             "displayName": "", 
             "name": "mr_controllerBetaTarget", 
-            "show": false, 
+            "show": true, 
             "color": [
                 54, 
                 254, 
@@ -299,6 +299,66 @@
             ], 
             "isRequested": true, 
             "id": 24
+        }, 
+        {
+            "displayName": "", 
+            "name": "mr_betaFilter", 
+            "show": true, 
+            "color": [
+                184, 
+                193, 
+                103
+            ], 
+            "isRequested": true, 
+            "id": 25
+        }, 
+        {
+            "displayName": "", 
+            "name": "mr_speedFilter", 
+            "show": true, 
+            "color": [
+                83, 
+                114, 
+                184
+            ], 
+            "isRequested": true, 
+            "id": 26
+        }, 
+        {
+            "displayName": "", 
+            "name": "mr_gammaPFilter", 
+            "show": true, 
+            "color": [
+                145, 
+                136, 
+                23
+            ], 
+            "isRequested": true, 
+            "id": 27
+        }, 
+        {
+            "displayName": "", 
+            "name": "mr_conrtrollerGammaPTarget", 
+            "show": true, 
+            "color": [
+                56, 
+                200, 
+                89
+            ], 
+            "isRequested": true, 
+            "id": 28
+        }, 
+        {
+            "displayName": "", 
+            "name": "mr_speedIntegralPart", 
+            "show": true, 
+            "color": [
+                80, 
+                152, 
+                85
+            ], 
+            "isRequested": true, 
+            "id": 29
         }
     ], 
     "commands": [
@@ -324,32 +384,24 @@
             "pendingMode": false, 
             "inputMethod": 1, 
             "id": 1, 
-            "history": []
+            "history": [
+                0.0, 
+                0.1
+            ]
         }, 
         {
             "initialValue": 0.0, 
             "displayName": "", 
             "name": "speedSetPoint", 
-            "min": -0.3, 
-            "max": 0.3, 
+            "min": -0.5, 
+            "max": 0.5, 
             "valueType": 2, 
             "pendingMode": false, 
             "inputMethod": 1, 
             "id": 2, 
             "history": [
-                0.05, 
-                -0.05, 
-                0.0, 
-                0.05, 
-                -0.05, 
-                0.05, 
-                -0.05, 
-                0.05, 
-                0.05, 
-                0.1, 
                 -0.2, 
-                -0.3, 
-                0.3
+                0.1
             ]
         }, 
         {
@@ -363,76 +415,57 @@
             "inputMethod": 1, 
             "id": 3, 
             "history": [
-                0.01, 
+                0.3, 
+                0.2, 
+                0.0, 
+                0.3, 
+                -0.1, 
+                0.0, 
+                -0.2, 
+                0.0, 
                 0.1, 
-                1.0, 
-                0.01, 
-                0.1, 
-                1.0, 
+                0.0, 
+                -0.3, 
+                0.0, 
+                0.5, 
+                0.4, 
+                0.55, 
+                0.0, 
+                0.6, 
                 0.5, 
                 0.2, 
-                0.3
+                0.1
             ]
         }, 
         {
-            "initialValue": -0.03, 
+            "initialValue": -10.0, 
             "displayName": "", 
             "name": "kPidSpeed", 
             "min": -100000.0, 
-            "max": 100000.0, 
+            "max": 0.0, 
             "valueType": 2, 
             "pendingMode": false, 
             "inputMethod": 1, 
             "id": 4, 
-            "history": [
-                20.0, 
-                20.0, 
-                -1.0, 
-                -6.0, 
-                -1.0, 
-                -6.0, 
-                -1.0, 
-                -5.0, 
-                -10.0, 
-                -20.0, 
-                -30.0, 
-                -50.0, 
-                -100.0, 
-                -1.0, 
-                -5.0, 
-                -10.0, 
-                -20.0, 
-                -10.0, 
-                -1.0, 
-                -5.0
-            ]
+            "history": []
         }, 
         {
-            "initialValue": -1.0, 
+            "initialValue": 0.3, 
             "displayName": "", 
             "name": "tgSpeed", 
-            "min": -100000.0, 
+            "min": 0.0, 
             "max": 100000.0, 
             "valueType": 2, 
             "pendingMode": false, 
             "inputMethod": 1, 
             "id": 5, 
-            "history": [
-                1.0, 
-                1.0, 
-                0.01, 
-                0.001, 
-                -0.001, 
-                -0.001, 
-                -0.01, 
-                -0.1
-            ]
+            "history": []
         }, 
         {
-            "initialValue": 140.0, 
+            "initialValue": 80.0, 
             "displayName": "", 
             "name": "kPidBeta", 
-            "min": -100000.0, 
+            "min": 0.0, 
             "max": 100000.0, 
             "valueType": 2, 
             "pendingMode": false, 
@@ -441,10 +474,10 @@
             "history": []
         }, 
         {
-            "initialValue": 0.00999999977648, 
+            "initialValue": 0.07, 
             "displayName": "", 
             "name": "tvBeta", 
-            "min": -100000.0, 
+            "min": 0.0, 
             "max": 100000.0, 
             "valueType": 2, 
             "pendingMode": false, 
@@ -463,6 +496,14 @@
             "inputMethod": 1, 
             "id": 8, 
             "history": [
+                1.0, 
+                0.3, 
+                0.2, 
+                0.1, 
+                1.0, 
+                0.3, 
+                0.2, 
+                0.1, 
                 1.0
             ]
         }, 
@@ -476,10 +517,7 @@
             "pendingMode": false, 
             "inputMethod": 2, 
             "id": 9, 
-            "history": [
-                1.0, 
-                0.0
-            ]
+            "history": []
         }, 
         {
             "initialValue": 0.0, 
@@ -525,7 +563,7 @@
             "max": 100000.0, 
             "valueType": 2, 
             "pendingMode": false, 
-            "inputMethod": 1, 
+            "inputMethod": 3, 
             "id": 13, 
             "history": []
         }, 
@@ -554,7 +592,7 @@
             "history": []
         }, 
         {
-            "initialValue": 0.1, 
+            "initialValue": 3.0, 
             "displayName": "", 
             "name": "limitAdditionalGammaPDueGamma", 
             "min": -100000.0, 
@@ -602,13 +640,11 @@
             "history": [
                 1.0, 
                 0.0, 
-                1.0, 
-                0.0, 
                 1.0
             ]
         }, 
         {
-            "initialValue": 1.0, 
+            "initialValue": 2.0, 
             "displayName": "", 
             "name": "mr_controlModeStraight", 
             "min": 0.0, 
@@ -617,17 +653,44 @@
             "pendingMode": false, 
             "inputMethod": 1, 
             "id": 20, 
+            "history": []
+        }, 
+        {
+            "initialValue": 30.0, 
+            "displayName": "", 
+            "name": "size_beta_buffer", 
+            "min": -100000.0, 
+            "max": 100000.0, 
+            "valueType": 1, 
+            "pendingMode": false, 
+            "inputMethod": 1, 
+            "id": 21, 
+            "history": []
+        }, 
+        {
+            "initialValue": 10.0, 
+            "displayName": "", 
+            "name": "size_speed_buffer", 
+            "min": -100000.0, 
+            "max": 100000.0, 
+            "valueType": 1, 
+            "pendingMode": false, 
+            "inputMethod": 1, 
+            "id": 22, 
+            "history": []
+        }, 
+        {
+            "initialValue": 10.0, 
+            "displayName": "", 
+            "name": "size_gammaP_buffer", 
+            "min": -100000.0, 
+            "max": 100000.0, 
+            "valueType": 1, 
+            "pendingMode": false, 
+            "inputMethod": 1, 
+            "id": 23, 
             "history": [
-                2.0, 
-                1.0, 
-                2.0, 
-                1.0, 
-                1.0, 
-                2.0, 
-                1.0, 
-                2.0, 
-                2.0, 
-                1.0
+                100.0
             ]
         }
     ], 
@@ -642,13 +705,13 @@
         ], 
         "messageSkipMode": false, 
         "comPortBaudRate": 115200, 
-        "comPortDescription": "STMicroelectronics STLink Virtual COM Port (COM11)", 
+        "comPortDescription": "", 
         "pauseAfterRecord": false, 
         "computerIP": "192.168.0.133", 
         "udpPort": 10000, 
         "recordBufferLength": 1, 
         "debugMode": false, 
-        "pathToControllerCodeFolder": "D:\\00 eigene Daten\\000 FH\\S 6\\Segway\\SegwayControllerCode\\segway", 
+        "pathToControllerCodeFolder": "D:\\Github\\SegwayControllerCode\\SegwayControllerCode\\segway", 
         "suppressParameterConfirmation": false, 
         "controllerLoopCycleTimeInUs": 1000, 
         "controllerIP": "192.168.0.15"

@@ -5,10 +5,10 @@
 
 // must have parameters
 #define loopCycleTimeUs                            1000
-#define CHANNELS_AVAILABLE_COUNT                     25
-#define CHANNELS_REQUESTED_COUNT                     25
-#define CHANNELS_UNREQUESTED_COUNT                    0
-#define PARAMETER_COUNT                              21
+#define CHANNELS_AVAILABLE_COUNT                     30
+#define CHANNELS_REQUESTED_COUNT                     11
+#define CHANNELS_UNREQUESTED_COUNT                   19
+#define PARAMETER_COUNT                              24
 #define SPECIAL_COMMANDS_COUNT                        3
 #define BAUD_RATE                                115200
 #define INT_TYPE                                      1
@@ -18,33 +18,38 @@
 #define MESSAGE_SKIP_MODE                             0
 
 // All requested channels
-#define mr_pulsi                                 (messageOutBuffer.channels[0])
-#define mr_sonic                                 (messageOutBuffer.channels[1])
-#define mr_rawAccX                               (messageOutBuffer.channels[2])
-#define mr_rawAccY                               (messageOutBuffer.channels[3])
-#define mr_rawAccZ                               (messageOutBuffer.channels[4])
-#define mr_rawDegPX                              (messageOutBuffer.channels[5])
-#define mr_rawDegPY                              (messageOutBuffer.channels[6])
-#define mr_rawDegPZ                              (messageOutBuffer.channels[7])
-#define mr_betaRaw                               (messageOutBuffer.channels[8])
-#define mr_betaTangens                           (messageOutBuffer.channels[9])
-#define mr_betaRawIntegral                       (messageOutBuffer.channels[10])
-#define mr_betaComplementary                     (messageOutBuffer.channels[11])
-#define mr_betaKalman                            (messageOutBuffer.channels[12])
-#define mr_dutyCycleTime                         (messageOutBuffer.channels[13])
-#define mr_worldX                                (messageOutBuffer.channels[14])
-#define mr_worldY                                (messageOutBuffer.channels[15])
-#define mr_worldGamma                            (messageOutBuffer.channels[16])
-#define mr_encoderLeftWheel                      (messageOutBuffer.channels[17])
-#define mr_encoderRightWheel                     (messageOutBuffer.channels[18])
-#define mr_controllerOutputMotorZero             (messageOutBuffer.channels[19])
-#define mr_controllerOutputMotorOne              (messageOutBuffer.channels[20])
-#define mr_debugTimer                            (messageOutBuffer.channels[21])
-#define mr_speed                                 (messageOutBuffer.channels[22])
-#define mr_controllerSpeedTarget                 (messageOutBuffer.channels[23])
-#define mr_controllerBetaTarget                  (messageOutBuffer.channels[24])
+#define mr_betaComplementary                     (messageOutBuffer.channels[0])
+#define mr_controllerOutputMotorZero             (messageOutBuffer.channels[1])
+#define mr_controllerOutputMotorOne              (messageOutBuffer.channels[2])
+#define mr_speed                                 (messageOutBuffer.channels[3])
+#define mr_controllerSpeedTarget                 (messageOutBuffer.channels[4])
+#define mr_controllerBetaTarget                  (messageOutBuffer.channels[5])
+#define mr_betaFilter                            (messageOutBuffer.channels[6])
+#define mr_speedFilter                           (messageOutBuffer.channels[7])
+#define mr_gammaPFilter                          (messageOutBuffer.channels[8])
+#define mr_conrtrollerGammaPTarget               (messageOutBuffer.channels[9])
+#define mr_speedIntegralPart                     (messageOutBuffer.channels[10])
 
 // All unrequested channels
+#define mr_pulsi                                 (unrequestedChannels[0])
+#define mr_sonic                                 (unrequestedChannels[1])
+#define mr_rawAccX                               (unrequestedChannels[2])
+#define mr_rawAccY                               (unrequestedChannels[3])
+#define mr_rawAccZ                               (unrequestedChannels[4])
+#define mr_rawDegPX                              (unrequestedChannels[5])
+#define mr_rawDegPY                              (unrequestedChannels[6])
+#define mr_rawDegPZ                              (unrequestedChannels[7])
+#define mr_betaRaw                               (unrequestedChannels[8])
+#define mr_betaTangens                           (unrequestedChannels[9])
+#define mr_betaRawIntegral                       (unrequestedChannels[10])
+#define mr_betaKalman                            (unrequestedChannels[11])
+#define mr_dutyCycleTime                         (unrequestedChannels[12])
+#define mr_worldX                                (unrequestedChannels[13])
+#define mr_worldY                                (unrequestedChannels[14])
+#define mr_worldGamma                            (unrequestedChannels[15])
+#define mr_encoderLeftWheel                      (unrequestedChannels[16])
+#define mr_encoderRightWheel                     (unrequestedChannels[17])
+#define mr_debugTimer                            (unrequestedChannels[18])
 
 // all parameters
 #define mr_currentMotorZero                      (parameters[0]).valueFloat
@@ -70,7 +75,7 @@
 #define mr_controlModeStraight                   (parameters[20]).valueInt
 #define size_beta_buffer                         (parameters[21]).valueInt
 #define size_speed_buffer                        (parameters[22]).valueInt
-#define size_gammap_buffer                       (parameters[23]).valueInt
+#define size_gammaP_buffer                       (parameters[23]).valueInt
 
 // all special parameters
 #define loopCycleTimeExceededByUs                (specialCommands[0])

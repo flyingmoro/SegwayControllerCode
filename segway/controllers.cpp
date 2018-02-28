@@ -5,19 +5,19 @@
 #define DELTA_T 0.001
 
 TargetValues currentTargetPoints;
-
+#define maxFilter 100
 float eOldSpeed = 0.0;
 float speedIntegral = 0.0;
 float eOldBeta = 0.0;
-float beta_buffer[size_beta_buffer] = {0};
-float speed_buffer[size_speed_buffer] = {0};
-float gammap_buffer[size_gammap_buffer] = {0};
+float beta_buffer[maxFilter] = {0};
+float speed_buffer[maxFilter] = {0};
+float gammaP_buffer[maxFilter] = {0};
 float beta_filter = 0.0;
 float speed_filter = 0.0;
-float gammap_filter = 0.0;
+float gammaP_filter = 0.0;
 int beta_Pointer = 0;
 int speed_Pointer = 0;
-int gammap_Pointer = 0;
+int gammaP_Pointer = 0;
 
 #define OFF_MODE 0
 #define TILT_MODE 1
@@ -37,23 +37,6 @@ float speedTarget = 0.0;
 
 void updateControlTargets(SensorDataCollection * sensorData, TargetValues * targets) {
 
-    //filter signals beta speed gammap
-    beta_buffer[beta_Pointer] = sensorData->beta;
-    beta_Pointer = (beta_Pointer+1)% size_beta_buffer;
-    for(int i = 0; i < size_beta_buffer; i++){
-        beta_filter += beta_buffer[i]/size_beta_buffer;
-    }
-    speed_buffer[speed_Pointer] = sensorData->speed;
-    speed_Pointer = (speed_Pointer+1)% size_speed_buffer;
-    for(int i = 0; i < size_speed_buffer; i++){
-        speed_filter += speed_buffer[i]/size_speed_buffer;
-    }
-    gammap_buffer[gammap_Pointer] = sensorData->gammap;
-    gammap_Pointer = (gammap_Pointer+1)% size_gammap_buffer;
-    for(int i = 0; i < size_gammap_buffer; i++){
-        gammap_filter += gammap_buffer[i]/size_gammap_buffer;
-    }
-
 
     // clear all controller outputs
     betaTarget = 0.0f;
@@ -64,9 +47,34 @@ void updateControlTargets(SensorDataCollection * sensorData, TargetValues * targ
 
     // tilt control
     if(mr_controlModeStraight > 0) {
+
+//        for(int i = size_beta_buffer-1; i > 0; i--){
+//            beta_buffer[i] = beta_buffer[i - 1];
+//        }
+//        beta_buffer[0] = sensorData->beta;
+//        beta_filter = 0;
+//        for (int i = 0; i < size_beta_buffer; i++)
+//        {
+//            beta_filter += (beta_buffer[i]/size_beta_buffer);
+//        }
+//        mr_betaFilter = beta_filter*57.296;
+        beta_filter = 0;
+        if(size_beta_buffer > maxFilter)
+        {
+            size_beta_buffer = maxFilter;
+        }
+        beta_buffer[beta_Pointer] = sensorData->beta;
+        beta_Pointer = (beta_Pointer+1)% size_beta_buffer;
+        for(int i = 0; i < size_beta_buffer; i++){
+            beta_filter += beta_buffer[i]/size_beta_buffer;
+        }
+        mr_betaFilter = beta_filter*57.296;
+
         float eBeta = 0.0 - beta_filter;
         betaTarget = kPidBeta * (eBeta + (eBeta - eOldBeta) * tvBeta / DELTA_T);
         eOldBeta = eBeta;
+
+
     }
 
 
@@ -133,23 +141,47 @@ void updateControlTargets(SensorDataCollection * sensorData, TargetValues * targ
     }
 
     // velocity control
+    speed_filter = 0;
+    if(size_speed_buffer > maxFilter)
+    {
+        size_speed_buffer = maxFilter;
+    }
+    speed_buffer[speed_Pointer] = sensorData->speed;
+    speed_Pointer = (speed_Pointer+1)% size_speed_buffer;
+    for(int i = 0; i < size_speed_buffer; i++){
+        speed_filter += (speed_buffer[i]/size_speed_buffer);
+    }
+    mr_speedFilter = speed_filter;
     if(mr_controlModeStraight >= VELOCITY_MODE) {
+
         float eSpeed = speedSetPoint + additionalSpeedDueDistance - speed_filter;
         if (abs(speedIntegral + eSpeed) < VELOCITY_CONTROL_INTEGRATOR_LIMIT) {
             speedIntegral += eSpeed * DELTA_T;
         }
         // speedTarget = kPidSpeed * (eSpeed + tgSpeed * speedIntegral);
         speedTarget = kPidSpeed * eSpeed + kPidSpeed * tgSpeed * speedIntegral;
-        eOldSpeed = eSpeed;
+        mr_speedIntegralPart = kPidSpeed * tgSpeed * speedIntegral;
     }
 
 
     // turn rate control
+    gammaP_filter = 0;
+    if(size_gammaP_buffer > maxFilter)
+    {
+        size_gammaP_buffer = maxFilter;
+    }
+    gammaP_buffer[gammaP_Pointer] = sensorData->gammaP;
+    gammaP_Pointer = (gammaP_Pointer+1)% size_gammaP_buffer;
+    for(int i = 0; i < size_gammaP_buffer; i++){
+        gammaP_filter += gammaP_buffer[i]/size_gammaP_buffer;
+    }
+    mr_gammaPFilter = gammaP_filter;
+
     if(mr_controlModeTurning >= TURNING_MODE) {
-        float eGammaP = gammaPSetPoint + additionalGammaPDueGamma - gammap_filter;
+        float eGammaP = gammaPSetPoint + additionalGammaPDueGamma - gammaP_filter;
         gammaPTarget = kPidGammaP * eGammaP;
     }
-
+    mr_controllerGammaPTarget = gammaPTarget;
 
 
     // noninteracting control calculation
