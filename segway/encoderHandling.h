@@ -17,7 +17,7 @@ typedef struct position {
 
 // #define ENCODER_COUNT 8192
 #define ENCODER_COUNT 65535
-#define METERS_PER_ENCODER_STEP (0.000327*0.125)
+#define METERS_PER_ENCODER_STEP (0.000327*0.125/1.09) //1.09 correction term
 #define WHEEL_SPAN 0.184  // Radabstand in metern
 #define PI 3.1415927
 #define NEG_PI -3.141

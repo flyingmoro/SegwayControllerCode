@@ -8,7 +8,7 @@
 #define CHANNELS_AVAILABLE_COUNT                     34
 #define CHANNELS_REQUESTED_COUNT                     10
 #define CHANNELS_UNREQUESTED_COUNT                   24
-#define PARAMETER_COUNT                              24
+#define PARAMETER_COUNT                              23
 #define SPECIAL_COMMANDS_COUNT                        3
 #define BAUD_RATE                                115200
 #define INT_TYPE                                      1
@@ -75,11 +75,10 @@
 #define limitAdditionalGammaPDueGamma            (parameters[16]).valueFloat
 #define complementaryRatioRawData                (parameters[17]).valueFloat
 #define kalmannQ                                 (parameters[18]).valueFloat
-#define mr_controlModeTurning                    (parameters[19]).valueInt
-#define mr_controlModeStraight                   (parameters[20]).valueInt
-#define size_beta_buffer                         (parameters[21]).valueInt
-#define size_speed_buffer                        (parameters[22]).valueInt
-#define size_gammaP_buffer                       (parameters[23]).valueInt
+#define mr_controlMode                           (parameters[19]).valueInt
+#define size_beta_buffer                         (parameters[20]).valueInt
+#define size_speed_buffer                        (parameters[21]).valueInt
+#define size_gammaP_buffer                       (parameters[22]).valueInt
 
 // all special parameters
 #define loopCycleTimeExceededByUs                (specialCommands[0])

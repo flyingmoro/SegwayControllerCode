@@ -444,28 +444,7 @@
             "pendingMode": false, 
             "inputMethod": 1, 
             "id": 2, 
-            "history": [
-                0.0, 
-                1.0, 
-                0.6, 
-                0.4, 
-                0.0, 
-                0.6, 
-                0.4, 
-                0.3, 
-                0.2, 
-                0.0, 
-                0.0, 
-                1.0, 
-                1.0, 
-                0.5, 
-                0.0, 
-                0.2, 
-                0.0, 
-                0.0, 
-                -0.2, 
-                0.0
-            ]
+            "history": []
         }, 
         {
             "initialValue": 0.0, 
@@ -477,18 +456,7 @@
             "pendingMode": false, 
             "inputMethod": 1, 
             "id": 3, 
-            "history": [
-                0.0, 
-                4.0, 
-                3.0, 
-                2.0, 
-                0.0, 
-                2.0, 
-                1.0, 
-                6.0, 
-                0.0, 
-                6.0
-            ]
+            "history": []
         }, 
         {
             "initialValue": -10.0, 
@@ -524,15 +492,7 @@
             "pendingMode": false, 
             "inputMethod": 1, 
             "id": 6, 
-            "history": [
-                80.0, 
-                120.0, 
-                120.0, 
-                100.0, 
-                80.0, 
-                150.0, 
-                200.0
-            ]
+            "history": []
         }, 
         {
             "initialValue": 0.07, 
@@ -679,44 +639,16 @@
             "history": []
         }, 
         {
-            "initialValue": 0.0, 
-            "displayName": "", 
-            "name": "mr_controlModeTurning", 
-            "min": 0.0, 
-            "max": 1.0, 
-            "valueType": 1, 
-            "pendingMode": false, 
-            "inputMethod": 2, 
-            "id": 19, 
-            "history": [
-                1.0, 
-                0.0, 
-                1.0, 
-                0.0, 
-                1.0, 
-                0.0, 
-                1.0
-            ]
-        }, 
-        {
             "initialValue": 2.0, 
             "displayName": "", 
-            "name": "mr_controlModeStraight", 
+            "name": "mr_controlMode", 
             "min": 0.0, 
             "max": 10.0, 
             "valueType": 1, 
             "pendingMode": false, 
             "inputMethod": 1, 
-            "id": 20, 
-            "history": [
-                2.0, 
-                2.0, 
-                1.0, 
-                2.0, 
-                1.0, 
-                2.0, 
-                1.0
-            ]
+            "id": 19, 
+            "history": []
         }, 
         {
             "initialValue": 30.0, 
@@ -727,7 +659,7 @@
             "valueType": 1, 
             "pendingMode": false, 
             "inputMethod": 1, 
-            "id": 21, 
+            "id": 20, 
             "history": []
         }, 
         {
@@ -739,7 +671,7 @@
             "valueType": 1, 
             "pendingMode": false, 
             "inputMethod": 1, 
-            "id": 22, 
+            "id": 21, 
             "history": []
         }, 
         {
@@ -751,7 +683,7 @@
             "valueType": 1, 
             "pendingMode": false, 
             "inputMethod": 1, 
-            "id": 23, 
+            "id": 22, 
             "history": []
         }
     ], 

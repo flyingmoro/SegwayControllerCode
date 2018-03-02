@@ -23,10 +23,12 @@ int direction = 0;
 #define OFF_MODE 0
 #define TILT_MODE 1
 #define VELOCITY_MODE 2
-#define POSITION_MODE_FORWARD 3
-#define POSITION_MODE_FORWARD_AND_BACKWARD 4
+#define TURNING_MODE 3
+#define POSITION_MODE_FORWARD 4
+#define POSITION_MODE_FORWARD_AND_BACKWARD 5
+#define POSITION_MODE_VECTOR 6
 
-#define TURNING_MODE 1
+
 
 #define VELOCITY_CONTROL_INTEGRATOR_LIMIT 10.0
 
@@ -47,18 +49,7 @@ void updateControlTargets(SensorDataCollection * sensorData, TargetValues * targ
     gammaPTarget = 0.0f;
 
     // tilt control
-    if(mr_controlModeStraight > 0) {
-
-//        for(int i = size_beta_buffer-1; i > 0; i--){
-//            beta_buffer[i] = beta_buffer[i - 1];
-//        }
-//        beta_buffer[0] = sensorData->beta;
-//        beta_filter = 0;
-//        for (int i = 0; i < size_beta_buffer; i++)
-//        {
-//            beta_filter += (beta_buffer[i]/size_beta_buffer);
-//        }
-//        mr_betaFilter = beta_filter*57.296;
+    if(mr_controlMode > 0) {
         beta_filter = 0;
         if(size_beta_buffer > maxFilter)
         {
@@ -74,8 +65,6 @@ void updateControlTargets(SensorDataCollection * sensorData, TargetValues * targ
         float eBeta = 0.0 - beta_filter;
         betaTarget = kPidBeta * (eBeta + (eBeta - eOldBeta) * tvBeta / DELTA_T);
         eOldBeta = eBeta;
-
-
     }
 
 
@@ -92,9 +81,9 @@ void updateControlTargets(SensorDataCollection * sensorData, TargetValues * targ
     mr_dgamma1 = dgamma1;
     mr_distance = distance;
     // moving forward only
-    if(mr_controlModeStraight == POSITION_MODE_FORWARD) {
+    if(mr_controlMode == POSITION_MODE_FORWARD) {
         if( distance > deathZoneRadius) {
-            if(abs(dgamma1)< 2.26) // ~130°
+            if(abs(dgamma1)< 2.96) // ~170°
             {
                 additionalSpeedDueDistance = distance*kPidDistance;
                 direction = 0;
@@ -117,12 +106,12 @@ void updateControlTargets(SensorDataCollection * sensorData, TargetValues * targ
     }
 
     // moving forward and backward
-    if (mr_controlModeStraight >= POSITION_MODE_FORWARD_AND_BACKWARD) {
+    if (mr_controlMode == POSITION_MODE_FORWARD_AND_BACKWARD) {
 
         //forward (overwrites values from POSITION_MODE_FORWARD)
         if ((dgamma1> -M_PI/2) && (dgamma1 < M_PI/2)) {
             if (distance > deathZoneRadius) {
-                if (abs(dgamma1)< 1.22) // ~70°
+                if (abs(dgamma1)< 1.48) // ~85°
                 {
                     additionalSpeedDueDistance = distance*kPidDistance;
                     direction = 0;
@@ -149,7 +138,7 @@ void updateControlTargets(SensorDataCollection * sensorData, TargetValues * targ
             float dgamma1 = atan2(-dy1, -dx1);
             if (distance > deathZoneRadius) {
 
-                if(abs(dgamma1)< 1.22) // ~70°
+                if(abs(dgamma1)< 1.48) // ~85°
                 {
                     additionalSpeedDueDistance = -distance*kPidDistance;
                     direction = 0;
@@ -169,6 +158,14 @@ void updateControlTargets(SensorDataCollection * sensorData, TargetValues * targ
                     additionalGammaPDueGamma = abs(dgamma1)*direction*kPidGamma;
                 }
             }
+        }
+    }
+
+    // moving with scalar
+    if(mr_controlMode == POSITION_MODE_VECTOR) {
+        if( distance > deathZoneRadius) {
+            additionalSpeedDueDistance = dx1*kPidDistance;
+            additionalGammaPDueGamma = dgamma1 * kPidGamma;
         }
     }
 
@@ -200,7 +197,7 @@ void updateControlTargets(SensorDataCollection * sensorData, TargetValues * targ
         speed_filter += (speed_buffer[i]/size_speed_buffer);
     }
     mr_speedFilter = speed_filter;
-    if(mr_controlModeStraight >= VELOCITY_MODE) {
+    if(mr_controlMode >= VELOCITY_MODE) {
 
         float eSpeed = speedSetPoint + additionalSpeedDueDistance - speed_filter;
         if (abs(speedIntegral + eSpeed) < VELOCITY_CONTROL_INTEGRATOR_LIMIT) {
@@ -225,7 +222,7 @@ void updateControlTargets(SensorDataCollection * sensorData, TargetValues * targ
     }
     mr_gammaPFilter = gammaP_filter;
 
-    if(mr_controlModeTurning >= TURNING_MODE) {
+    if(mr_controlMode >= TURNING_MODE) {
         float eGammaP = gammaPSetPoint + additionalGammaPDueGamma - gammaP_filter;
         gammaPTarget = kPidGammaP * eGammaP;
     }

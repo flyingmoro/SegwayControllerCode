@@ -161,7 +161,7 @@ void loop() {
     mr_encoderRightWheel = worldPosition.encRight;
     mr_worldX = worldPosition.x;
     mr_worldY = worldPosition.y;
-    mr_worldGamma = worldPosition.gamma;
+    mr_worldGamma = -worldPosition.gamma;
 
     mr_rawAccX = mpuData.rawAcceleration_x;
     mr_rawAccY = mpuData.rawAcceleration_y;
