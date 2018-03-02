@@ -135,13 +135,13 @@
         {
             "displayName": "", 
             "name": "mr_betaComplementary", 
-            "show": true, 
+            "show": false, 
             "color": [
                 136, 
                 228, 
                 2
             ], 
-            "isRequested": true, 
+            "isRequested": false, 
             "id": 11
         }, 
         {
@@ -177,7 +177,7 @@
                 80, 
                 103
             ], 
-            "isRequested": false, 
+            "isRequested": true, 
             "id": 14
         }, 
         {
@@ -189,7 +189,7 @@
                 184, 
                 77
             ], 
-            "isRequested": false, 
+            "isRequested": true, 
             "id": 15
         }, 
         {
@@ -201,7 +201,7 @@
                 25, 
                 68
             ], 
-            "isRequested": false, 
+            "isRequested": true, 
             "id": 16
         }, 
         {
@@ -231,25 +231,25 @@
         {
             "displayName": "", 
             "name": "mr_controllerOutputMotorZero", 
-            "show": true, 
+            "show": false, 
             "color": [
                 196, 
                 149, 
                 141
             ], 
-            "isRequested": true, 
+            "isRequested": false, 
             "id": 19
         }, 
         {
             "displayName": "", 
             "name": "mr_controllerOutputMotorOne", 
-            "show": true, 
+            "show": false, 
             "color": [
                 85, 
                 131, 
                 9
             ], 
-            "isRequested": true, 
+            "isRequested": false, 
             "id": 20
         }, 
         {
@@ -267,7 +267,7 @@
         {
             "displayName": "", 
             "name": "mr_speed", 
-            "show": true, 
+            "show": false, 
             "color": [
                 198, 
                 129, 
@@ -279,37 +279,37 @@
         {
             "displayName": "", 
             "name": "mr_controllerSpeedTarget", 
-            "show": true, 
+            "show": false, 
             "color": [
                 56, 
                 178, 
                 243
             ], 
-            "isRequested": true, 
+            "isRequested": false, 
             "id": 23
         }, 
         {
             "displayName": "", 
             "name": "mr_controllerBetaTarget", 
-            "show": true, 
+            "show": false, 
             "color": [
                 54, 
                 254, 
                 70
             ], 
-            "isRequested": true, 
+            "isRequested": false, 
             "id": 24
         }, 
         {
             "displayName": "", 
             "name": "mr_betaFilter", 
-            "show": true, 
+            "show": false, 
             "color": [
                 184, 
                 193, 
                 103
             ], 
-            "isRequested": true, 
+            "isRequested": false, 
             "id": 25
         }, 
         {
@@ -327,7 +327,7 @@
         {
             "displayName": "", 
             "name": "mr_gammaPFilter", 
-            "show": true, 
+            "show": false, 
             "color": [
                 145, 
                 136, 
@@ -338,27 +338,75 @@
         }, 
         {
             "displayName": "", 
-            "name": "mr_conrtrollerGammaPTarget", 
-            "show": true, 
+            "name": "mr_controllerGammaPTarget", 
+            "show": false, 
             "color": [
                 56, 
                 200, 
                 89
             ], 
-            "isRequested": true, 
+            "isRequested": false, 
             "id": 28
         }, 
         {
             "displayName": "", 
             "name": "mr_speedIntegralPart", 
-            "show": true, 
+            "show": false, 
             "color": [
                 80, 
                 152, 
                 85
             ], 
-            "isRequested": true, 
+            "isRequested": false, 
             "id": 29
+        }, 
+        {
+            "displayName": "", 
+            "name": "mr_dx1", 
+            "show": false, 
+            "color": [
+                64, 
+                228, 
+                195
+            ], 
+            "isRequested": true, 
+            "id": 30
+        }, 
+        {
+            "displayName": "", 
+            "name": "mr_dy1", 
+            "show": false, 
+            "color": [
+                108, 
+                211, 
+                4
+            ], 
+            "isRequested": true, 
+            "id": 31
+        }, 
+        {
+            "displayName": "", 
+            "name": "mr_dgamma1", 
+            "show": false, 
+            "color": [
+                217, 
+                166, 
+                97
+            ], 
+            "isRequested": true, 
+            "id": 32
+        }, 
+        {
+            "displayName": "", 
+            "name": "mr_distance", 
+            "show": false, 
+            "color": [
+                212, 
+                115, 
+                15
+            ], 
+            "isRequested": true, 
+            "id": 33
         }
     ], 
     "commands": [
@@ -384,24 +432,39 @@
             "pendingMode": false, 
             "inputMethod": 1, 
             "id": 1, 
-            "history": [
-                0.0, 
-                0.1
-            ]
+            "history": []
         }, 
         {
             "initialValue": 0.0, 
             "displayName": "", 
             "name": "speedSetPoint", 
-            "min": -0.5, 
-            "max": 0.5, 
+            "min": -6.0, 
+            "max": 6.0, 
             "valueType": 2, 
             "pendingMode": false, 
             "inputMethod": 1, 
             "id": 2, 
             "history": [
+                0.0, 
+                1.0, 
+                0.6, 
+                0.4, 
+                0.0, 
+                0.6, 
+                0.4, 
+                0.3, 
+                0.2, 
+                0.0, 
+                0.0, 
+                1.0, 
+                1.0, 
+                0.5, 
+                0.0, 
+                0.2, 
+                0.0, 
+                0.0, 
                 -0.2, 
-                0.1
+                0.0
             ]
         }, 
         {
@@ -409,32 +472,22 @@
             "displayName": "", 
             "name": "gammaPSetPoint", 
             "min": -6.0, 
-            "max": 6.0, 
+            "max": 100.0, 
             "valueType": 2, 
             "pendingMode": false, 
             "inputMethod": 1, 
             "id": 3, 
             "history": [
-                0.3, 
-                0.2, 
                 0.0, 
-                0.3, 
-                -0.1, 
+                4.0, 
+                3.0, 
+                2.0, 
                 0.0, 
-                -0.2, 
+                2.0, 
+                1.0, 
+                6.0, 
                 0.0, 
-                0.1, 
-                0.0, 
-                -0.3, 
-                0.0, 
-                0.5, 
-                0.4, 
-                0.55, 
-                0.0, 
-                0.6, 
-                0.5, 
-                0.2, 
-                0.1
+                6.0
             ]
         }, 
         {
@@ -471,7 +524,15 @@
             "pendingMode": false, 
             "inputMethod": 1, 
             "id": 6, 
-            "history": []
+            "history": [
+                80.0, 
+                120.0, 
+                120.0, 
+                100.0, 
+                80.0, 
+                150.0, 
+                200.0
+            ]
         }, 
         {
             "initialValue": 0.07, 
@@ -486,7 +547,7 @@
             "history": []
         }, 
         {
-            "initialValue": 0.0, 
+            "initialValue": 1.0, 
             "displayName": "", 
             "name": "kPidGammaP", 
             "min": -100000.0, 
@@ -495,17 +556,7 @@
             "pendingMode": false, 
             "inputMethod": 1, 
             "id": 8, 
-            "history": [
-                1.0, 
-                0.3, 
-                0.2, 
-                0.1, 
-                1.0, 
-                0.3, 
-                0.2, 
-                0.1, 
-                1.0
-            ]
+            "history": []
         }, 
         {
             "initialValue": 1.0, 
@@ -544,10 +595,10 @@
             "history": []
         }, 
         {
-            "initialValue": 0.0, 
+            "initialValue": 0.5, 
             "displayName": "", 
             "name": "kPidDistance", 
-            "min": -100000.0, 
+            "min": 0.0, 
             "max": 100000.0, 
             "valueType": 2, 
             "pendingMode": false, 
@@ -556,14 +607,14 @@
             "history": []
         }, 
         {
-            "initialValue": 0.0, 
+            "initialValue": -4.0, 
             "displayName": "", 
             "name": "kPidGamma", 
             "min": -100000.0, 
-            "max": 100000.0, 
+            "max": 0.0, 
             "valueType": 2, 
             "pendingMode": false, 
-            "inputMethod": 3, 
+            "inputMethod": 1, 
             "id": 13, 
             "history": []
         }, 
@@ -640,6 +691,10 @@
             "history": [
                 1.0, 
                 0.0, 
+                1.0, 
+                0.0, 
+                1.0, 
+                0.0, 
                 1.0
             ]
         }, 
@@ -653,7 +708,15 @@
             "pendingMode": false, 
             "inputMethod": 1, 
             "id": 20, 
-            "history": []
+            "history": [
+                2.0, 
+                2.0, 
+                1.0, 
+                2.0, 
+                1.0, 
+                2.0, 
+                1.0
+            ]
         }, 
         {
             "initialValue": 30.0, 
@@ -680,7 +743,7 @@
             "history": []
         }, 
         {
-            "initialValue": 10.0, 
+            "initialValue": 20.0, 
             "displayName": "", 
             "name": "size_gammaP_buffer", 
             "min": -100000.0, 
@@ -689,9 +752,7 @@
             "pendingMode": false, 
             "inputMethod": 1, 
             "id": 23, 
-            "history": [
-                100.0
-            ]
+            "history": []
         }
     ], 
     "miscSettings": {

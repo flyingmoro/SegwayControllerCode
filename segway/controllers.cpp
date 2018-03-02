@@ -18,6 +18,7 @@ float gammaP_filter = 0.0;
 int beta_Pointer = 0;
 int speed_Pointer = 0;
 int gammaP_Pointer = 0;
+int direction = 0;
 
 #define OFF_MODE 0
 #define TILT_MODE 1
@@ -86,14 +87,32 @@ void updateControlTargets(SensorDataCollection * sensorData, TargetValues * targ
     float dgamma1 = atan2(dy1, dx1);
     float distance = sqrt(dx1*dx1+dy1*dy1);
 
+    mr_dx1 = dx1;
+    mr_dy1 = dy1;
+    mr_dgamma1 = dgamma1;
+    mr_distance = distance;
     // moving forward only
-    if(mr_controlModeStraight >= POSITION_MODE_FORWARD) {
+    if(mr_controlModeStraight == POSITION_MODE_FORWARD) {
         if( distance > deathZoneRadius) {
-            if(abs(dgamma1)< 2.96) {
-                // ~170°
+            if(abs(dgamma1)< 2.26) // ~130°
+            {
                 additionalSpeedDueDistance = distance*kPidDistance;
+                direction = 0;
+                additionalGammaPDueGamma = dgamma1 * kPidGamma;
             }
-            additionalGammaPDueGamma = dgamma1*kPidGamma;
+            else{
+                if(direction == 0)
+                {
+                    if(dgamma1 > 0)
+                    {
+                        direction = -1;
+                    }
+                    else{
+                        direction = 1;
+                    }
+                }
+                additionalGammaPDueGamma = abs(dgamma1)*direction*kPidGamma;
+            }
         }
     }
 
@@ -103,11 +122,25 @@ void updateControlTargets(SensorDataCollection * sensorData, TargetValues * targ
         //forward (overwrites values from POSITION_MODE_FORWARD)
         if ((dgamma1> -M_PI/2) && (dgamma1 < M_PI/2)) {
             if (distance > deathZoneRadius) {
-                if (abs(dgamma1)< 1.48) {
-                    // ~85°
+                if (abs(dgamma1)< 1.22) // ~70°
+                {
                     additionalSpeedDueDistance = distance*kPidDistance;
+                    direction = 0;
+                    additionalGammaPDueGamma = dgamma1 * kPidGamma;
                 }
-                additionalGammaPDueGamma = dgamma1 * kPidGamma;
+                else{
+                    if(direction == 0)
+                    {
+                        if(dgamma1 > 0)
+                        {
+                            direction = 1;
+                        }
+                        else{
+                            direction = -1;
+                        }
+                    }
+                    additionalGammaPDueGamma = abs(dgamma1)*direction*kPidGamma;
+                }
             }
         }
 
@@ -115,11 +148,26 @@ void updateControlTargets(SensorDataCollection * sensorData, TargetValues * targ
         else {
             float dgamma1 = atan2(-dy1, -dx1);
             if (distance > deathZoneRadius) {
-                // ~85°
-                if(abs(dgamma1)< 1.48) {
+
+                if(abs(dgamma1)< 1.22) // ~70°
+                {
                     additionalSpeedDueDistance = -distance*kPidDistance;
+                    direction = 0;
+                    additionalGammaPDueGamma = dgamma1 * kPidGamma;
                 }
-                additionalGammaPDueGamma = dgamma1*kPidGamma;
+                else{
+                    if(direction == 0)
+                    {
+                        if(dgamma1 > 0)
+                        {
+                            direction = 1;
+                        }
+                        else{
+                            direction = -1;
+                        }
+                    }
+                    additionalGammaPDueGamma = abs(dgamma1)*direction*kPidGamma;
+                }
             }
         }
     }

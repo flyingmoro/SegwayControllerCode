@@ -153,12 +153,12 @@ Parameter parameters[] = {
     { 2, { .valueFloat = 0.3f} },
     { 2, { .valueFloat = 80.0f} },
     { 2, { .valueFloat = 0.07f} },
-    { 2, { .valueFloat = 0.0f} },
+    { 2, { .valueFloat = 1.0f} },
     { 1, { .valueInt = 1} },
     { 2, { .valueFloat = 0.0f} },
     { 2, { .valueFloat = 0.0f} },
-    { 2, { .valueFloat = 0.0f} },
-    { 2, { .valueFloat = 0.0f} },
+    { 2, { .valueFloat = 0.5f} },
+    { 2, { .valueFloat = -4.0f} },
     { 2, { .valueFloat = 0.1f} },
     { 2, { .valueFloat = 0.5f} },
     { 2, { .valueFloat = 3.0f} },
@@ -168,7 +168,7 @@ Parameter parameters[] = {
     { 1, { .valueInt = 2} },
     { 1, { .valueInt = 30} },
     { 1, { .valueInt = 10} },
-    { 1, { .valueInt = 10} }
+    { 1, { .valueInt = 20} }
 };
 
 int specialCommands[] = {
