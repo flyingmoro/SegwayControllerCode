@@ -495,7 +495,7 @@
             "history": []
         }, 
         {
-            "initialValue": 0.166, 
+            "initialValue": 0.07, 
             "displayName": "", 
             "name": "tvBeta", 
             "min": 0.0, 
