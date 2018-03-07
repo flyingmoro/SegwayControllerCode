@@ -11,8 +11,8 @@
         "module": "[fill]", 
         "size": {
             ".data": 9, 
-            ".bss": 80, 
-            ".text": 325
+            ".bss": 76, 
+            ".text": 297
         }
     }, 
     {
@@ -947,8 +947,8 @@
         "module": "controllers.o", 
         "size": {
             ".data": 0, 
-            ".bss": 536, 
-            ".text": 1348
+            ".bss": 1260, 
+            ".text": 1648
         }
     }, 
     {
@@ -956,7 +956,7 @@
         "size": {
             ".data": 0, 
             ".bss": 136, 
-            ".text": 1028
+            ".text": 1048
         }
     }, 
     {
@@ -964,7 +964,7 @@
         "size": {
             ".data": 4, 
             ".bss": 744, 
-            ".text": 1096
+            ".text": 1052
         }
     }, 
     {
@@ -1971,8 +1971,8 @@
         "module": "microRay.o", 
         "size": {
             ".data": 201, 
-            ".bss": 792, 
-            ".text": 1083
+            ".bss": 832, 
+            ".text": 1091
         }
     }, 
     {
@@ -2001,8 +2001,8 @@
     }, 
     {
         "summary": {
-            "static_ram": 61312, 
-            "total_flash": 149252
+            "static_ram": 62072, 
+            "total_flash": 149508
         }
     }
 ]

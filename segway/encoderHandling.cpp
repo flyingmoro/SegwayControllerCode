@@ -1,4 +1,5 @@
 #include "encoderHandling.h"
+#include "microRay.h"
 
 #include "mbed.h"
 
@@ -28,16 +29,23 @@ void updatePosition(Position *worldPosition) {
     xRRight = (float)encoderChange(oldEncRight, worldPosition->encRight) * METERS_PER_ENCODER_STEP;
 
     // see documentation concerning the following formulas
-    diffX = (float)(xRRight - xRLeft);
+    diffX = (float)(xRLeft - xRRight);
     deltaGamma = diffX / WHEEL_SPAN;
     deltaForward = (xRLeft + xRRight) / 2.0;
 
+
     worldPosition->x += (cos(worldPosition->gamma) * deltaForward);
-    worldPosition->y -= (sin(worldPosition->gamma) * deltaForward);
+    worldPosition->y += (sin(worldPosition->gamma) * deltaForward);
     worldPosition->forwardSpeed = deltaForward / DELTA_T;
     worldPosition->gamma += deltaGamma;
     worldPosition->gammaP = deltaGamma / DELTA_T;
 
+    if(mr_resetPosition) //position reset by microRay
+    {
+        worldPosition->x = 0;
+        worldPosition->y = 0;
+        worldPosition->gamma = 0;
+    }
 
     // constrain gamma
     while (worldPosition->gamma > PI) {

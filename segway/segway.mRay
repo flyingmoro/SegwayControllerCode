@@ -141,7 +141,7 @@
                 228, 
                 2
             ], 
-            "isRequested": false, 
+            "isRequested": true, 
             "id": 11
         }, 
         {
@@ -309,13 +309,13 @@
                 193, 
                 103
             ], 
-            "isRequested": false, 
+            "isRequested": true, 
             "id": 25
         }, 
         {
             "displayName": "", 
             "name": "mr_speedFilter", 
-            "show": true, 
+            "show": false, 
             "color": [
                 83, 
                 114, 
@@ -351,13 +351,13 @@
         {
             "displayName": "", 
             "name": "mr_speedIntegralPart", 
-            "show": false, 
+            "show": true, 
             "color": [
                 80, 
                 152, 
                 85
             ], 
-            "isRequested": false, 
+            "isRequested": true, 
             "id": 29
         }, 
         {
@@ -405,7 +405,7 @@
                 115, 
                 15
             ], 
-            "isRequested": true, 
+            "isRequested": false, 
             "id": 33
         }
     ], 
@@ -456,7 +456,14 @@
             "pendingMode": false, 
             "inputMethod": 1, 
             "id": 3, 
-            "history": []
+            "history": [
+                0.0, 
+                1.0, 
+                0.0, 
+                1.0, 
+                0.0, 
+                2.0
+            ]
         }, 
         {
             "initialValue": -10.0, 
@@ -471,7 +478,7 @@
             "history": []
         }, 
         {
-            "initialValue": 0.3, 
+            "initialValue": 1.0, 
             "displayName": "", 
             "name": "tgSpeed", 
             "min": 0.0, 
@@ -480,7 +487,12 @@
             "pendingMode": false, 
             "inputMethod": 1, 
             "id": 5, 
-            "history": []
+            "history": [
+                0.6, 
+                3.0, 
+                1.0, 
+                0.6
+            ]
         }, 
         {
             "initialValue": 60.0, 
@@ -507,7 +519,7 @@
             "history": []
         }, 
         {
-            "initialValue": 1.0, 
+            "initialValue": -1.0, 
             "displayName": "", 
             "name": "kPidGammaP", 
             "min": -100000.0, 
@@ -540,7 +552,25 @@
             "pendingMode": false, 
             "inputMethod": 1, 
             "id": 10, 
-            "history": []
+            "history": [
+                0.0, 
+                2.0, 
+                3.0, 
+                2.0, 
+                3.0, 
+                0.0, 
+                3.0, 
+                0.0, 
+                3.0, 
+                1.0, 
+                2.0, 
+                0.0, 
+                2.0, 
+                0.0, 
+                4.0, 
+                3.0, 
+                2.0
+            ]
         }, 
         {
             "initialValue": 0.0, 
@@ -552,7 +582,14 @@
             "pendingMode": false, 
             "inputMethod": 1, 
             "id": 11, 
-            "history": []
+            "history": [
+                0.0, 
+                1.0, 
+                -1.0, 
+                1.0, 
+                -1.0, 
+                1.0
+            ]
         }, 
         {
             "initialValue": 0.5, 
@@ -567,11 +604,11 @@
             "history": []
         }, 
         {
-            "initialValue": -4.0, 
+            "initialValue": 4.0, 
             "displayName": "", 
             "name": "kPidGamma", 
-            "min": -100000.0, 
-            "max": 0.0, 
+            "min": -4.0, 
+            "max": 10.0, 
             "valueType": 2, 
             "pendingMode": false, 
             "inputMethod": 1, 
@@ -648,7 +685,12 @@
             "pendingMode": false, 
             "inputMethod": 1, 
             "id": 19, 
-            "history": []
+            "history": [
+                3.0, 
+                6.0, 
+                5.0, 
+                3.0
+            ]
         }, 
         {
             "initialValue": 30.0, 
@@ -685,6 +727,25 @@
             "inputMethod": 1, 
             "id": 22, 
             "history": []
+        }, 
+        {
+            "initialValue": 0.0, 
+            "displayName": "", 
+            "name": "mr_resetPosition", 
+            "min": 0.0, 
+            "max": 1.0, 
+            "valueType": 1, 
+            "pendingMode": false, 
+            "inputMethod": 3, 
+            "id": 23, 
+            "history": [
+                0.0, 
+                1.0, 
+                0.0, 
+                1.0, 
+                0.0, 
+                1.0
+            ]
         }
     ], 
     "miscSettings": {
